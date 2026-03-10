@@ -1,0 +1,148 @@
+/**
+ * Orienta.me - Sistema de Diseño CSS
+ * Paleta: Kahoot (Púrpura, Rojo, Azul, Verde, Amarillo)
+ * Estilo: Cartier elegance + Kahoot vibrancy
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   VARIABLES CSS - PALETA KAHOOT
+   ============================================ */
+:root {
+    /* Colores principales */
+    --kahoot-purple: #46178F;
+    --kahoot-purple-dark: #2D0F5C;
+    --kahoot-red: #E21B3C;
+    --kahoot-orange: #EB670F;
+    --kahoot-blue: #1368CE;
+    --kahoot-yellow: #D89E00;
+    --kahoot-green: #26890C;
+    
+    /* Colores CHASIDE */
+    --chaside-c: #E21B3C; /* Ciencias Exactas - Rojo */
+    --chaside-h: #EB670F; /* Humanísticas - Naranja */
+    --chaside-a: #46178F; /* Artísticas - Púrpura */
+    --chaside-s: #26890C; /* Salud - Verde */
+    --chaside-i: #1368CE; /* Investigación - Azul */
+    --chaside-d: #FF3355; /* Defensa - Rojo claro */
+    --chaside-e: #D89E00; /* Empresariales - Amarillo */
+    
+    /* Tipografía */
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'Space Grotesk', monospace;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+}
+
+/* ============================================
+   COMPONENTES TAILWIND PERSONALIZADOS
+   ============================================ */
+@layer components {
+    /* Línea de carga de dos líneas */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-slow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* ============================================
+   SCROLLBAR PERSONALIZADO
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ============================================
+   FOCUS STATES ACCESIBLES
+   ============================================ */
+:focus-visible {
+    outline: 2px solid var(--kahoot-purple);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   SELECCIÓN DE TEXTO
+   ============================================ */
+::selection {
+    background-color: var(--kahoot-purple);
+    color: white;
+}
