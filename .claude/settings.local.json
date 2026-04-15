@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from openpyxl import load_workbook; wb = load_workbook\\(r'C:\\\\Users\\\\ponch\\\\Downloads\\\\Mallas_Curriculares_UT_Tamaulipas.xlsx'\\); print\\('SHEETS:', wb.sheetnames\\)\")",
+      "Bash(python -m pip install openpyxl --quiet)",
+      "Bash(python)",
+      "Bash(python scripts/gen_unis.py)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(curl -sS -L --max-time 30 \"https://raw.githubusercontent.com/PhantomInsights/mexican-geojson/master/mexicoHigh.json\" -o mexico.geojson)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('mexico.geojson',encoding='utf-8'\\)\\); print\\('Features:', len\\(d['features']\\)\\); [print\\(f['properties']\\) for f in d['features'][:3]]\")",
+      "Bash(curl -sS -L --max-time 30 \"https://raw.githubusercontent.com/PhantomInsights/mexican-geojson/master/mexico.json\" -o mexico.geojson)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('mexico.geojson',encoding='utf-8'\\)\\); print\\('Features:', len\\(d['features']\\)\\); [print\\(f['properties'].get\\('name', f['properties'].get\\('NAME', f['properties']\\)\\)\\) for f in d['features']]\")",
+      "Bash(curl -sS -L --max-time 30 \"https://raw.githubusercontent.com/strotgen/mexico-leaflet/master/states.geojson\" -o mexico.geojson)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('mexico.geojson',encoding='utf-8'\\)\\); print\\('Features:', len\\(d['features']\\)\\); names=[f['properties'] for f in d['features']]; [print\\(n\\) for n in names[:3]]\")",
+      "Bash(python scripts/gen_map_path.py)",
+      "Bash(python scripts/patch_universidades_latlon.py)"
+    ]
+  }
+}

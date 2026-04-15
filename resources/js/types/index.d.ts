@@ -21,7 +21,7 @@ export interface User {
 // TIPOS PARA PÁGINAS (INERTIA)
 // ============================================
 
-export interface PageProps {
+export interface PageProps<T = {}> extends T {
     auth: {
         user: User | null;
     };

@@ -1,254 +1,165 @@
 /**
- * Página: Mapa Interactivo de Universidades Politécnicas de Tamaulipas
+ * Página: Mapa Interactivo de Universidades de Tamaulipas
  * Ruta: GET /universidades-tamaulipas
- * 
- * Mapa SVG interactivo del estado de Tamaulipas con ciudades
- * que tienen universidades politécnicas. Al hacer clic en una ciudad,
- * se despliega una animación circular que transiciona a la página de detalles.
+ *
+ * Mapa SVG con contorno real del estado y marcadores para las 7
+ * universidades (tecnológicas y politécnicas). Al hacer clic en un
+ * marcador se abre un drawer lateral con la información completa, sin
+ * navegar fuera de esta página. Soporta deep-link con ?uni={id}.
  */
 
-import { Head, router } from '@inertiajs/react';
-import { useState, useRef, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
 import { PageProps } from '@/types';
-
-// ===== DATOS DE UNIVERSIDADES POLITÉCNICAS =====
-// Estos datos vienen del archivo Datos_universidades_Almazan_Mario.xlsx
-
-interface Carrera {
-    nombre: string;
-    duracion: string;
-}
-
-interface Universidad {
-    id: number;
-    nombre: string;
-    nombreCorto: string;
-    ciudad: string;
-    coordenadas: { x: number; y: number }; // Posición en el mapa SVG
-    carreras: Carrera[];
-    colorPrimario: string;
-    descripcion: string;
-    sitioWeb: string;
-}
-
-const universidadesPolitecnicas: Universidad[] = [
-    {
-        id: 1,
-        nombre: 'Universidad Politécnica de Victoria',
-        nombreCorto: 'UPV',
-        ciudad: 'Cd. Victoria',
-        coordenadas: { x: 55, y: 58 }, // Centro del estado
-        carreras: [
-            { nombre: 'Ing. Mecatrónica', duracion: '3 años 4 meses' },
-            { nombre: 'Ing. en Tecnologías de la Información', duracion: '3 años 4 meses' },
-            { nombre: 'Ing. en Tecnologías de Manufactura', duracion: '3 años 4 meses' },
-            { nombre: 'Ing. en Sistemas Automotrices', duracion: '3 años 4 meses' },
-            { nombre: 'Lic. en Comercio Internacional y Aduanas', duracion: '3 años 4 meses' },
-            { nombre: 'Lic. en Administración y Gestión Empresarial', duracion: '3 años 4 meses' },
-        ],
-        colorPrimario: '#1E40AF',
-        descripcion: 'Principal universidad politécnica de la capital del estado, enfocada en formar profesionales en tecnología y negocios internacionales.',
-        sitioWeb: 'https://upv.edu.mx',
-    },
-    {
-        id: 2,
-        nombre: 'Universidad Tecnológica de Matamoros',
-        nombreCorto: 'UTM',
-        ciudad: 'H. Matamoros',
-        coordenadas: { x: 78, y: 12 }, // Norte del estado
-        carreras: [
-            { nombre: 'Ingeniería en Mecatrónica', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Sistemas Productivos', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Mantenimiento Industrial', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Logística Internacional', duracion: '3 años 4 meses' },
-            { nombre: 'Lic. en Gestión de Negocios y Proyectos', duracion: '3 años 4 meses' },
-            { nombre: 'Ing. en Redes Inteligentes y Ciberseguridad', duracion: '3 años 4 meses' },
-        ],
-        colorPrimario: '#059669',
-        descripcion: 'Universidad fronteriza especializada en industria maquiladora, logística internacional y ciberseguridad.',
-        sitioWeb: 'https://utmatamoros.edu.mx',
-    },
-    {
-        id: 3,
-        nombre: 'Universidad Tecnológica de Altamira',
-        nombreCorto: 'UTA',
-        ciudad: 'Tampico',
-        coordenadas: { x: 72, y: 88 }, // Sur del estado
-        carreras: [
-            { nombre: 'Lic. en Innovación de Negocios y Mercadotecnia', duracion: '3 años 4 meses' },
-            { nombre: 'Lic. en Diseño y Gestión de Redes Logísticas', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Energías Renovables', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Mecatrónica', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Mantenimiento Industrial', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería en Nanotecnología', duracion: '3 años 4 meses' },
-            { nombre: 'Ingeniería Química de Procesos Industriales', duracion: '3 años 4 meses' },
-        ],
-        colorPrimario: '#DC2626',
-        descripcion: 'Universidad de la zona industrial sur, líder en energías renovables, nanotecnología y procesos químicos.',
-        sitioWeb: 'https://utaltamira.edu.mx',
-    },
-];
+import {
+    universidades,
+    carreras as todasCarreras,
+    Universidad,
+    getUniversidadById,
+    getCarrerasByUniversidadId,
+} from '@/Data/universidadesData';
+import {
+    TAMAULIPAS_VIEWBOX,
+    TamaulipasShapePath,
+    TamaulipasMapDefs,
+    projectLatLon,
+} from '@/Components/Universities/TamaulipasMapShape';
+import UniversidadDrawer from '@/Components/Universities/UniversidadDrawer';
 
 // ===== COMPONENTE DEL MAPA SVG DE TAMAULIPAS =====
-interface MapaTamaulipasProps {
+interface MapaSVGProps {
     ciudadActiva: number | null;
     onCiudadHover: (id: number | null) => void;
     onCiudadClick: (universidad: Universidad) => void;
 }
 
-function MapaSVGTamaulipas({ ciudadActiva, onCiudadHover, onCiudadClick }: MapaTamaulipasProps) {
+function MapaSVGTamaulipas({ ciudadActiva, onCiudadHover, onCiudadClick }: MapaSVGProps) {
+    // Proyectamos cada universidad una sola vez por render
+    const marcadores = useMemo(
+        () =>
+            universidades.map((uni) => ({
+                uni,
+                pos: projectLatLon(uni.latitud, uni.longitud),
+            })),
+        [],
+    );
+
     return (
         <svg
-            viewBox="0 0 100 100"
+            viewBox={TAMAULIPAS_VIEWBOX}
             className="w-full h-full"
-            style={{ filter: 'drop-shadow(0 4px 20px rgba(0, 0, 0, 0.15))' }}
+            style={{ filter: 'drop-shadow(0 8px 24px rgba(30, 41, 59, 0.18))' }}
         >
-            {/* Definiciones de gradientes y filtros */}
-            <defs>
-                <linearGradient id="tamaulipasGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f8fafc" />
-                    <stop offset="100%" stopColor="#e2e8f0" />
-                </linearGradient>
-                <linearGradient id="tamaulipasStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#94a3b8" />
-                    <stop offset="100%" stopColor="#64748b" />
-                </linearGradient>
-                <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                    <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-                <filter id="shadow">
-                    <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3"/>
-                </filter>
-            </defs>
+            <TamaulipasMapDefs />
 
-            {/* Forma del estado de Tamaulipas (simplificada pero reconocible) */}
-            <path
-                d="M 75 5 
-                   L 85 8 L 88 15 L 85 20 L 80 18 
-                   L 78 25 L 82 35 L 80 45 L 78 50 
-                   L 82 60 L 85 70 L 88 80 L 85 90 L 80 95 
-                   L 70 98 L 60 95 L 50 92 L 40 88 
-                   L 30 80 L 25 70 L 20 60 L 18 50 
-                   L 20 40 L 25 30 L 30 25 L 35 20 
-                   L 40 15 L 50 10 L 60 8 L 70 5 Z"
-                fill="url(#tamaulipasGradient)"
-                stroke="url(#tamaulipasStroke)"
-                strokeWidth="0.8"
-                className="transition-all duration-500"
-            />
+            {/* Contorno del estado */}
+            <TamaulipasShapePath />
 
-            {/* Líneas internas simulando divisiones municipales */}
-            <g stroke="#cbd5e1" strokeWidth="0.3" opacity="0.5">
-                <line x1="30" y1="35" x2="75" y2="30" />
-                <line x1="25" y1="55" x2="78" y2="50" />
-                <line x1="35" y1="75" x2="82" y2="72" />
-            </g>
+            {/* Marcadores de universidades */}
+            {marcadores.map(({ uni, pos }) => {
+                const esPolitecnica = uni.nombreCorto.startsWith('UP');
+                const activo = ciudadActiva === uni.id;
 
-            {/* Texto del estado */}
-            <text
-                x="50"
-                y="50"
-                textAnchor="middle"
-                className="fill-slate-300 text-[3px] font-light tracking-[0.5em] uppercase"
-                style={{ fontFamily: 'system-ui' }}
-            >
-                Tamaulipas
-            </text>
+                // Tamaños en unidades del viewBox (0..1000 aprox.)
+                const R = 18;
+                const SQ = 34;
 
-            {/* Marcadores de ciudades con universidades */}
-            {universidadesPolitecnicas.map((uni) => (
-                <g key={uni.id}>
-                    {/* Círculo de resplandor cuando está activo */}
-                    <motion.circle
-                        cx={uni.coordenadas.x}
-                        cy={uni.coordenadas.y}
-                        r={ciudadActiva === uni.id ? 8 : 0}
-                        fill={uni.colorPrimario}
-                        opacity={0.2}
-                        animate={{
-                            r: ciudadActiva === uni.id ? [6, 10, 6] : 0,
-                            opacity: ciudadActiva === uni.id ? [0.1, 0.3, 0.1] : 0,
-                        }}
-                        transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                    />
-                    
-                    {/* Marcador principal de la ciudad */}
-                    <motion.circle
-                        cx={uni.coordenadas.x}
-                        cy={uni.coordenadas.y}
-                        r={3}
-                        fill="#1E40AF"
-                        stroke="#ffffff"
-                        strokeWidth="1"
-                        filter="url(#shadow)"
-                        className="cursor-pointer"
-                        initial={{ scale: 1 }}
-                        whileHover={{ scale: 1.5 }}
-                        animate={{
-                            scale: ciudadActiva === uni.id ? 1.4 : 1,
-                            fill: ciudadActiva === uni.id ? uni.colorPrimario : '#1E40AF',
-                        }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        onMouseEnter={() => onCiudadHover(uni.id)}
-                        onMouseLeave={() => onCiudadHover(null)}
-                        onClick={() => onCiudadClick(uni)}
-                    />
+                return (
+                    <g key={uni.id}>
+                        {/* Pulso cuando está activo */}
+                        <motion.circle
+                            cx={pos.x}
+                            cy={pos.y}
+                            r={0}
+                            fill={uni.colorPrimario}
+                            opacity={0.25}
+                            animate={{
+                                r: activo ? [R, R * 2, R] : 0,
+                                opacity: activo ? [0.15, 0.35, 0.15] : 0,
+                            }}
+                            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                        />
 
-                    {/* Etiqueta de la ciudad */}
-                    <motion.g
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{
-                            opacity: ciudadActiva === uni.id ? 1 : 0.7,
-                            y: ciudadActiva === uni.id ? -2 : 0,
-                        }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <text
-                            x={uni.coordenadas.x}
-                            y={uni.coordenadas.y - 6}
-                            textAnchor="middle"
-                            className="text-[2.5px] font-bold pointer-events-none"
-                            fill={ciudadActiva === uni.id ? uni.colorPrimario : '#334155'}
-                            style={{ fontFamily: 'system-ui' }}
-                        >
-                            {uni.ciudad}
-                        </text>
-                        <text
-                            x={uni.coordenadas.x}
-                            y={uni.coordenadas.y - 3.5}
-                            textAnchor="middle"
-                            className="text-[1.8px] pointer-events-none"
-                            fill="#64748b"
-                            style={{ fontFamily: 'system-ui' }}
-                        >
-                            {uni.nombreCorto}
-                        </text>
-                    </motion.g>
-                </g>
-            ))}
+                        {/* Marcador principal: cuadrado para UP, círculo para UT */}
+                        {esPolitecnica ? (
+                            <motion.rect
+                                x={pos.x - SQ / 2}
+                                y={pos.y - SQ / 2}
+                                width={SQ}
+                                height={SQ}
+                                rx={6}
+                                fill={uni.colorPrimario}
+                                stroke="#ffffff"
+                                strokeWidth={4}
+                                filter="url(#markerShadow)"
+                                className="cursor-pointer"
+                                whileHover={{ scale: 1.25 }}
+                                animate={{ scale: activo ? 1.2 : 1 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                                onMouseEnter={() => onCiudadHover(uni.id)}
+                                onMouseLeave={() => onCiudadHover(null)}
+                                onClick={() => onCiudadClick(uni)}
+                                style={{ transformOrigin: `${pos.x}px ${pos.y}px` }}
+                            />
+                        ) : (
+                            <motion.circle
+                                cx={pos.x}
+                                cy={pos.y}
+                                r={R}
+                                fill={uni.colorPrimario}
+                                stroke="#ffffff"
+                                strokeWidth={4}
+                                filter="url(#markerShadow)"
+                                className="cursor-pointer"
+                                whileHover={{ scale: 1.3 }}
+                                animate={{ scale: activo ? 1.25 : 1 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                                onMouseEnter={() => onCiudadHover(uni.id)}
+                                onMouseLeave={() => onCiudadHover(null)}
+                                onClick={() => onCiudadClick(uni)}
+                                style={{ transformOrigin: `${pos.x}px ${pos.y}px` }}
+                            />
+                        )}
+
+                        {/* Etiqueta */}
+                        <g pointerEvents="none">
+                            <motion.text
+                                x={pos.x}
+                                y={pos.y - 30}
+                                textAnchor="middle"
+                                fontSize={22}
+                                fontWeight={700}
+                                fill={activo ? uni.colorPrimario : '#0f172a'}
+                                style={{ fontFamily: 'system-ui, sans-serif' }}
+                                animate={{ opacity: activo ? 1 : 0.85 }}
+                            >
+                                {uni.nombreCorto}
+                            </motion.text>
+                            <motion.text
+                                x={pos.x}
+                                y={pos.y + 44}
+                                textAnchor="middle"
+                                fontSize={17}
+                                fill="#475569"
+                                style={{ fontFamily: 'system-ui, sans-serif' }}
+                                animate={{ opacity: activo ? 1 : 0.7 }}
+                            >
+                                {uni.ciudad}
+                            </motion.text>
+                        </g>
+                    </g>
+                );
+            })}
         </svg>
     );
 }
 
-// ===== COMPONENTE DE TARJETA DE INFORMACIÓN =====
-interface TarjetaInfoProps {
-    universidad: Universidad | null;
-}
-
-function TarjetaInfo({ universidad }: TarjetaInfoProps) {
-    if (!universidad) return null;
-
+// ===== TARJETA DE INFORMACIÓN (HOVER) =====
+function TarjetaInfo({ universidad }: { universidad: Universidad }) {
+    const carreras = getCarrerasByUniversidadId(universidad.id);
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -256,131 +167,111 @@ function TarjetaInfo({ universidad }: TarjetaInfoProps) {
             exit={{ opacity: 0, x: 20 }}
             className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100"
         >
-            <div 
+            <div
                 className="w-full h-3 rounded-full mb-4"
-                style={{ background: `linear-gradient(90deg, ${universidad.colorPrimario}, ${universidad.colorPrimario}88)` }}
+                style={{
+                    background: `linear-gradient(90deg, ${universidad.colorPrimario}, ${universidad.colorPrimario}88)`,
+                }}
             />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">{universidad.nombre}</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">{universidad.nombre}</h3>
             <p className="text-slate-500 text-sm mb-4">📍 {universidad.ciudad}, Tamaulipas</p>
             <p className="text-slate-600 text-sm mb-4">{universidad.descripcion}</p>
-            
+
             <div className="bg-slate-50 rounded-2xl p-4 mb-4">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                    {universidad.carreras.length} Carreras disponibles
+                    {carreras.length} Carreras disponibles
                 </p>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {universidad.carreras.slice(0, 4).map((carrera, idx) => (
-                        <p key={idx} className="text-sm text-slate-700">• {carrera.nombre}</p>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {carreras.slice(0, 6).map((c) => (
+                        <p key={c.id} className="text-sm text-slate-700">
+                            • {c.nombre}
+                        </p>
                     ))}
-                    {universidad.carreras.length > 4 && (
-                        <p className="text-sm text-slate-400">+{universidad.carreras.length - 4} más...</p>
+                    {carreras.length > 6 && (
+                        <p className="text-sm text-slate-400">+{carreras.length - 6} más…</p>
                     )}
                 </div>
             </div>
 
             <p className="text-xs text-center text-slate-400">
-                Haz clic en el marcador para ver más detalles →
+                Haz clic para ver las mallas curriculares →
             </p>
         </motion.div>
     );
 }
 
-// ===== COMPONENTE DE ANIMACIÓN DE TRANSICIÓN CIRCULAR =====
-interface TransicionCircularProps {
-    activa: boolean;
-    colorOrigen: string;
-    posicionOrigen: { x: number; y: number };
-    onComplete: () => void;
-}
-
-function TransicionCircular({ activa, colorOrigen, posicionOrigen, onComplete }: TransicionCircularProps) {
-    useEffect(() => {
-        if (activa) {
-            const timer = setTimeout(onComplete, 800);
-            return () => clearTimeout(timer);
-        }
-    }, [activa, onComplete]);
-
-    return (
-        <AnimatePresence>
-            {activa && (
-                <motion.div
-                    className="fixed inset-0 z-[100] pointer-events-none"
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <motion.circle
-                            cx={posicionOrigen.x}
-                            cy={posicionOrigen.y}
-                            fill={colorOrigen}
-                            initial={{ r: 0 }}
-                            animate={{ 
-                                r: 150,
-                                cx: [posicionOrigen.x, 120],
-                            }}
-                            transition={{ 
-                                duration: 0.8,
-                                ease: [0.4, 0, 0.2, 1]
-                            }}
-                        />
-                    </svg>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
-}
-
-// ===== PÁGINA PRINCIPAL DEL MAPA =====
+// ===== PÁGINA PRINCIPAL =====
 export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
     const [ciudadHover, setCiudadHover] = useState<number | null>(null);
-    const [universidadSeleccionada, setUniversidadSeleccionada] = useState<Universidad | null>(null);
-    const [transicionActiva, setTransicionActiva] = useState(false);
-    const [posicionClick, setPosicionClick] = useState({ x: 50, y: 50 });
+    const [universidadAbierta, setUniversidadAbierta] = useState<Universidad | null>(null);
+    const [filtro, setFiltro] = useState<'todas' | 'UT' | 'UP'>('todas');
 
-    const universidadEnHover = universidadesPolitecnicas.find(u => u.id === ciudadHover) || null;
+    const universidadEnHover =
+        (ciudadHover ? universidades.find((u) => u.id === ciudadHover) : null) || null;
 
-    const manejarClickCiudad = (universidad: Universidad) => {
-        setUniversidadSeleccionada(universidad);
-        setPosicionClick({
-            x: universidad.coordenadas.x,
-            y: universidad.coordenadas.y
-        });
-        setTransicionActiva(true);
+    const universidadesFiltradas =
+        filtro === 'todas'
+            ? universidades
+            : universidades.filter((u) =>
+                  filtro === 'UP'
+                      ? u.nombreCorto.startsWith('UP')
+                      : u.nombreCorto.startsWith('UT'),
+              );
+
+    // ===== Deep-link: ?uni={id} abre el drawer al montar
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const idStr = params.get('uni');
+        if (idStr) {
+            const u = getUniversidadById(Number(idStr));
+            if (u) setUniversidadAbierta(u);
+        }
+
+        const onPop = () => {
+            const p = new URLSearchParams(window.location.search).get('uni');
+            setUniversidadAbierta(p ? getUniversidadById(Number(p)) ?? null : null);
+        };
+        window.addEventListener('popstate', onPop);
+        return () => window.removeEventListener('popstate', onPop);
+    }, []);
+
+    // Sincronizar URL cuando el drawer abre/cierra
+    const abrirDrawer = (uni: Universidad) => {
+        setUniversidadAbierta(uni);
+        const url = `${window.location.pathname}?uni=${uni.id}`;
+        window.history.pushState(null, '', url);
     };
 
-    const completarTransicion = () => {
-        // Aquí navegarías a la página de detalles
-        // router.visit(`/universidad/${universidadSeleccionada?.id}`);
-        // Por ahora, mostramos el modal de detalles
-        setTransicionActiva(false);
+    const cerrarDrawer = () => {
+        setUniversidadAbierta(null);
+        window.history.pushState(null, '', window.location.pathname);
     };
+
+    const totalCarreras = todasCarreras.length;
 
     return (
         <>
-            <Head title="Universidades Politécnicas de Tamaulipas" />
+            <Head title="Universidades de Tamaulipas" />
             <Navbar />
 
-            {/* Animación de transición circular */}
-            <TransicionCircular
-                activa={transicionActiva}
-                colorOrigen={universidadSeleccionada?.colorPrimario || '#1E40AF'}
-                posicionOrigen={posicionClick}
-                onComplete={completarTransicion}
+            <UniversidadDrawer
+                open={!!universidadAbierta}
+                universidad={universidadAbierta}
+                onClose={cerrarDrawer}
             />
 
             <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24">
                 {/* Hero */}
                 <section className="py-12">
                     <div className="max-w-[1400px] mx-auto px-6 text-center">
-                        <motion.span 
+                        <motion.span
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4"
                         >
                             🎓 Educación Superior en Tamaulipas
                         </motion.span>
-                        <motion.h1 
+                        <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
@@ -389,75 +280,99 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
                         >
                             Universidades{' '}
                             <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                                Politécnicas
+                                Tecnológicas y Politécnicas
                             </span>
                         </motion.h1>
-                        <motion.p 
+                        <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="text-xl text-slate-600 max-w-2xl mx-auto"
+                            className="text-xl text-slate-600 max-w-3xl mx-auto"
                         >
-                            Explora el mapa interactivo y descubre las opciones educativas 
-                            en tecnología e innovación de tu estado.
+                            Explora el mapa interactivo y descubre las {universidades.length}{' '}
+                            universidades con {totalCarreras} carreras y sus mallas curriculares
+                            completas.
                         </motion.p>
+
+                        {/* Filtros */}
+                        <div className="mt-8 inline-flex bg-white rounded-full p-1 shadow-md border border-slate-200">
+                            {(['todas', 'UT', 'UP'] as const).map((f) => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFiltro(f)}
+                                    className={`px-5 py-2 text-sm font-semibold rounded-full transition-all ${
+                                        filtro === f
+                                            ? 'bg-blue-600 text-white shadow'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    {f === 'todas'
+                                        ? 'Todas'
+                                        : f === 'UT'
+                                          ? 'Tecnológicas'
+                                          : 'Politécnicas'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
-                {/* Mapa e Información */}
+                {/* Mapa e información */}
                 <section className="py-8 pb-24">
                     <div className="max-w-[1400px] mx-auto px-6">
                         <div className="grid lg:grid-cols-3 gap-8 items-start">
                             {/* Panel del Mapa */}
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.3 }}
-                                className="lg:col-span-2 bg-white rounded-3xl shadow-xl p-8 border border-slate-100"
+                                className="lg:col-span-2 bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100"
                             >
-                                <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold text-slate-900">
                                         Mapa de Tamaulipas
                                     </h2>
-                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                        <span className="w-3 h-3 rounded-full bg-blue-600"></span>
-                                        <span>Universidad disponible</span>
+                                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                                            UT
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-sm bg-purple-600" />
+                                            UP
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Contenedor del mapa */}
-                                <div className="aspect-square max-w-lg mx-auto">
+                                <div className="mx-auto" style={{ maxWidth: '540px' }}>
                                     <MapaSVGTamaulipas
                                         ciudadActiva={ciudadHover}
                                         onCiudadHover={setCiudadHover}
-                                        onCiudadClick={manejarClickCiudad}
+                                        onCiudadClick={abrirDrawer}
                                     />
                                 </div>
 
-                                {/* Instrucciones */}
-                                <div className="mt-6 text-center">
+                                <div className="mt-4 text-center">
                                     <p className="text-sm text-slate-500">
-                                        {ciudadHover 
-                                            ? '🖱️ Haz clic para ver detalles de la universidad'
-                                            : '👆 Pasa el cursor sobre los marcadores azules'
-                                        }
+                                        {ciudadHover
+                                            ? '🖱️ Haz clic para abrir el panel con carreras y mallas'
+                                            : '👆 Pasa el cursor sobre los marcadores del mapa'}
                                     </p>
                                 </div>
                             </motion.div>
 
                             {/* Panel de Información */}
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.4 }}
                                 className="space-y-6"
                             >
-                                {/* Tarjeta de universidad en hover */}
                                 <AnimatePresence mode="wait">
                                     {universidadEnHover ? (
-                                        <TarjetaInfo 
-                                            key={universidadEnHover.id} 
-                                            universidad={universidadEnHover} 
+                                        <TarjetaInfo
+                                            key={universidadEnHover.id}
+                                            universidad={universidadEnHover}
                                         />
                                     ) : (
                                         <motion.div
@@ -471,11 +386,12 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
                                                 <span className="text-3xl">🗺️</span>
                                             </div>
                                             <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                                                Selecciona una ciudad
+                                                Selecciona una universidad
                                             </h3>
                                             <p className="text-sm text-slate-500">
-                                                Pasa el cursor sobre los marcadores azules 
-                                                en el mapa para ver información de cada universidad.
+                                                Pasa el cursor sobre los marcadores del mapa o haz
+                                                clic para abrir el panel con toda la información y
+                                                mallas curriculares.
                                             </p>
                                         </motion.div>
                                     )}
@@ -486,133 +402,55 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
                                     <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">
                                         Todas las universidades
                                     </h3>
-                                    <div className="space-y-3">
-                                        {universidadesPolitecnicas.map((uni) => (
-                                            <button
-                                                key={uni.id}
-                                                className={`w-full text-left p-3 rounded-xl transition-all duration-300 ${
-                                                    ciudadHover === uni.id 
-                                                        ? 'bg-blue-50 border-blue-200' 
-                                                        : 'bg-slate-50 hover:bg-slate-100'
-                                                } border`}
-                                                onMouseEnter={() => setCiudadHover(uni.id)}
-                                                onMouseLeave={() => setCiudadHover(null)}
-                                                onClick={() => manejarClickCiudad(uni)}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div 
-                                                        className="w-3 h-3 rounded-full"
-                                                        style={{ backgroundColor: uni.colorPrimario }}
-                                                    />
-                                                    <div>
-                                                        <p className="font-medium text-slate-900 text-sm">
-                                                            {uni.nombreCorto}
-                                                        </p>
-                                                        <p className="text-xs text-slate-500">
-                                                            {uni.ciudad}
-                                                        </p>
+                                    <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
+                                        {universidadesFiltradas.map((uni) => {
+                                            const carrerasCount = getCarrerasByUniversidadId(
+                                                uni.id,
+                                            ).length;
+                                            return (
+                                                <button
+                                                    key={uni.id}
+                                                    className={`w-full text-left p-3 rounded-xl transition-all duration-300 border ${
+                                                        ciudadHover === uni.id
+                                                            ? 'bg-blue-50 border-blue-200'
+                                                            : 'bg-slate-50 hover:bg-slate-100 border-slate-100'
+                                                    }`}
+                                                    onMouseEnter={() => setCiudadHover(uni.id)}
+                                                    onMouseLeave={() => setCiudadHover(null)}
+                                                    onClick={() => abrirDrawer(uni)}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className={`w-3 h-3 ${
+                                                                uni.nombreCorto.startsWith('UP')
+                                                                    ? 'rounded-sm'
+                                                                    : 'rounded-full'
+                                                            }`}
+                                                            style={{
+                                                                backgroundColor: uni.colorPrimario,
+                                                            }}
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-semibold text-slate-900 text-sm truncate">
+                                                                {uni.nombreCorto}
+                                                            </p>
+                                                            <p className="text-xs text-slate-500 truncate">
+                                                                {uni.ciudad}
+                                                            </p>
+                                                        </div>
+                                                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                                                            {carrerasCount} carreras
+                                                        </span>
                                                     </div>
-                                                    <span className="ml-auto text-xs text-slate-400">
-                                                        {uni.carreras.length} carreras
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </motion.div>
                         </div>
                     </div>
                 </section>
-
-                {/* Modal de detalles (aparece después de la transición) */}
-                <AnimatePresence>
-                    {universidadSeleccionada && !transicionActiva && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                            onClick={() => setUniversidadSeleccionada(null)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                transition={{ type: "spring", duration: 0.5 }}
-                                className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {/* Header con color */}
-                                <div 
-                                    className="h-24 relative"
-                                    style={{ 
-                                        background: `linear-gradient(135deg, ${universidadSeleccionada.colorPrimario}, ${universidadSeleccionada.colorPrimario}cc)` 
-                                    }}
-                                >
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-5xl font-bold text-white/20">
-                                            {universidadSeleccionada.nombreCorto}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => setUniversidadSeleccionada(null)}
-                                        className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-
-                                {/* Contenido */}
-                                <div className="p-8">
-                                    <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                                        {universidadSeleccionada.nombre}
-                                    </h2>
-                                    <p className="text-slate-500 mb-4">
-                                        📍 {universidadSeleccionada.ciudad}, Tamaulipas
-                                    </p>
-                                    <p className="text-slate-600 mb-6">
-                                        {universidadSeleccionada.descripcion}
-                                    </p>
-
-                                    {/* Carreras */}
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                                        Carreras disponibles ({universidadSeleccionada.carreras.length})
-                                    </h3>
-                                    <div className="grid md:grid-cols-2 gap-3 mb-6 max-h-60 overflow-y-auto">
-                                        {universidadSeleccionada.carreras.map((carrera, idx) => (
-                                            <div 
-                                                key={idx}
-                                                className="bg-slate-50 rounded-xl p-4"
-                                            >
-                                                <p className="font-medium text-slate-900 text-sm mb-1">
-                                                    {carrera.nombre}
-                                                </p>
-                                                <p className="text-xs text-slate-500">
-                                                    ⏱️ {carrera.duracion}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Botón de acción */}
-                                    <a
-                                        href={universidadSeleccionada.sitioWeb}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-semibold transition-all hover:shadow-lg"
-                                        style={{ backgroundColor: universidadSeleccionada.colorPrimario }}
-                                    >
-                                        Visitar sitio web oficial
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </main>
 
             <Footer />

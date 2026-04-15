@@ -26,12 +26,9 @@ Route::get('/universidades-tamaulipas', function () {
     return Inertia::render('Universities/MapaTamaulipas');
 })->name('universidades.mapa');
 
-// Detalles de cada universidad
+// Detalles de cada universidad — redirige al mapa con el drawer abierto
 Route::get('/universidad/{id}', function ($id) {
-    return Inertia::render('Universities/DetalleUniversidad', [
-        'universidadId' => (int) $id,
-        'animacionEntrada' => true,
-    ]);
+    return redirect('/universidades-tamaulipas?uni='.(int) $id);
 })->name('universidad.detalle');
 
 // Página de universidades general
