@@ -51,4 +51,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(TestResult::class);
     }
+
+    public function progress(): HasMany
+    {
+        return $this->hasMany(UserProgress::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+    public function badges(): HasMany
+    {
+        return $this->hasMany(UserBadge::class);
+    }
+
+    public function userProgress()
+    {
+        return $this->hasOne(UserProgress::class);
+    }
 }

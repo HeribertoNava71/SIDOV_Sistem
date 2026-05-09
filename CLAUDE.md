@@ -1212,6 +1212,42 @@ Al final de cada tarea completada, verificar:
 - [ ] Actualizar fecha "Última actualización"
 - [ ] Verificar que el proyecto aún compila y tests pasan
 
+### 15.5 Sección de Próximos Pasos
+
+**AL COMPLETAR CUALQUIER FASE, debe agregarse una sección de "PRÓXIMOS PASOS" al inicio de PROJECT_STATUS.md** (justo después del "RESUMEN EJECUTIVO", antes de "PLAN DE TRABAJO ESTRUCTURADO").
+
+La sección debe seguir este formato:
+```markdown
+## PRÓXIMOS PASOS
+
+**Última actualización:** YYYY-MM-DD
+
+**Lo que sigue:**
+
+1. **Fase X+1 - [Nombre de la siguiente fase]**
+   - Estado: ❌ NO INICIADA / ⚠️ PARCIAL
+   - Descripción breve de lo que implica
+   - Dependencias: qué necesita estar completo antes
+
+2. **Fase X+2 - [Nombre]**
+   - Estado: ❌ NO INICIADA
+   - Descripción breve
+
+3. **Fase X+3 - [Nombre]**
+   - Estado: ❌ NO INICIADA
+   - Descripción breve
+
+---
+
+**Nota:** Esta sección se actualiza automáticamente al completar cada fase.
+```
+
+**Cada vez que completes una fase:**
+1. Actualiza el estado de las fases en "PRÓXIMOS PASOS"
+2. Mueve la fase completada de "Lo que sigue" al historial (RESUMEN EJECUTIVO)
+3. Actualiza la fecha de última actualización
+4. Asegúrate de que el porcentaje de completitud refleje el progreso real
+
 ### 15.5 No Olvidar
 
 ❌ **NO** esperar al final del sprint para actualizar

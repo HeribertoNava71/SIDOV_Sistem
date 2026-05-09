@@ -2,49 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Dashboard\ActivityService;
+use App\Services\Dashboard\StatsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    /**
-     * Muestra el dashboard principal del usuario
-     * 
-     * Vista: Pages/Dashboard/Index.tsx
-     * Ruta: GET /dashboard
-     * Nombre: dashboard
-     */
+    public function __construct(
+        private StatsService $statsService,
+        private ActivityService $activityService,
+    ) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
-        
-        // Datos para el dashboard
-        // Por ahora son datos de ejemplo, después se conectarán a la BD
-        $stats = [
-            'totalTests' => 0,
-            'averageTime' => 0,
-            'level' => 1,
-            'xp' => 250,
-            'nextLevelXp' => 1000,
-            'badges' => 0,
-            'coursesInProgress' => 0,
-        ];
-        
-        $recentActivity = [
-            // Se llenará cuando tengamos el módulo de actividad
-        ];
-        
-        $recommendations = [
-            'careers' => [],
-            'courses' => [],
-            'scholarships' => [],
-        ];
+
+        $stats = $this->statsService->getUserStats($user);
+
+        $recentActivity = $this->activityService->getRecentActivities($user, 10);
 
         return Inertia::render('Dashboard/Index', [
-            'stats' => $stats,
-            'recentActivity' => $recentActivity,
-            'recommendations' => $recommendations,
+            'stats' => $stats->toArray(),
+            'recentActivity' => $recentActivity->map(fn($a) => $a->toArray())->toArray(),
+            'recommendations' => [
+                'careers' => [],
+                'courses' => [],
+                'scholarships' => [],
+            ],
         ]);
     }
 }

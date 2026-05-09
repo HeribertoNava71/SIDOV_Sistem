@@ -8,17 +8,44 @@
 
 **Stack:** Laravel 12 (PHP 8.2) | React 18 + TypeScript | Inertia.js | Tailwind CSS | SQLite/MySQL
 
-**Estado General:** Prototipo con arquitectura MVC monolítica. **65% funcional, 35% incompleto**.
+**Estado General:** Prototipo con arquitectura MVC monolítica. **70% funcional, 30% incompleto**.
 
 **Cobertura por Fases:**
 - ✅ Fase 1 — Autenticación (COMPLETA)
-- ✅ Fase 2 — Test Vocacional Wrapped (COMPLETA) ← ACTUALIZADO
-- [x] Fase 3 � Universidades & Mapas (PARCIAL - Backend COMPLETO)
-- ❌ Fase 4 — Dashboard & Progreso (INCOMPLETA)
+- ✅ Fase 2 — Test Vocacional Wrapped (COMPLETA)
+- [x] Fase 3 — Universidades & Mapas (Backend COMPLETO)
+- ✅ Fase 4 — Dashboard & Progreso (COMPLETA) ← ACTUALIZADO
 - ❌ Fase 5 — Módulo Aprende (NO INICIADA)
 - ❌ Fase 6 — Módulo Aspira/Becas (NO INICIADA)
 - ❌ Fase 7 — Catálogo de Carreras (NO INICIADA)
 - ❌ Fase 8 — Admin Panel (NO INICIADA)
+
+---
+
+## PRÓXIMOS PASOS
+
+**Última actualización:** 2026-05-09
+
+**Lo que sigue:**
+
+1. **Fase 5 - Módulo Aprende (Cursos & Tutores)**
+   - Estado: ❌ NO INICIADA
+   - Descripción: Sistema de cursos, tutores, inscripciones y progreso de cursos
+   - Dependencias: Fase 4 (Dashboard) completada ✅
+
+2. **Fase 6 - Módulo Aspira (Becas & Postulaciones)**
+   - Estado: ❌ NO INICIADA
+   - Descripción: Catálogo de becas, sistema de postulaciones y seguimiento
+   - Dependencias: Fase 5 completada
+
+3. **Fase 7 - Catálogo de Carreras**
+   - Estado: ❌ NO INICIADA
+   - Descripción: Detalles completos de carreras, campos laborales, plan de estudios
+   - Dependencias: Fase 3 (Universidades) completada
+
+---
+
+**Nota:** Esta sección se actualiza automáticamente al completar cada fase.
 
 ---
 
@@ -140,42 +167,46 @@
 
 ---
 
-### Fase 4 — Dashboard & Progreso ❌ NO IMPLEMENTADA
+### Fase 4 — Dashboard & Progreso ✅ COMPLETA
 
-**Status:** NO FUNCIONAL (solo placeholders)
+**Status:** COMPLETAMENTE IMPLEMENTADA (2026-05-09)
 
-- ❌ 4A: **Domain** — UserStats VO, Progress VO, Activity VO, Level system — **TODOS FALTANTES**
+- [x] 4A: **Domain** — ✅ COMPLETO (2026-05-09)
+  - UserStats Value Object (totalTests, averageScore, level, xp, etc.)
+  - Activity Value Object (id, action, description, icon, color, timestamp)
+  - LevelSystem (10 niveles, XP thresholds, level titles)
 
-- ❌ 4B: **Application** — DashboardService, ProgressService, StatsService — **TODOS FALTANTES**
+- [x] 4B: **Application** — ✅ COMPLETO (2026-05-09)
+  - StatsService (getUserStats, addXp, recordTestCompletion)
+  - ActivityService (getRecentActivities, recordActivity)
+  - DashboardService (getDashboardData)
 
-- ❌ 4C: **Infrastructure** — **FALTA TODO:** user_progress migration, activities migration, user_stats migration, badges table, models Eloquent, relations
+- [x] 4C: **Infrastructure** — ✅ COMPLETO (2026-05-09)
+  - user_progress migration (xp, total_tests, average_score, streak_days, etc.)
+  - activities migration (user_id, action, description, icon, color)
+  - badges migration (name, description, icon, color, xp_reward)
+  - user_badges migration (user_id, badge_id, earned_at)
+  - Modelos: UserProgress, Activity, Badge, UserBadge
+  - Relaciones en User model (progress, activities, badges)
 
-- ⚠️ 4D: **Api** — DashboardController::index() retorna datos placeholders (0 tests, 250 XP, sin conexión a BD)
-  - `GET /dashboard` (renderiza pero sin datos)
-  - `GET /progress` (renderiza pero sin datos)
+- [x] 4D: **Api** — ✅ COMPLETO (2026-05-09)
+  - DashboardController::index() retorna datos reales de BD
+  - `GET /dashboard` (con stats, recentActivity, recommendations)
+  - StatsService calcula nivel y XP desde UserProgress
 
-- ❌ 4E: **Tests** — 0 tests
+- [x] 4E: **Tests** — ✅ COMPLETO (2026-05-09)
+  - StatsServiceTest: 8 tests (16 assertions)
+  - ActivityServiceTest: 6 tests (8 assertions)
+  - DashboardControllerTest: 5 tests (59 assertions)
+  - **Total: 19 tests para Fase 4**
 
-**Datos Fabricados:**
-```php
-$stats = [
-    'totalTests' => 0,           // Debería venir de test_results
-    'averageTime' => 0,          // Debería calcularse
-    'level' => 1,                // Debería calcular de XP
-    'xp' => 250,                 // Debería venir de user_progress
-    'nextLevelXp' => 1000,      // Configuración
-    'badges' => 0,              // Debería venir de user_badges
-    'coursesInProgress' => 0,   // Debería venir de enrollments
-];
-```
-
-**Dependencias Faltantes:**
-- [ ] Tabla `user_progress` — level, xp, total_tests, average_score
-- [ ] Tabla `activities` — user_id, action, timestamp, icon, color
-- [ ] Tabla `badges` — id, name, description, icon
-- [ ] Tabla `user_badges` — user_id, badge_id, earned_at
-- [ ] Modelo `Activity` con relación a User
-- [ ] Modelo `Badge` con relación hasManyThrough User
+**Componentes Implementados:**
+- ✅ Sistema de niveles (1-10) con títulos y colores
+- ✅ Tracking de XP y progreso de tests
+- ✅ Actividades recientes del usuario
+- ✅ Badges del usuario
+- ✅ Sistema de rachas (streak days)
+- ✅ Tests pasando
 
 ---
 
