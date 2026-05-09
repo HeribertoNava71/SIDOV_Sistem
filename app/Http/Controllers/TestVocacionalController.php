@@ -2,49 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SubmitTestVocacionalRequest;
+use App\Models\Carrera;
+use App\Models\Pregunta;
+use App\Models\TestResult;
 use App\Services\TestVocacional\ScoringService;
 use App\Services\TestVocacional\SimilitudService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/**
- * Controlador para el Test Vocacional Wrapped
- */
 class TestVocacionalController extends Controller
 {
     private ScoringService $scoringService;
     private SimilitudService $similitudService;
-
-    /**
-     * Preguntas optimizadas del test (16 escenarios)
-     */
-    private const PREGUNTAS = [
-        [
-            'id' => 1,
-            'escenario' => 'Una startup te ofrece unirse a su equipo fundador',
-            'contexto' => 'Tienen una idea innovadora pero necesitan definir roles. ¿Qué posición te atrae más?',
-            'opciones' => [
-                ['texto' => 'CTO - Construir la arquitectura tecnológica', 'icono' => '💻', 'puntaje' => ['tecnologia' => 3, 'analisis' => 2]],
-                ['texto' => 'Director Creativo - Definir la identidad visual', 'icono' => '🎨', 'puntaje' => ['creatividad' => 3, 'organizacion' => 1]],
-                ['texto' => 'CEO - Liderar la visión y el equipo', 'icono' => '👔', 'puntaje' => ['liderazgo' => 3, 'organizacion' => 2]],
-                ['texto' => 'Head of Research - Validar el producto con datos', 'icono' => '🔬', 'puntaje' => ['investigacion' => 3, 'analisis' => 2]]
-            ]
-        ],
-        [
-            'id' => 2,
-            'escenario' => 'Tienes un fin de semana libre sin compromisos',
-            'contexto' => '¿Cómo lo aprovecharías idealmente?',
-            'opciones' => [
-                ['texto' => 'Aprendiendo una nueva tecnología o lenguaje', 'icono' => '🖥️', 'puntaje' => ['tecnologia' => 3, 'investigacion' => 1]],
-                ['texto' => 'Trabajando en un proyecto creativo personal', 'icono' => '✨', 'puntaje' => ['creatividad' => 3, 'tecnologia' => 1]],
-                ['texto' => 'Organizando un evento con amigos', 'icono' => '🎉', 'puntaje' => ['liderazgo' => 2, 'organizacion' => 2]],
-                ['texto' => 'Leyendo artículos científicos o investigaciones', 'icono' => '📚', 'puntaje' => ['investigacion' => 3, 'analisis' => 1]]
-            ]
-        ],
-        // ... (resto de preguntas - mismas que en el frontend)
-    ];
 
     public function __construct(ScoringService $scoringService, SimilitudService $similitudService)
     {
@@ -52,71 +23,53 @@ class TestVocacionalController extends Controller
         $this->similitudService = $similitudService;
     }
 
-    /**
-     * Mostrar la página del test wrapped
-     */
     public function index(): Response
     {
         return Inertia::render('Test/TestWrapped');
     }
 
-    /**
-     * Procesar las respuestas del test
-     */
-    public function submit(Request $request): JsonResponse
+    public function submit(SubmitTestVocacionalRequest $request): JsonResponse
     {
-        $request->validate([
-            'respuestas' => 'required|array|min:16|max:16',
-            'respuestas.*' => 'required|integer|min:0|max:3'
-        ]);
+        $respuestas = $request->validated()['respuestas'];
 
-        $respuestas = $request->input('respuestas');
+        $preguntas = $this->getPreguntasFromDb();
+        $resultado = $this->scoringService->procesarResultado($respuestas, $preguntas);
 
-        // Procesar scoring
-        $resultado = $this->scoringService->procesarResultado($respuestas, self::PREGUNTAS);
-
-        // Calcular match con carreras
         $topCarreras = $this->similitudService->obtenerTopCarreras(
             $resultado['vector_normalizado'],
             3
         );
 
-        // Construir respuesta completa
+        $perfilData = $resultado['perfil'];
         $response = [
             'vector' => $resultado['vector'],
             'vector_normalizado' => $resultado['vector_normalizado'],
             'dimension_dominante' => $resultado['dimension_dominante'],
             'dimension_secundaria' => $resultado['dimension_secundaria'],
-            'perfil' => $resultado['perfil'],
+            'perfil_dominante' => $perfilData['nombre'] ?? $perfilData,
+            'perfil_secundario' => $perfilData['subtitulo'] ?? null,
             'fortalezas' => $resultado['fortalezas'],
             'top_carreras' => $topCarreras,
             'timestamp' => now()->toIso8601String()
         ];
 
-        // Guardar resultado si el usuario está autenticado
         if (auth()->check()) {
-            $this->guardarResultado(auth()->id(), $response);
+            $this->guardarResultado(auth()->id(), $respuestas, $response);
         }
 
         return response()->json($response);
     }
 
-    /**
-     * Obtener todas las carreras disponibles
-     */
     public function carreras(): JsonResponse
     {
-        $carreras = $this->similitudService->obtenerCarreras();
-        
+        $carreras = Carrera::activa()->get();
+
         return response()->json([
             'carreras' => $carreras,
-            'total' => count($carreras)
+            'total' => $carreras->count()
         ]);
     }
 
-    /**
-     * Calcular match para un vector específico
-     */
     public function match(Request $request): JsonResponse
     {
         $request->validate([
@@ -141,40 +94,53 @@ class TestVocacionalController extends Controller
         ]);
     }
 
-    /**
-     * Guardar resultado en la base de datos
-     */
-    private function guardarResultado(int $userId, array $resultado): void
+    private function getPreguntasFromDb(): array
     {
-        // Aquí puedes implementar la lógica para guardar en DB
-        // Por ejemplo, usando un modelo TestResult
-        
-        // TestResult::create([
-        //     'user_id' => $userId,
-        //     'vector' => json_encode($resultado['vector']),
-        //     'vector_normalizado' => json_encode($resultado['vector_normalizado']),
-        //     'dimension_dominante' => $resultado['dimension_dominante'],
-        //     'perfil' => json_encode($resultado['perfil']),
-        //     'top_carreras' => json_encode($resultado['top_carreras']),
-        // ]);
+        return Pregunta::activa()
+            ->ordenado()
+            ->get()
+            ->map(function (Pregunta $pregunta) {
+                return [
+                    'id' => $pregunta->id,
+                    'escenario' => $pregunta->escenario,
+                    'contexto' => $pregunta->contexto,
+                    'opciones' => $pregunta->opciones,
+                ];
+            })
+            ->toArray();
     }
 
-    /**
-     * Obtener historial de tests del usuario
-     */
+    private function guardarResultado(int $userId, array $respuestas, array $resultado): void
+    {
+        $topCarreras = $resultado['top_carreras'] ?? [];
+
+        TestResult::create([
+            'user_id' => $userId,
+            'vector_raw' => $resultado['vector'],
+            'vector_normalizado' => $resultado['vector_normalizado'],
+            'dimension_dominante' => $resultado['dimension_dominante'],
+            'dimension_secundaria' => $resultado['dimension_secundaria'],
+            'perfil_dominante' => $resultado['perfil_dominante'] ?? null,
+            'perfil_secundario' => $resultado['perfil_secundario'] ?? null,
+            'carreras_recomendadas' => $topCarreras,
+            'respuestas_raw' => $respuestas,
+            'tiempo_total_segundos' => null,
+        ]);
+    }
+
     public function historial(): JsonResponse
     {
         if (!auth()->check()) {
             return response()->json(['error' => 'No autenticado'], 401);
         }
 
-        // TestResult::where('user_id', auth()->id())
-        //     ->orderBy('created_at', 'desc')
-        //     ->get();
+        $historial = TestResult::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
-            'historial' => [],
-            'mensaje' => 'Funcionalidad pendiente de implementar'
+            'historial' => $historial,
+            'total' => $historial->count()
         ]);
     }
 }

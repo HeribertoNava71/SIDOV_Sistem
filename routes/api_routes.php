@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TestVocacionalController;
+use App\Http\Controllers\UniversidadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,5 +72,50 @@ Route::prefix('test')->group(function () {
      * Requiere autenticación
      */
     Route::middleware('auth:sanctum')->get('/historial', [TestVocacionalController::class, 'historial']);
+    
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Universidades
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('universidades')->group(function () {
+    
+    /**
+     * GET /api/universidades
+     * 
+     * Lista todas las universidades
+     * Query params:
+     *   - search: texto para buscar por nombre, ciudad o descripción
+     *   - ciudad: filtrar por ciudad específica
+     */
+    Route::get('/', [UniversidadController::class, 'index']);
+    
+    /**
+     * GET /api/universidades/{id}
+     * 
+     * Obtiene detalle de una universidad
+     */
+    Route::get('/{id}', [UniversidadController::class, 'show'])->where('id', '[0-9]+');
+    
+    /**
+     * GET /api/universidades/{id}/carreras
+     * 
+     * Obtiene universidad con sus carreras
+     */
+    Route::get('/{id}/carreras', [UniversidadController::class, 'showWithCarreras'])->where('id', '[0-9]+');
+    
+    /**
+     * GET /api/universidades/nearby
+     * 
+     * Busca universidades cercanas a una ubicación
+     * Query params:
+     *   - latitud: float (requerido)
+     *   - longitud: float (requerido)
+     *   - radio: int en km (default: 50)
+     */
+    Route::get('/nearby', [UniversidadController::class, 'nearby']);
     
 });
