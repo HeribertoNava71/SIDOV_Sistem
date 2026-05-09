@@ -10,6 +10,10 @@ use App\Http\Controllers\Aspira\ScholarshipController;
 use App\Http\Controllers\Aspira\ApplicationController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\UniversidadAdminController;
+use App\Http\Controllers\Admin\CarreraAdminController;
+use App\Http\Controllers\Admin\ScholarshipAdminController;
+use App\Http\Controllers\Admin\PreguntaAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,17 +26,17 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('test')->group(function () {
-    
+
     /**
      * POST /api/test/submit
-     * 
+     *
      * Procesa las respuestas del test y devuelve resultados completos
-     * 
+     *
      * Body:
      * {
      *   "respuestas": [0, 2, 1, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]
      * }
-     * 
+     *
      * Response:
      * {
      *   "vector": {...},
@@ -44,7 +48,8 @@ Route::prefix('test')->group(function () {
      *   "top_carreras": [...]
      * }
      */
-    Route::post('/submit', [TestVocacionalController::class, 'submit']);
+    Route::post('/submit', [TestVocacionalController::class, 'submit'])
+        ->middleware('throttle:test-submit');
     
     /**
      * GET /api/test/carreras
@@ -141,9 +146,12 @@ Route::prefix('courses')->group(function () {
     Route::get('/free', [CourseController::class, 'free']);
     Route::get('/categories', [CourseController::class, 'categories']);
     Route::get('/{id}', [CourseController::class, 'show'])->where('id', '[0-9]+');
-    Route::post('/', [CourseController::class, 'store']);
-    Route::put('/{id}', [CourseController::class, 'update'])->where('id', '[0-9]+');
-    Route::delete('/{id}', [CourseController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [CourseController::class, 'store']);
+        Route::put('/{id}', [CourseController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('/{id}', [CourseController::class, 'destroy'])->where('id', '[0-9]+');
+    });
 
 });
 
@@ -160,9 +168,12 @@ Route::prefix('tutors')->group(function () {
     Route::get('/top-rated', [TutorController::class, 'topRated']);
     Route::get('/specialties', [TutorController::class, 'specialties']);
     Route::get('/{id}', [TutorController::class, 'show'])->where('id', '[0-9]+');
-    Route::post('/', [TutorController::class, 'store']);
-    Route::put('/{id}', [TutorController::class, 'update'])->where('id', '[0-9]+');
-    Route::delete('/{id}', [TutorController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [TutorController::class, 'store']);
+        Route::put('/{id}', [TutorController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('/{id}', [TutorController::class, 'destroy'])->where('id', '[0-9]+');
+    });
 
 });
 
@@ -203,9 +214,8 @@ Route::prefix('reviews')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ReviewController::class, 'store']);
         Route::get('/my/{courseId}', [ReviewController::class, 'myReview'])->where('courseId', '[0-9]+');
+        Route::delete('/{id}', [ReviewController::class, 'destroy'])->where('id', '[0-9]+');
     });
-
-    Route::delete('/{id}', [ReviewController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
 
@@ -267,11 +277,11 @@ Route::prefix('carreras')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Rutas API para Admin Panel
+| Rutas API para Admin Panel (PROTEGIDAS)
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/stats', [AdminController::class, 'stats']);
 
@@ -288,5 +298,39 @@ Route::prefix('admin')->group(function () {
     Route::get('/permissions', [AdminController::class, 'permissions']);
 
     Route::get('/logs', [AdminController::class, 'logs']);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API Admin - Gestión de Entidades (CRUD Completo)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('admin/entities')->middleware(['auth:sanctum', 'admin'])->group(function () {
+
+    Route::get('/universidades', [UniversidadAdminController::class, 'index']);
+    Route::post('/universidades', [UniversidadAdminController::class, 'store']);
+    Route::get('/universidades/{id}', [UniversidadAdminController::class, 'show'])->where('id', '[0-9]+');
+    Route::put('/universidades/{id}', [UniversidadAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/universidades/{id}', [UniversidadAdminController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::get('/carreras', [CarreraAdminController::class, 'index']);
+    Route::post('/carreras', [CarreraAdminController::class, 'store']);
+    Route::get('/carreras/{id}', [CarreraAdminController::class, 'show'])->where('id', '[0-9]+');
+    Route::put('/carreras/{id}', [CarreraAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/carreras/{id}', [CarreraAdminController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::get('/scholarships', [ScholarshipAdminController::class, 'index']);
+    Route::post('/scholarships', [ScholarshipAdminController::class, 'store']);
+    Route::get('/scholarships/{id}', [ScholarshipAdminController::class, 'show'])->where('id', '[0-9]+');
+    Route::put('/scholarships/{id}', [ScholarshipAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/scholarships/{id}', [ScholarshipAdminController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::get('/preguntas', [PreguntaAdminController::class, 'index']);
+    Route::post('/preguntas', [PreguntaAdminController::class, 'store']);
+    Route::get('/preguntas/{id}', [PreguntaAdminController::class, 'show'])->where('id', '[0-9]+');
+    Route::put('/preguntas/{id}', [PreguntaAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/preguntas/{id}', [PreguntaAdminController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
