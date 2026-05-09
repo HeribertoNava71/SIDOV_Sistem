@@ -9,6 +9,7 @@ use App\Http\Controllers\Learn\ReviewController;
 use App\Http\Controllers\Aspira\ScholarshipController;
 use App\Http\Controllers\Aspira\ApplicationController;
 use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -261,5 +262,31 @@ Route::prefix('carreras')->group(function () {
     Route::get('/vectors', [CarreraController::class, 'withVectors']);
     Route::get('/{id}', [CarreraController::class, 'show'])->where('id', '[0-9]+');
     Route::get('/universidad/{universidadId}', [CarreraController::class, 'byUniversidad'])->where('universidadId', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Admin Panel
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/stats', [AdminController::class, 'stats']);
+
+    Route::get('/users', [AdminController::class, 'users']);
+    Route::get('/users/{id}', [AdminController::class, 'user'])->where('id', '[0-9]+');
+    Route::put('/users/{id}/roles', [AdminController::class, 'updateUserRoles'])->where('id', '[0-9]+');
+
+    Route::get('/roles', [AdminController::class, 'roles']);
+    Route::get('/roles/{id}', [AdminController::class, 'role'])->where('id', '[0-9]+');
+    Route::post('/roles', [AdminController::class, 'createRole']);
+    Route::put('/roles/{id}', [AdminController::class, 'updateRole'])->where('id', '[0-9]+');
+    Route::delete('/roles/{id}', [AdminController::class, 'deleteRole'])->where('id', '[0-9]+');
+
+    Route::get('/permissions', [AdminController::class, 'permissions']);
+
+    Route::get('/logs', [AdminController::class, 'logs']);
 
 });
