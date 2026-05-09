@@ -14,13 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
 import { PageProps } from '@/types';
-import {
-    universidades,
-    carreras as todasCarreras,
-    Universidad,
-    getUniversidadById,
-    getCarrerasByUniversidadId,
-} from '@/Data/universidadesData';
+import { useUniversidades } from '@/hooks/useUniversidades';
 import {
     TAMAULIPAS_VIEWBOX,
     TamaulipasShapePath,
@@ -29,22 +23,39 @@ import {
 } from '@/Components/Universities/TamaulipasMapShape';
 import UniversidadDrawer from '@/Components/Universities/UniversidadDrawer';
 
+interface Universidad {
+    id: number;
+    nombre: string;
+    nombreCorto: string;
+    ciudad: string;
+    latitud: number;
+    longitud: number;
+    colorPrimario: string;
+    sitioWeb: string;
+    direccion: string;
+    telefono: string;
+    email: string;
+    descripcion: string;
+    carrerasCount?: number;
+}
+
 // ===== COMPONENTE DEL MAPA SVG DE TAMAULIPAS =====
 interface MapaSVGProps {
+    universidades: Universidad[];
     ciudadActiva: number | null;
     onCiudadHover: (id: number | null) => void;
     onCiudadClick: (universidad: Universidad) => void;
 }
 
-function MapaSVGTamaulipas({ ciudadActiva, onCiudadHover, onCiudadClick }: MapaSVGProps) {
+function MapaSVGTamaulipas({ universidades, ciudadActiva, onCiudadHover, onCiudadClick }: MapaSVGProps) {
     // Proyectamos cada universidad una sola vez por render
     const marcadores = useMemo(
         () =>
-            universidades.map((uni) => ({
+            universidades.map((uni: Universidad) => ({
                 uni,
                 pos: projectLatLon(uni.latitud, uni.longitud),
             })),
-        [],
+        [universidades],
     );
 
     return (
@@ -159,7 +170,7 @@ function MapaSVGTamaulipas({ ciudadActiva, onCiudadHover, onCiudadClick }: MapaS
 
 // ===== TARJETA DE INFORMACIÓN (HOVER) =====
 function TarjetaInfo({ universidad }: { universidad: Universidad }) {
-    const carreras = getCarrerasByUniversidadId(universidad.id);
+    const carrerasCount = universidad.carrerasCount || 0;
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -179,22 +190,12 @@ function TarjetaInfo({ universidad }: { universidad: Universidad }) {
 
             <div className="bg-slate-50 rounded-2xl p-4 mb-4">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                    {carreras.length} Carreras disponibles
+                    {carrerasCount} {carrerasCount === 1 ? 'Carrera disponible' : 'Carreras disponibles'}
                 </p>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {carreras.slice(0, 6).map((c) => (
-                        <p key={c.id} className="text-sm text-slate-700">
-                            • {c.nombre}
-                        </p>
-                    ))}
-                    {carreras.length > 6 && (
-                        <p className="text-sm text-slate-400">+{carreras.length - 6} más…</p>
-                    )}
-                </div>
             </div>
 
             <p className="text-xs text-center text-slate-400">
-                Haz clic para ver las mallas curriculares →
+                Haz clic para ver los detalles →
             </p>
         </motion.div>
     );
@@ -202,6 +203,59 @@ function TarjetaInfo({ universidad }: { universidad: Universidad }) {
 
 // ===== PÁGINA PRINCIPAL =====
 export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
+    const { universidades, loading, error, getUniversidadById } = useUniversidades();
+
+    if (loading) {
+        return (
+            <>
+                <Head title="Universidades de Tamaulipas" />
+                <Navbar />
+                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-slate-600">Cargando universidades...</p>
+                    </div>
+                </main>
+                <Footer />
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Head title="Universidades de Tamaulipas" />
+                <Navbar />
+                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
+                    <div className="text-center">
+                        <p className="text-red-600 mb-4">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                        >
+                            Reintentar
+                        </button>
+                    </div>
+                </main>
+                <Footer />
+            </>
+        );
+    }
+
+    if (universidades.length === 0) {
+        return (
+            <>
+                <Head title="Universidades de Tamaulipas" />
+                <Navbar />
+                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
+                    <div className="text-center">
+                        <p className="text-slate-600">No hay universidades disponibles.</p>
+                    </div>
+                </main>
+                <Footer />
+            </>
+        );
+    }
     const [ciudadHover, setCiudadHover] = useState<number | null>(null);
     const [universidadAbierta, setUniversidadAbierta] = useState<Universidad | null>(null);
     const [filtro, setFiltro] = useState<'todas' | 'UT' | 'UP'>('todas');
@@ -209,31 +263,33 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
     const universidadEnHover =
         (ciudadHover ? universidades.find((u) => u.id === ciudadHover) : null) || null;
 
-    const universidadesFiltradas =
-        filtro === 'todas'
-            ? universidades
-            : universidades.filter((u) =>
-                  filtro === 'UP'
-                      ? u.nombreCorto.startsWith('UP')
-                      : u.nombreCorto.startsWith('UT'),
-              );
+    const universidadesFiltradas = useMemo(() => {
+        if (filtro === 'todas') return universidades;
+        return universidades.filter((u) =>
+            filtro === 'UP' ? u.nombreCorto.startsWith('UP') : u.nombreCorto.startsWith('UT'),
+        );
+    }, [universidades, filtro]);
 
     // ===== Deep-link: ?uni={id} abre el drawer al montar
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const idStr = params.get('uni');
-        if (idStr) {
+        if (idStr && universidades.length > 0) {
             const u = getUniversidadById(Number(idStr));
             if (u) setUniversidadAbierta(u);
         }
 
         const onPop = () => {
             const p = new URLSearchParams(window.location.search).get('uni');
-            setUniversidadAbierta(p ? getUniversidadById(Number(p)) ?? null : null);
+            if (p && universidades.length > 0) {
+                setUniversidadAbierta(getUniversidadById(Number(p)) ?? null);
+            } else {
+                setUniversidadAbierta(null);
+            }
         };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
-    }, []);
+    }, [universidades, getUniversidadById]);
 
     // Sincronizar URL cuando el drawer abre/cierra
     const abrirDrawer = (uni: Universidad) => {
@@ -247,7 +303,7 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
         window.history.pushState(null, '', window.location.pathname);
     };
 
-    const totalCarreras = todasCarreras.length;
+    const totalCarreras = universidades.reduce((sum, u) => sum + (u.carrerasCount || 0), 0);
 
     return (
         <>
@@ -346,6 +402,7 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
 
                                 <div className="mx-auto" style={{ maxWidth: '540px' }}>
                                     <MapaSVGTamaulipas
+                                        universidades={universidadesFiltradas}
                                         ciudadActiva={ciudadHover}
                                         onCiudadHover={setCiudadHover}
                                         onCiudadClick={abrirDrawer}
@@ -404,9 +461,7 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
                                     </h3>
                                     <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
                                         {universidadesFiltradas.map((uni) => {
-                                            const carrerasCount = getCarrerasByUniversidadId(
-                                                uni.id,
-                                            ).length;
+                                            const carrerasCount = uni.carrerasCount || 0;
                                             return (
                                                 <button
                                                     key={uni.id}
