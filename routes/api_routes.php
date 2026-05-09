@@ -6,6 +6,8 @@ use App\Http\Controllers\Learn\CourseController;
 use App\Http\Controllers\Learn\TutorController;
 use App\Http\Controllers\Learn\EnrollmentController;
 use App\Http\Controllers\Learn\ReviewController;
+use App\Http\Controllers\Aspira\ScholarshipController;
+use App\Http\Controllers\Aspira\ApplicationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -202,5 +204,44 @@ Route::prefix('reviews')->group(function () {
     });
 
     Route::delete('/{id}', [ReviewController::class, 'destroy'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Becas (Aspira)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('scholarships')->group(function () {
+
+    Route::get('/', [ScholarshipController::class, 'index']);
+    Route::get('/open', [ScholarshipController::class, 'open']);
+    Route::get('/featured', [ScholarshipController::class, 'featured']);
+    Route::get('/stats', [ScholarshipController::class, 'stats']);
+    Route::get('/levels', [ScholarshipController::class, 'levels']);
+    Route::get('/upcoming', [ScholarshipController::class, 'upcomingDeadlines']);
+    Route::get('/{id}', [ScholarshipController::class, 'show'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Postulaciones (Aspira)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('applications')->group(function () {
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', [ApplicationController::class, 'index']);
+        Route::get('/pending', [ApplicationController::class, 'pending']);
+        Route::get('/approved', [ApplicationController::class, 'approved']);
+        Route::get('/stats', [ApplicationController::class, 'stats']);
+        Route::post('/', [ApplicationController::class, 'apply']);
+    });
+
+    Route::get('/{id}', [ApplicationController::class, 'show'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [ApplicationController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
