@@ -17,7 +17,7 @@
 - ✅ Fase 4 — Dashboard & Progreso (COMPLETA)
 - ✅ Fase 5 — Módulo Aprende (COMPLETA) ← ACTUALIZADO 2026-05-09
 - ✅ Fase 6 — Módulo Aspira/Becas (COMPLETA) ← ACTUALIZADO 2026-05-09
-- ❌ Fase 7 — Catálogo de Carreras (NO INICIADA)
+- ✅ Fase 7 — Catálogo de Carreras (COMPLETA) ← ACTUALIZADO 2026-05-09
 - ❌ Fase 8 — Admin Panel (NO INICIADA)
 
 ---
@@ -296,29 +296,41 @@
 
 ---
 
-### Fase 7 — Catálogo de Carreras ❌ NO INICIADA
+### Fase 7 — Catálogo de Carreras ✅ COMPLETA
 
-**Status:** NO INICIADA (datos solo hardcodeados en SimilitudService)
+**Status:** COMPLETAMENTE IMPLEMENTADA (2026-05-09)
 
-- ❌ 7A: **Domain** — Carrera, VectorCarrera, AreaEstudio — **TODOS FALTANTES**
+- [x] 7A: **Domain** — ✅ COMPLETO
+  - Carrera model existente con relaciones a Universidad
+  - Carreras con vectores desde BD
 
-- ❌ 7B: **Application** — CarreraService, SearchService, RecommendationService — **TODOS FALTANTES**
+- [x] 7B: **Application** — ✅ COMPLETO (2026-05-09)
+  - CarreraService: getAll, getById, getByUniversidad, getActivas, getStats, getCarrerasWithVectors
+  - Archivo: app/Services/Carrera/CarreraService.php
 
-- ❌ 7C: **Infrastructure** — **FALTA TODO:** carreras migration, universidades migration, career_details migration, models, relations, indexes
+- [x] 7C: **Infrastructure** — ✅ COMPLETO
+  - Carreras migration existente con FK a universidades
+  - Carrera model con relaciones y scopes
 
-- ❌ 7D: **Api** — **FALTA COMPLETAMENTE:**
-  - ❌ CarreraController
-  - ❌ GET /api/carreras (con búsqueda/filtros)
-  - ❌ GET /api/carreras/{id}
-  - ❌ GET /api/carreras?area=tecnologia
-  - ❌ GET /api/carreras?universidad_id=4
+- [x] 7D: **Api** — ✅ COMPLETO (2026-05-09)
+  - CarreraController: index, show, byUniversidad, active, stats, withVectors
+  - Rutas en api_routes.php:
+    - GET /api/carreras (con search, universidad_id filters)
+    - GET /api/carreras/active
+    - GET /api/carreras/stats
+    - GET /api/carreras/vectors
+    - GET /api/carreras/{id}
+    - GET /api/carreras/universidad/{id}
 
-- ❌ 7E: **Tests** — 0 tests
+- [x] 7E: **Frontend** — ✅ COMPLETO (2026-05-09)
+  - useCarreras hook created
+  - Build passes
 
-**Datos Hardcodeados en SimilitudService::$CARRERAS:**
-- 10 carreras con vectores de 6 dimensiones
-- Sin detalles (plan_estudios, requisitos_admision, campo_laboral)
-- Sin descripción completa
+**Componentes Implementados:**
+- ✅ Carrera model con Universidad relationship
+- ✅ CarreraService con búsqueda y filtros
+- ✅ 6 endpoints API funcionando
+- ✅ useCarreras hook para frontend
 
 ---
 

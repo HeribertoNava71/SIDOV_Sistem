@@ -8,6 +8,7 @@ use App\Http\Controllers\Learn\EnrollmentController;
 use App\Http\Controllers\Learn\ReviewController;
 use App\Http\Controllers\Aspira\ScholarshipController;
 use App\Http\Controllers\Aspira\ApplicationController;
+use App\Http\Controllers\CarreraController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -243,5 +244,22 @@ Route::prefix('applications')->group(function () {
 
     Route::get('/{id}', [ApplicationController::class, 'show'])->where('id', '[0-9]+');
     Route::delete('/{id}', [ApplicationController::class, 'destroy'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Carreras
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('carreras')->group(function () {
+
+    Route::get('/', [CarreraController::class, 'index']);
+    Route::get('/active', [CarreraController::class, 'active']);
+    Route::get('/stats', [CarreraController::class, 'stats']);
+    Route::get('/vectors', [CarreraController::class, 'withVectors']);
+    Route::get('/{id}', [CarreraController::class, 'show'])->where('id', '[0-9]+');
+    Route::get('/universidad/{universidadId}', [CarreraController::class, 'byUniversidad'])->where('universidadId', '[0-9]+');
 
 });
