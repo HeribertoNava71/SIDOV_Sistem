@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\TestVocacionalController;
 use App\Http\Controllers\UniversidadController;
+use App\Http\Controllers\Learn\CourseController;
+use App\Http\Controllers\Learn\TutorController;
+use App\Http\Controllers\Learn\EnrollmentController;
+use App\Http\Controllers\Learn\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -117,5 +121,86 @@ Route::prefix('universidades')->group(function () {
      *   - radio: int en km (default: 50)
      */
     Route::get('/nearby', [UniversidadController::class, 'nearby']);
-    
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Cursos (Learn)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('courses')->group(function () {
+
+    Route::get('/', [CourseController::class, 'index']);
+    Route::get('/featured', [CourseController::class, 'featured']);
+    Route::get('/free', [CourseController::class, 'free']);
+    Route::get('/categories', [CourseController::class, 'categories']);
+    Route::get('/{id}', [CourseController::class, 'show'])->where('id', '[0-9]+');
+    Route::post('/', [CourseController::class, 'store']);
+    Route::put('/{id}', [CourseController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [CourseController::class, 'destroy'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Tutores
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('tutors')->group(function () {
+
+    Route::get('/', [TutorController::class, 'index']);
+    Route::get('/featured', [TutorController::class, 'featured']);
+    Route::get('/top-rated', [TutorController::class, 'topRated']);
+    Route::get('/specialties', [TutorController::class, 'specialties']);
+    Route::get('/{id}', [TutorController::class, 'show'])->where('id', '[0-9]+');
+    Route::post('/', [TutorController::class, 'store']);
+    Route::put('/{id}', [TutorController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [TutorController::class, 'destroy'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Inscripciones
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('enrollments')->group(function () {
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', [EnrollmentController::class, 'index']);
+        Route::get('/active', [EnrollmentController::class, 'active']);
+        Route::get('/completed', [EnrollmentController::class, 'completed']);
+        Route::get('/stats', [EnrollmentController::class, 'stats']);
+        Route::post('/', [EnrollmentController::class, 'store']);
+    });
+
+    Route::get('/{id}', [EnrollmentController::class, 'show'])->where('id', '[0-9]+');
+    Route::put('/{id}/progress', [EnrollmentController::class, 'updateProgress'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [EnrollmentController::class, 'destroy'])->where('id', '[0-9]+');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas API para Reviews
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('reviews')->group(function () {
+
+    Route::get('/recent', [ReviewController::class, 'recent']);
+    Route::get('/course/{courseId}', [ReviewController::class, 'index'])->where('courseId', '[0-9]+');
+    Route::get('/course/{courseId}/paginated', [ReviewController::class, 'paginated'])->where('courseId', '[0-9]+');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [ReviewController::class, 'store']);
+        Route::get('/my/{courseId}', [ReviewController::class, 'myReview'])->where('courseId', '[0-9]+');
+    });
+
+    Route::delete('/{id}', [ReviewController::class, 'destroy'])->where('id', '[0-9]+');
+
 });

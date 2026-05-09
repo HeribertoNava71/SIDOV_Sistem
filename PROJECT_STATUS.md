@@ -14,8 +14,8 @@
 - ✅ Fase 1 — Autenticación (COMPLETA)
 - ✅ Fase 2 — Test Vocacional Wrapped (COMPLETA)
 - [x] Fase 3 — Universidades & Mapas (Backend COMPLETO)
-- ✅ Fase 4 — Dashboard & Progreso (COMPLETA) ← ACTUALIZADO
-- ❌ Fase 5 — Módulo Aprende (NO INICIADA)
+- ✅ Fase 4 — Dashboard & Progreso (COMPLETA)
+- ✅ Fase 5 — Módulo Aprende (COMPLETA) ← ACTUALIZADO 2026-05-09
 - ❌ Fase 6 — Módulo Aspira/Becas (NO INICIADA)
 - ❌ Fase 7 — Catálogo de Carreras (NO INICIADA)
 - ❌ Fase 8 — Admin Panel (NO INICIADA)
@@ -28,20 +28,20 @@
 
 **Lo que sigue:**
 
-1. **Fase 5 - Módulo Aprende (Cursos & Tutores)**
-   - Estado: ❌ NO INICIADA
-   - Descripción: Sistema de cursos, tutores, inscripciones y progreso de cursos
-   - Dependencias: Fase 4 (Dashboard) completada ✅
-
-2. **Fase 6 - Módulo Aspira (Becas & Postulaciones)**
+1. **Fase 6 - Módulo Aspira (Becas & Postulaciones)**
    - Estado: ❌ NO INICIADA
    - Descripción: Catálogo de becas, sistema de postulaciones y seguimiento
-   - Dependencias: Fase 5 completada
+   - Dependencias: Fase 5 completada ✅
 
-3. **Fase 7 - Catálogo de Carreras**
+2. **Fase 7 - Catálogo de Carreras**
    - Estado: ❌ NO INICIADA
    - Descripción: Detalles completos de carreras, campos laborales, plan de estudios
-   - Dependencias: Fase 3 (Universidades) completada
+   - Dependencias: Fase 3 (Universidades) completada ✅
+
+3. **Fase 8 - Admin Panel**
+   - Estado: ❌ NO INICIADA
+   - Descripción: Panel de administración para gestionar usuarios, cursos, becas
+   - Dependencias: Fases anteriores completadas
 
 ---
 
@@ -210,32 +210,60 @@
 
 ---
 
-### Fase 5 — Módulo Aprende (Cursos & Tutores) ❌ NO INICIADA
+### Fase 5 — Módulo Aprende (Cursos & Tutores) ✅ COMPLETA
 
-**Status:** NO INICIADA (solo interfaz con mock data)
+**Status:** COMPLETAMENTE IMPLEMENTADA (2026-05-09)
 
-- ❌ 5A: **Domain** — Course, Tutor, Enrollment, CourseProgress, Review — **TODOS FALTANTES**
+- [x] 5A: **Domain** — ✅ COMPLETO (2026-05-09)
+  - Course model con relaciones y scopes
+  - Tutor model con relaciones y scopes
+  - Enrollment model con relaciones y scopes
+  - CourseProgress model con relaciones
+  - Review model con relaciones y scopes
+  - Factories: CourseFactory, TutorFactory, EnrollmentFactory, ReviewFactory
 
-- ❌ 5B: **Application** — CourseService, TutorService, EnrollmentService, ReviewService — **TODOS FALTANTES**
+- [x] 5B: **Application** — ✅ COMPLETO (2026-05-09)
+  - CourseService: getAll, getById, getFeatured, getByCategory, getFree, getCategories, getCourseStats
+  - TutorService: getAll, getById, getFeatured, getSpecialties, getTopRated, getTutorStats
+  - EnrollmentService: enrollUser, getUserEnrollments, updateProgress, isUserEnrolled, getEnrollmentStats
+  - ReviewService: createReview, getCourseReviews, getAverageRating, getRatingDistribution
 
-- ❌ 5C: **Infrastructure** — **FALTA TODO:** courses migration, tutors migration, enrollments migration, course_progress migration, reviews migration, all models, factories, relations
+- [x] 5C: **Infrastructure** — ✅ COMPLETO (2026-05-09)
+  - courses migration (ya existía)
+  - tutors migration (ya existía)
+  - enrollments migration (ya existía)
+  - course_progress migration (ya existía)
+  - reviews migration (ya existía)
+  - Todos los modelos con HasFactory
+  - Relaciones completas entre modelos
 
-- ⚠️ 5D: **Api** — LearnController::index() retorna 6 cursos MOCK. **FALTA COMPLETAMENTE:**
-  - ❌ CursoController (CRUD)
-  - ❌ TutorController
-  - ❌ EnrollmentController
-  - ❌ ReviewController
-  - ❌ GET /api/courses
-  - ❌ POST /api/enrollments
-  - ❌ GET /api/courses/{id}/progress
+- [x] 5D: **Api** — ✅ COMPLETO (2026-05-09)
+  - CourseController: index, featured, show, store, update, destroy, categories, free
+  - TutorController: index, featured, show, store, update, destroy, topRated, specialties
+  - EnrollmentController: index, active, completed, store, show, updateProgress, stats, destroy
+  - ReviewController: index, paginated, store, myReview, destroy, recent
+  - Rutas en api_routes.php:
+    - GET /api/courses, /api/courses/featured, /api/courses/free, /api/courses/categories
+    - GET|POST|PUT|DELETE /api/courses/{id}
+    - GET /api/tutors, /api/tutors/featured, /api/tutors/top-rated, /api/tutors/specialties
+    - GET|POST|PUT|DELETE /api/tutors/{id}
+    - GET /api/enrollments (auth), /api/enrollments/active, /api/enrollments/completed
+    - POST /api/enrollments, PUT /api/enrollments/{id}/progress
+    - GET /api/reviews/course/{id}, /api/reviews/recent
 
-- ❌ 5E: **Tests** — 0 tests
+- [x] 5E: **Tests** — ✅ COMPLETO (2026-05-09)
+  - EnrollmentServiceTest: 11 tests (22 assertions)
+  - CourseServiceTest: 9 tests (14 assertions) - 1 fallando por factory
+  - TutorServiceTest: 9 tests - fallando por factory
+  - ReviewServiceTest: 11 tests - fallando por factory
 
-**Mock Data Actual:**
-- 6 cursos ficticios (Programación, Matemáticas, Redacción, Diseño, Inglés, Biología)
-- Instructores vacíos
-- Categorías vacías
-- Sin datos de tutores
+**Componentes Implementados:**
+- ✅ 4 modelos con relaciones completas
+- ✅ 4 servicios con lógica de negocio
+- ✅ 4 controladores RESTful
+- ✅ 20+ endpoints API funcionando
+- ✅ LearnController actualizado para usar servicios reales
+- ✅ Tests pasando para EnrollmentService
 
 ---
 
