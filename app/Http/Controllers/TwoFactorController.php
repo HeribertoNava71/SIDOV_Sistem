@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\TwoFactorAuthentication;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class TwoFactorController extends Controller
 {
     public function showSetup(): View
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $twoFactor = $user->twoFactorAuthentication ?? new TwoFactorAuthentication(['user_id' => $user->id]);
 
         if ($twoFactor->isEnabled()) {
@@ -41,7 +43,7 @@ class TwoFactorController extends Controller
             'code' => 'required|string|size:6',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
         $twoFactor = $user->twoFactorAuthentication;
 
         if (!$twoFactor || !$twoFactor->secret) {
@@ -71,7 +73,7 @@ class TwoFactorController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!password_verify($request->password, $user->password)) {
             return response()->json(['error' => 'Contraseña incorrecta.'], 403);
@@ -115,10 +117,10 @@ class TwoFactorController extends Controller
         $userId = $request->session()->get('2fa_pending_user_id');
 
         if (!$userId) {
-            return response()->json(['error' => 'Sesión expirada.'], 401);
+            return response()->json(['error' => 'Sesión expirada. Por favor inicia sesión nuevamente.'], 401);
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
 
         if (!$user) {
             return response()->json(['error' => 'Usuario no encontrado.'], 404);
@@ -137,19 +139,12 @@ class TwoFactorController extends Controller
 
             $request->session()->forget('2fa_pending_user_id');
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            Auth::login($user);
+            $request->session()->regenerate();
 
             Log::info("Login 2FA exitoso para usuario {$user->id}");
 
-            return response()->json([
-                'message' => 'Verificación exitosa.',
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ],
-            ]);
+            return redirect()->intended(route('dashboard'));
         }
 
         return response()->json(['error' => 'Código inválido.'], 401);

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -12,30 +12,16 @@ use Inertia\Response;
 
 class LoginController extends Controller
 {
-    /**
-     * Muestra la página de login
-     * 
-     * Vista: Pages/Auth/Login.tsx
-     * Ruta: GET /login
-     * Nombre: login
-     */
     public function create(): Response
     {
         return Inertia::render('Auth/Login', [
-            'canResetPassword' => true, // Habilitar "¿Olvidaste tu contraseña?"
-            'status' => session('status'), // Mensajes de estado (ej: "Link enviado")
+            'canResetPassword' => route('password.request') !== null,
+            'status' => session('status'),
         ]);
     }
 
-    /**
-     * Procesa el formulario de login
-     * 
-     * Ruta: POST /login
-     * Nombre: login.store
-     */
     public function store(Request $request): RedirectResponse
     {
-        // Validar datos del formulario
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string'],
@@ -45,17 +31,29 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        // Intentar autenticar al usuario
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => 'Las credenciales no coinciden con nuestros registros.',
             ]);
         }
 
-        // Regenerar sesión para prevenir session fixation
         $request->session()->regenerate();
 
-        // Redirigir al dashboard
+        $user = Auth::user();
+
+        if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        $twoFactor = $user->twoFactorAuthentication;
+        if ($twoFactor && $twoFactor->isEnabled()) {
+            $request->session()->put('2fa_pending_user_id', $user->id);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('two-factor.challenge');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 }

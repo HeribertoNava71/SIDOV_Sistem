@@ -133,7 +133,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('challenge');
 
         Route::post('/challenge', [App\Http\Controllers\TwoFactorController::class, 'challenge'])
-            ->name('challenge.verify');
+            ->name('challenge.verify')
+            ->withoutMiddleware('auth')
+            ->middleware('throttle:5,1');
     });
 
 });

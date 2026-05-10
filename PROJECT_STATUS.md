@@ -6,7 +6,9 @@
 **Stack:** Laravel 12 + React 18 + Inertia.js + SQLite/MySQL  
 **Estado:** Sistema funcional con arquitectura MVC. Fases base completadas (F1-F14). Tests corregidos y pasando (161 tests).
 
-**Historial (F1-F14):** Autenticación Breeze, Test Vocacional (16Q + scoring), Mapa universidades Tamaulipas, Dashboard (niveles/XP/badges), Módulo Aprende (cursos/tutores), Módulo Aspira (becas/postulaciones), Catálogo carreras con vectores, Admin Panel API (roles/permisos/logs), Panel Admin Frontend, 2FA (con bugs), Notificaciones email, Hardening (headers/rate limiting/Docker/CI-CD).
+**Historial (F1-F14):** Autenticación Breeze, Test Vocacional (16Q + scoring), Mapa universidades Tamaulipas, Dashboard (niveles/XP/badges), Módulo Aprende (cursos/tutores), Módulo Aspira (becas/postulaciones), Catálogo carreras con vectores, Admin Panel API (roles/permisos/logs), Panel Admin Frontend, 2FA integrado, Notificaciones email con Gmail, Hardening.
+
+**Nueva funcionalidad:** Email verification + Gmail SMTP + 2FA integrado al login + recuperación de contraseña + páginas auth en español.
 
 **Última actualización:** 2026-05-10
 
