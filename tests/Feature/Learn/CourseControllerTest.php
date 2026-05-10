@@ -4,11 +4,20 @@ namespace Tests\Feature\Learn;
 
 use Tests\TestCase;
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CourseControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->user = User::factory()->create();
+    }
 
     public function test_index_returns_courses(): void
     {
@@ -92,7 +101,7 @@ class CourseControllerTest extends TestCase
             'level' => 'Principiante',
         ];
 
-        $response = $this->postJson('/api/courses', $data);
+        $response = $this->actingAs($this->user)->postJson('/api/courses', $data);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('courses', ['title' => 'Nuevo Curso']);
@@ -105,7 +114,7 @@ class CourseControllerTest extends TestCase
             'category' => 'Tecnología',
         ];
 
-        $response = $this->postJson('/api/courses', $data);
+        $response = $this->actingAs($this->user)->postJson('/api/courses', $data);
 
         $response->assertStatus(422);
     }
@@ -114,7 +123,7 @@ class CourseControllerTest extends TestCase
     {
         $course = Course::factory()->create(['title' => 'Old Title']);
 
-        $response = $this->putJson("/api/courses/{$course->id}", [
+        $response = $this->actingAs($this->user)->putJson("/api/courses/{$course->id}", [
             'title' => 'New Title',
         ]);
 
@@ -126,7 +135,7 @@ class CourseControllerTest extends TestCase
     {
         $course = Course::factory()->create();
 
-        $response = $this->deleteJson("/api/courses/{$course->id}");
+        $response = $this->actingAs($this->user)->deleteJson("/api/courses/{$course->id}");
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('courses', ['id' => $course->id]);

@@ -59,12 +59,12 @@ class TestVocacionalController extends Controller
 
             $user = auth()->user();
             TestCompleted::dispatch(
-                user: $user,
-                result: $response,
-                profileName: $perfilData['nombre'] ?? $perfilData,
-                profileDescription: $perfilData['descripcion'] ?? '',
-                topDimensions: array_keys(array_filter($resultado['vector_normalizado'])),
-                topCareers: $topCarreras
+                $user,
+                $response,
+                $perfilData['nombre'] ?? $perfilData,
+                $perfilData['descripcion'] ?? '',
+                array_keys(array_filter($resultado['vector_normalizado'])),
+                $topCarreras
             );
         }
 

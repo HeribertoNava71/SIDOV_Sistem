@@ -115,6 +115,7 @@ class UniversidadServiceTest extends TestCase
 
         $result = $this->service->getNearby($latitud, $longitud, $radioKm);
 
-        $this->assertIsArray($result);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
+        $this->assertGreaterThanOrEqual(1, $result->count());
     }
 }

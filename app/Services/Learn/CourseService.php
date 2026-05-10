@@ -61,7 +61,10 @@ class CourseService
 
     public function getCategories(): array
     {
-        return ['Todos', 'Tecnología', 'Ciencias', 'Humanidades', 'Arte', 'Idiomas', 'Negocios'];
+        $categories = \App\Models\CourseCategory::getActiveCategories();
+        $categoryNames = $categories->pluck('name')->toArray();
+        array_unshift($categoryNames, 'Todos');
+        return $categoryNames;
     }
 
     public function getLevels(): array

@@ -48,7 +48,7 @@ class UniversidadService
         return $universidad?->toArray();
     }
 
-    public function getNearby(float $latitud, float $longitud, int $radioKm = 50): array
+    public function getNearby(float $latitud, float $longitud, int $radioKm = 50): Collection
     {
         $earthRadius = 6371;
 
@@ -64,6 +64,6 @@ class UniversidadService
             ));
 
             return $distance <= $radioKm;
-        })->toArray();
+        });
     }
 }

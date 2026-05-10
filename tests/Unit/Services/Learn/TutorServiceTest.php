@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\Learn;
 use Tests\TestCase;
 use App\Services\Learn\TutorService;
 use App\Models\Tutor;
+use App\Models\TutorSpecialty;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TutorServiceTest extends TestCase
@@ -79,11 +80,16 @@ class TutorServiceTest extends TestCase
 
     public function test_get_specialties_returns_array(): void
     {
+        TutorSpecialty::factory()->create(['name' => 'Programación y Tecnología', 'is_active' => true, 'sort_order' => 1]);
+        TutorSpecialty::factory()->create(['name' => 'Matemáticas y Física', 'is_active' => true, 'sort_order' => 2]);
+        TutorSpecialty::factory()->create(['name' => 'Inactive', 'is_active' => false, 'sort_order' => 3]);
+
         $result = $this->service->getSpecialties();
 
         $this->assertIsArray($result);
-        $this->assertContains('Programación y Tecnología');
-        $this->assertContains('Matemáticas y Física');
+        $this->assertContains('Programación y Tecnología', $result);
+        $this->assertContains('Matemáticas y Física', $result);
+        $this->assertNotContains('Inactive', $result);
     }
 
     public function test_get_top_rated_returns_ordered_tutors(): void

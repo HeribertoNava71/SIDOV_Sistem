@@ -5,12 +5,20 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\UserProgress;
 use App\Models\Activity;
+use App\Models\Level;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Level::factory()->create(['level' => 1, 'xp_min' => 0, 'xp_max' => 999, 'is_active' => true]);
+        Level::factory()->create(['level' => 2, 'xp_min' => 1000, 'xp_max' => 1999, 'is_active' => true]);
+    }
 
     public function test_dashboard_returns_stats_for_authenticated_user(): void
     {

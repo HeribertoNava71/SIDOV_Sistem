@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\Learn;
 use Tests\TestCase;
 use App\Services\Learn\CourseService;
 use App\Models\Course;
+use App\Models\CourseCategory;
 use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\Review;
@@ -83,11 +84,17 @@ class CourseServiceTest extends TestCase
 
     public function test_get_categories_returns_array(): void
     {
+        CourseCategory::factory()->create(['name' => 'Tecnología', 'is_active' => true, 'sort_order' => 1]);
+        CourseCategory::factory()->create(['name' => 'Ciencias', 'is_active' => true, 'sort_order' => 2]);
+        CourseCategory::factory()->create(['name' => 'Inactive', 'is_active' => false, 'sort_order' => 3]);
+
         $result = $this->service->getCategories();
 
         $this->assertIsArray($result);
         $this->assertContains('Todos', $result);
         $this->assertContains('Tecnología', $result);
+        $this->assertContains('Ciencias', $result);
+        $this->assertNotContains('Inactive', $result);
     }
 
     public function test_get_course_stats_returns_correct_data(): void
@@ -95,7 +102,7 @@ class CourseServiceTest extends TestCase
         $course = Course::factory()->create();
         $user = User::factory()->create();
 
-        Enrollment::factory()->count(10)->create(['course_id' => $course->id]);
+        Enrollment::factory()->count(7)->create(['course_id' => $course->id]);
         Enrollment::factory()->count(3)->create([
             'course_id' => $course->id,
             'status' => 'completed',

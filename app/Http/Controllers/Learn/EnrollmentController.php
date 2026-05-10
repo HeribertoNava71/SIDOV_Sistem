@@ -101,7 +101,9 @@ class EnrollmentController extends Controller
 
         $enrollment = $this->enrollmentService->updateProgress($id, (float) $progress);
 
-        return response()->json($enrollment);
+        return response()->json([
+            'enrollment' => $enrollment,
+        ]);
     }
 
     public function stats(Request $request): JsonResponse

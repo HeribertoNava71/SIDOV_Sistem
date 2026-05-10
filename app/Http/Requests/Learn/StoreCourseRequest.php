@@ -13,19 +13,23 @@ class StoreCourseRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|min:10|max:2000',
-            'instructor' => 'required|string|max:255',
+        $isUpdate = in_array($this->method(), ['PUT', 'PATCH']);
+        
+        $rules = [
+            'title' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
+            'description' => $isUpdate ? 'sometimes|string|min:10|max:2000' : 'required|string|min:10|max:2000',
+            'instructor' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'rating' => 'nullable|numeric|min:0|max:5',
             'students' => 'nullable|integer|min:0',
             'price' => 'nullable|numeric|min:0',
-            'category' => 'required|string|max:100',
-            'duration' => 'required|string|max:50',
-            'level' => 'required|string|in:Principiante,Intermedio,Avanzado',
+            'category' => $isUpdate ? 'sometimes|string|max:100' : 'required|string|max:100',
+            'duration' => $isUpdate ? 'sometimes|string|max:50' : 'required|string|max:50',
+            'level' => $isUpdate ? 'sometimes|string|in:Principiante,Intermedio,Avanzado' : 'required|string|in:Principiante,Intermedio,Avanzado',
             'image' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
         ];
+        
+        return $rules;
     }
 
     public function messages(): array
