@@ -102,5 +102,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
+// =============================================
+// PANEL DE ADMINISTRACIÓN (requiere rol admin)
+// =============================================
+
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('dashboard');
+
+    Route::get('/universities', function () {
+        return Inertia::render('Admin/Universities/Index');
+    })->name('universities');
+
+    Route::get('/carrers', function () {
+        return Inertia::render('Admin/Carrers/Index');
+    })->name('carrers');
+
+    Route::get('/scholarships', function () {
+        return Inertia::render('Admin/Scholarships/Index');
+    })->name('scholarships');
+
+    Route::get('/questions', function () {
+        return Inertia::render('Admin/Questions/Index');
+    })->name('questions');
+
+    Route::get('/users', function () {
+        return Inertia::render('Admin/Users/Index');
+    })->name('users');
+
+    Route::get('/roles', function () {
+        return Inertia::render('Admin/Roles/Index');
+    })->name('roles');
+
+    Route::get('/logs', function () {
+        return Inertia::render('Admin/Logs');
+    })->name('logs');
+});
+
 // Incluir rutas de autenticación
 require __DIR__.'/auth.php';
