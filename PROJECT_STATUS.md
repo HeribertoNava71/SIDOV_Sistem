@@ -239,16 +239,24 @@ Límites implementados:
 - `resources/js/Pages/Admin/Carrers/Form.tsx` - Formulario crear/editar
 
 #### 11.5 Gestión de Becas
-**Archivo:** `resources/js/Pages/Admin/Scholarships/Index.tsx`
+**Archivos:**
+- `resources/js/Pages/Admin/Scholarships/Index.tsx` - Lista con tabla
+- `resources/js/Pages/Admin/Scholarships/Form.tsx` - Formulario crear/editar
 
 #### 11.6 Gestión de Preguntas
-**Archivo:** `resources/js/Pages/Admin/Questions/Index.tsx`
+**Archivos:**
+- `resources/js/Pages/Admin/Questions/Index.tsx` - Grid de preguntas
+- `resources/js/Pages/Admin/Questions/Form.tsx` - Formulario crear/editar con opciones y puntajes
 
 #### 11.7 Gestión de Usuarios
-**Archivo:** `resources/js/Pages/Admin/Users/Index.tsx`
+**Archivos:**
+- `resources/js/Pages/Admin/Users/Index.tsx` - Lista con tabla y búsqueda
+- `resources/js/Pages/Admin/Users/Form.tsx` - Formulario crear/editar
 
 #### 11.8 Roles y Permisos
-**Archivo:** `resources/js/Pages/Admin/Roles/Index.tsx`
+**Archivos:**
+- `resources/js/Pages/Admin/Roles/Index.tsx` - Vista de roles y permisos
+- `resources/js/Pages/Admin/Roles/Form.tsx` - Formulario crear/editar con selector de permisos
 
 #### 11.9 Logs de Actividad
 **Archivo:** `resources/js/Pages/Admin/Logs.tsx`
@@ -274,9 +282,6 @@ Todas las rutas requieren: `auth` + `verified` + `admin` middleware
 resources/js/Layouts/Admin/
 └── AdminLayout.tsx
 
-resources/js/Components/Admin/
-└── (vacio - integrado en layout)
-
 resources/js/Pages/Admin/
 ├── Dashboard.tsx
 ├── Universities/
@@ -286,13 +291,17 @@ resources/js/Pages/Admin/
 │   ├── Index.tsx
 │   └── Form.tsx
 ├── Scholarships/
-│   └── Index.tsx
+│   ├── Index.tsx
+│   └── Form.tsx
 ├── Questions/
-│   └── Index.tsx
+│   ├── Index.tsx
+│   └── Form.tsx
 ├── Users/
-│   └── Index.tsx
+│   ├── Index.tsx
+│   └── Form.tsx
 ├── Roles/
-│   └── Index.tsx
+│   ├── Index.tsx
+│   └── Form.tsx
 └── Logs.tsx
 ```
 
