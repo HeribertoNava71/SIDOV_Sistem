@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorAuthentication extends Model
 {
@@ -13,6 +14,7 @@ class TwoFactorAuthentication extends Model
         'enabled',
         'enabled_at',
         'recovery_codes',
+        'recovery_codes_hash',
         'last_used_at',
     ];
 
@@ -47,21 +49,32 @@ class TwoFactorAuthentication extends Model
             'enabled' => false,
             'secret' => null,
             'recovery_codes' => null,
+            'recovery_codes_hash' => null,
         ]);
     }
 
     public function generateSecret(): string
     {
-        return base64_encode(random_bytes(20));
+        $google2fa = new Google2FA();
+        return $google2fa->generateSecretKey(32);
     }
 
     public function generateRecoveryCodes(int $count = 8): array
     {
         $codes = [];
+        $hashedCodes = [];
+        
         for ($i = 0; $i < $count; $i++) {
-            $codes[] = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $codes[] = $code;
+            $hashedCodes[] = hash('sha256', $code);
         }
-        $this->update(['recovery_codes' => $codes]);
+        
+        $this->update([
+            'recovery_codes' => $codes,
+            'recovery_codes_hash' => $hashedCodes,
+        ]);
+        
         return $codes;
     }
 
@@ -73,9 +86,11 @@ class TwoFactorAuthentication extends Model
         }
 
         $code = trim($code);
-        $hash = $this->generateTOTPCode($secret);
-
-        if (hash_equals($hash, $code)) {
+        $google2fa = new Google2FA();
+        
+        $valid = $google2fa->verifyKey($secret, $code);
+        
+        if ($valid) {
             $this->update(['last_used_at' => now()]);
             return true;
         }
@@ -83,35 +98,22 @@ class TwoFactorAuthentication extends Model
         return false;
     }
 
-    private function generateTOTPCode(string $secret): string
-    {
-        $time = floor(time() / 30);
-        $data = pack('J', $time);
-        $key = base64_decode($secret);
-
-        $hash = hash_hmac('sha1', $data, $key, true);
-        $offset = ord($hash[strlen($hash) - 1]) & 0x0F;
-
-        $binary = (
-            ((ord($hash[$offset]) & 0x7F) << 24) |
-            ((ord($hash[$offset + 1]) & 0xFF) << 16) |
-            ((ord($hash[$offset + 2]) & 0xFF) << 8) |
-            (ord($hash[$offset + 3]) & 0xFF)
-        );
-
-        $otp = $binary % 1000000;
-        return str_pad((string) $otp, 6, '0', STR_PAD_LEFT);
-    }
-
     public function verifyRecoveryCode(string $code): bool
     {
+        $hashedCodes = $this->recovery_codes_hash ?? [];
         $codes = $this->recovery_codes ?? [];
         $code = trim($code);
+        $codeHash = hash('sha256', $code);
 
-        $index = array_search($code, $codes);
+        $index = array_search($codeHash, $hashedCodes);
         if ($index !== false) {
+            unset($hashedCodes[$index]);
             unset($codes[$index]);
-            $this->update(['recovery_codes' => array_values($codes)]);
+            
+            $this->update([
+                'recovery_codes' => array_values($codes),
+                'recovery_codes_hash' => array_values($hashedCodes),
+            ]);
             $this->update(['last_used_at' => now()]);
             return true;
         }
@@ -121,8 +123,18 @@ class TwoFactorAuthentication extends Model
 
     public function getQRCodeUrl(string $email): string
     {
+        $google2fa = new Google2FA();
         $secret = $this->secret;
-        $encoded = urlencode("otpauth://totp/Orienta.me:{$email}?secret={$secret}&issuer=Orienta.me");
-        return "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={$encoded}";
+        
+        return $google2fa->getQRCodeUrl(
+            'Orienta.me',
+            $email,
+            $secret
+        );
+    }
+
+    public function getSecretKey(): string
+    {
+        return $this->secret;
     }
 }

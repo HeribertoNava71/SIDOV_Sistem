@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
             PreguntaSeeder::class,
             CarreraSeeder::class,
             UniversidadSeeder::class,
+            PermissionSeeder::class,
+            RoleSeeder::class,
         ]);
 
         User::factory()->create([

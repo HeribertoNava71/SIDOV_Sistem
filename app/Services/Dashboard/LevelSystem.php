@@ -2,42 +2,26 @@
 
 namespace App\Services\Dashboard;
 
+use App\Models\Level;
+
 class LevelSystem
 {
-    private const LEVEL_THRESHOLDS = [
-        1 => 0,
-        2 => 1000,
-        3 => 2500,
-        4 => 5000,
-        5 => 10000,
-        6 => 17500,
-        7 => 27500,
-        8 => 40000,
-        9 => 55000,
-        10 => 75000,
-    ];
-
     private const XP_PER_TEST = 100;
     private const XP_PER_BADGE = 50;
     private const XP_PER_COURSE_COMPLETE = 200;
 
     public static function calculateLevel(int $xp): int
     {
-        $level = 1;
-        foreach (self::LEVEL_THRESHOLDS as $lvl => $threshold) {
-            if ($xp >= $threshold) {
-                $level = $lvl;
-            }
-        }
-        return $level;
+        $levelFromDb = Level::getLevelByXP($xp);
+        return $levelFromDb?->level ?? 1;
     }
 
     public static function getNextLevelXp(int $xp): int
     {
         $currentLevel = self::calculateLevel($xp);
-        $nextLevel = $currentLevel + 1;
-
-        return self::LEVEL_THRESHOLDS[$nextLevel] ?? $xp;
+        $nextLevel = Level::where('level', $currentLevel + 1)->first();
+        
+        return $nextLevel?->xp_min ?? $xp;
     }
 
     public static function getXpForAction(string $action): int
@@ -52,29 +36,69 @@ class LevelSystem
 
     public static function getLevelTitle(int $level): string
     {
-        return match ($level) {
-            1 => 'Explorador',
-            2 => 'Aprendiz',
-            3 => 'Estudiante',
-            4 => 'Convencido',
-            5 => 'Entusiasta',
-            6 => 'Profesional en Formación',
-            7 => 'Especialista',
-            8 => 'Experto',
-            9 => 'Maestro',
-            10 => 'Guía Vocacional',
-            default => 'Explorador',
-        };
+        $levelFromDb = Level::where('level', $level)->first();
+        return $levelFromDb?->title ?? 'Novato';
     }
 
     public static function getLevelColor(int $level): string
     {
-        return match (true) {
-            $level <= 2 => '#6B7280',
-            $level <= 4 => '#3B82F6',
-            $level <= 6 => '#8B5CF6',
-            $level <= 8 => '#F59E0B',
-            default => '#10B981',
-        };
+        $levelFromDb = Level::where('level', $level)->first();
+        
+        if ($levelFromDb) {
+            return match ($levelFromDb->color) {
+                'gray' => '#6B7280',
+                'blue' => '#3B82F6',
+                'green' => '#10B981',
+                'yellow' => '#F59E0B',
+                'orange' => '#F97316',
+                'purple' => '#8B5CF6',
+                'pink' => '#EC4899',
+                'red' => '#EF4444',
+                'gold' => '#EAB308',
+                'rainbow' => '#6366F1',
+                default => '#6B7280',
+            };
+        }
+        
+        return '#6B7280';
+    }
+
+    public static function getLevelIcon(int $level): string
+    {
+        $levelFromDb = Level::where('level', $level)->first();
+        return $levelFromDb?->icon ?? '🌱';
+    }
+
+    public static function getAllLevels()
+    {
+        return Level::getActiveLevels();
+    }
+
+    public static function getLevelProgress(int $xp): array
+    {
+        $currentLevel = self::calculateLevel($xp);
+        $levelData = Level::where('level', $currentLevel)->first();
+        
+        if (!$levelData) {
+            return [
+                'level' => 1,
+                'title' => 'Novato',
+                'progress' => 0,
+                'xp_to_next' => 100,
+                'icon' => '🌱',
+            ];
+        }
+        
+        $xpInLevel = $xp - $levelData->xp_min;
+        $xpNeeded = $levelData->xp_max - $levelData->xp_min;
+        $progress = $xpNeeded > 0 ? ($xpInLevel / $xpNeeded) * 100 : 100;
+        
+        return [
+            'level' => $currentLevel,
+            'title' => $levelData->title,
+            'progress' => min(100, $progress),
+            'xp_to_next' => max(0, $levelData->xp_max - $xp),
+            'icon' => $levelData->icon,
+        ];
     }
 }
