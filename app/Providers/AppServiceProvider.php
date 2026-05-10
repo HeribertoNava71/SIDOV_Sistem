@@ -40,5 +40,17 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin-actions', function (Request $request) {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('2fa-challenge', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip());
+        });
+
+        RateLimiter::for('global', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
     }
 }

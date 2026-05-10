@@ -31,6 +31,7 @@
 | F11 | Panel Admin Frontend | ✅ COMPLETA | Layout admin, Dashboard, páginas gestión CRUD |
 | F12 | Autenticación 2FA | ✅ COMPLETA | TOTP, QR code, códigos de recuperación |
 | F13 | Notificaciones Correo | ✅ COMPLETA | Mailables, eventos, listeners, templates |
+| F14 | Hardening Producción | ✅ COMPLETA | Security headers, rate limit, Docker, CI/CD |
 
 ---
 
@@ -45,12 +46,17 @@
 3. **🎨 FASE 11 - Panel de Administración Frontend** ✅ COMPLETA
 4. **🔐 FASE 12 - Autenticación 2FA** ✅ COMPLETA
 5. **✉️ FASE 13 - Notificaciones por Correo** ✅ COMPLETA
-6. **🚀 FASE 14 - Hardening para Producción**
-   - Estado: ❌ NO INICIADA
-   - Headers de seguridad (CSP, HSTS, X-Frame)
-   - Rate limiting global
-   - Optimizar queries
-   - Docker + CI/CD
+6. **🚀 FASE 14 - Hardening para Producción** ✅ COMPLETA
+
+---
+
+**🎉 TODAS LAS FASES IMPLEMENTADAS**
+
+El proyecto Orienta.me está completo con todas las fases de desarrollo implementadas.
+Para producción, configurar:
+- SMTP real en `.env`
+- Dominio y SSL en Nginx
+- Secrets de GitHub Actions para deploy
 
 ---
 
@@ -412,6 +418,64 @@ El sistema usa la configuración de `.env`:
 - MAIL_MAILER=smtp (cambiar de log a smtp para producción)
 - MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
 - MAIL_FROM_ADDRESS configurable
+
+---
+
+## FASE 14 — Hardening para Producción ✅ COMPLETA
+
+**Implementada:** 2026-05-10
+
+### Lo que se implementó:
+
+#### 14.1 Headers de Seguridad
+**Archivo:** `app/Http/Middleware/SecurityHeaders.php`
+- X-Frame-Options: SAMEORIGIN
+- X-Content-Type-Options: nosniff
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: restrict device APIs
+- Strict-Transport-Security (solo en producción)
+- Content-Security-Policy (solo en producción)
+
+**Archivo:** `bootstrap/app.php`
+- SecurityHeaders agregado al grupo web middleware
+
+#### 14.2 Rate Limiting
+**Archivo:** `app/Providers/AppServiceProvider.php`
+Nuevos limitadores:
+- `2fa-challenge`: 5/min (protección contra fuerza bruta 2FA)
+- `login`: 3/min (protección contra ataques de login)
+- `global`: 120/min (límite general)
+
+#### 14.3 Índices de Base de Datos
+**Archivo:** `database/migrations/2026_05_10_192606_add_indexes_to_tables.php`
+Índices agregados a:
+- users: email, created_at
+- test_results: user_id, dimension_dominante, created_at
+- preguntas: activa, orden
+- carreras: activa, universidad_id
+- universidads: ciudad
+- activities: user_id, type, created_at
+- admin_logs: user_id, action, created_at
+
+#### 14.4 Docker Setup
+**Archivos:**
+- `Dockerfile` - imagen PHP 8.2-FPM con extensiones necesarias
+- `docker-compose.yml` - servicios: app, nginx, mysql, redis, queue
+- `docker/nginx/default.conf` - configuración Nginx optimizada
+- `docker-compose.override.yml.example` - guía de configuración
+
+#### 14.5 CI/CD Pipeline
+**Archivo:** `.github/workflows/ci.yml`
+Jobs:
+- `lint` - Pint (linter PHP)
+- `test` - PHPUnit con coverage
+- `build` - Build assets con npm
+- `deploy` - SSH deploy a servidor (solo en main)
+
+#### 14.6 Archivos de Configuración
+- `.dockerignore` - archivos ignorados en Docker
+- Documentación en `docker-compose.override.yml.example`
 
 ---
 
