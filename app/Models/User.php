@@ -95,4 +95,14 @@ class User extends Authenticatable
     {
         return $this->roles()->count() > 0;
     }
+
+    public function twoFactorAuthentication(): HasOne
+    {
+        return $this->hasOne(TwoFactorAuthentication::class);
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->twoFactorAuthentication?->isEnabled() ?? false;
+    }
 }

@@ -29,24 +29,20 @@
 | F9 | Corrección Arquitectura | ✅ COMPLETA | AdminMiddleware, endpoints protegidos, rate limiting |
 | F10 | CRUD Admin Completo | ✅ COMPLETA | CRUD para universidades, carreras, becas, preguntas |
 | F11 | Panel Admin Frontend | ✅ COMPLETA | Layout admin, Dashboard, páginas gestión CRUD |
+| F12 | Autenticación 2FA | ✅ COMPLETA | TOTP, QR code, códigos de recuperación |
 
 ---
 
 ## PRÓXIMOS PASOS
 
-**Última actualización:** 2026-05-09
+**Última actualización:** 2026-05-10
 
 **Lo que sigue:**
 
 1. **🔧 FASE 9 - Corrección de Arquitectura Base** ✅ COMPLETA
 2. **📋 FASE 10 - CRUD Completo de Administración** ✅ COMPLETA
 3. **🎨 FASE 11 - Panel de Administración Frontend** ✅ COMPLETA
-4. **🔐 FASE 12 - Autenticación 2FA**
-   - Estado: ❌ NO INICIADA
-   - Tablas y modelo TwoFactor
-   - Servicio TOTP
-   - Vistas setup/challenge
-
+4. **🔐 FASE 12 - Autenticación 2FA** ✅ COMPLETA
 5. **✉️ FASE 13 - Notificaciones por Correo**
    - Estado: ❌ NO INICIADA
    - Configurar SMTP real
@@ -309,6 +305,71 @@ resources/js/Pages/Admin/
 - `routes/web.php` (8 nuevas rutas admin)
 - `resources/js/Components/Layout/Navbar.tsx` (enlace a Panel Admin)
 - `PROJECT_STATUS.md`
+
+---
+
+## FASE 12 — Autenticación 2FA ✅ COMPLETA
+
+**Implementada:** 2026-05-10
+
+### Lo que se implementó:
+
+#### 12.1 Base de Datos
+**Archivo:** `database/migrations/2026_05_10_185058_create_two_factor_authentications_table.php`
+- Tabla `two_factor_authentications` con campos: user_id, secret, enabled, enabled_at, recovery_codes, last_used_at
+- Relación con users (one-to-one, on delete cascade)
+
+#### 12.2 Modelo TwoFactorAuthentication
+**Archivo:** `app/Models/TwoFactorAuthentication.php`
+- Métodos: isEnabled(), enable(), disable(), generateSecret(), generateRecoveryCodes()
+- verifyCode() - verificación TOTP
+- verifyRecoveryCode() - verificación de códigos de recuperación
+- getQRCodeUrl() - genera URL QR para app de autenticación
+
+#### 12.3 Relaciones en User Model
+**Archivo:** `app/Models/User.php`
+- twoFactorAuthentication(): HasOne
+- hasTwoFactorEnabled(): bool
+
+#### 12.4 Controlador TwoFactor
+**Archivo:** `app/Http/Controllers/TwoFactorController.php`
+- showSetup() - muestra página de configuración
+- enable() - habilita 2FA con verificación de código
+- disable() - deshabilita 2FA (requiere password)
+- showChallenge() - página de verificación
+- challenge() - verifica código con rate limiting (5 intentos/min)
+
+#### 12.5 Middleware EnsureTwoFactorEnabled
+**Archivo:** `app/Http/Middleware/EnsureTwoFactorEnabled.php`
+- Verifica si usuario tiene 2FA habilitado
+- Redirige a /two-factor/challenge si no está verificado
+- Retorna JSON 403 si es API request
+
+#### 12.6 Vistas React
+**Archivos:**
+- `resources/js/Pages/Auth/TwoFactorSetup.tsx` - Configuración con QR code
+- `resources/js/Pages/Auth/TwoFactorChallenge.tsx` - Verificación de código
+
+#### 12.7 Rutas
+**Archivo:** `routes/web.php`
+- GET /two-factor/setup → página de configuración
+- POST /two-factor/enable → habilitar 2FA
+- POST /two-factor/disable → deshabilitar 2FA
+- GET /two-factor/challenge → página de verificación
+- POST /two-factor/challenge → verificar código
+
+**Archivo:** `routes/api_routes.php`
+- POST /api/two-factor/enable
+- POST /api/two-factor/disable
+- POST /api/two-factor/challenge (rate limited)
+- GET /api/two-factor/status
+
+#### 12.8 Integración en Perfil
+**Archivo:** `resources/js/Pages/Profile/Partials/TwoFactorSettings.tsx`
+- Componente para gestionar 2FA desde perfil de usuario
+
+**Archivo:** `resources/js/Pages/Profile/Edit.tsx`
+- Añadido componente TwoFactorSettings
 
 ---
 

@@ -334,3 +334,22 @@ Route::prefix('admin/entities')->middleware(['auth:sanctum', 'admin'])->group(fu
     Route::delete('/preguntas/{id}', [PreguntaAdminController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
+
+// Two-Factor Authentication API Routes
+Route::prefix('two-factor')->group(function () {
+    Route::post('/enable', [\App\Http\Controllers\TwoFactorController::class, 'enable'])
+        ->middleware('auth:sanctum');
+
+    Route::post('/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable'])
+        ->middleware('auth:sanctum');
+
+    Route::post('/challenge', [\App\Http\Controllers\TwoFactorController::class, 'challenge'])
+        ->middleware('throttle:5,1');
+
+    Route::get('/status', function () {
+        $user = auth()->user();
+        return response()->json([
+            'enabled' => $user?->hasTwoFactorEnabled() ?? false,
+        ]);
+    })->middleware('auth:sanctum');
+});
