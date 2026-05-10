@@ -30,6 +30,7 @@
 | F10 | CRUD Admin Completo | ✅ COMPLETA | CRUD para universidades, carreras, becas, preguntas |
 | F11 | Panel Admin Frontend | ✅ COMPLETA | Layout admin, Dashboard, páginas gestión CRUD |
 | F12 | Autenticación 2FA | ✅ COMPLETA | TOTP, QR code, códigos de recuperación |
+| F13 | Notificaciones Correo | ✅ COMPLETA | Mailables, eventos, listeners, templates |
 
 ---
 
@@ -43,16 +44,12 @@
 2. **📋 FASE 10 - CRUD Completo de Administración** ✅ COMPLETA
 3. **🎨 FASE 11 - Panel de Administración Frontend** ✅ COMPLETA
 4. **🔐 FASE 12 - Autenticación 2FA** ✅ COMPLETA
-5. **✉️ FASE 13 - Notificaciones por Correo**
-   - Estado: ❌ NO INICIADA
-   - Configurar SMTP real
-   - Mailables para eventos clave
-   - Sistema de notificaciones
-
+5. **✉️ FASE 13 - Notificaciones por Correo** ✅ COMPLETA
 6. **🚀 FASE 14 - Hardening para Producción**
    - Estado: ❌ NO INICIADA
-   - Headers de seguridad
-   - Redis para cache/sessions
+   - Headers de seguridad (CSP, HSTS, X-Frame)
+   - Rate limiting global
+   - Optimizar queries
    - Docker + CI/CD
 
 ---
@@ -373,6 +370,51 @@ resources/js/Pages/Admin/
 
 ---
 
+## FASE 13 — Notificaciones por Correo ✅ COMPLETA
+
+**Implementada:** 2026-05-10
+
+### Lo que se implementó:
+
+#### 13.1 Mailables
+**Archivos:** `app/Mail/`
+- `WelcomeUser.php` - Correo de bienvenida
+- `VerifyEmail.php` - Verificación de email
+- `ResetPassword.php` - Restablecer contraseña
+- `TestResultNotification.php` - Resultados del test
+- `NewScholarship.php` - Notificación de nueva beca
+
+#### 13.2 Templates de Email
+**Archivos:** `resources/views/emails/`
+- `welcome.blade.php` - Diseño con botón para test
+- `verify-email.blade.php` - Verificación de cuenta
+- `reset-password.blade.php` - Restablecer contraseña
+- `test-result.blade.php` - Resultados vocacionales
+- `new-scholarship.blade.php` - Nueva oportunidad
+
+#### 13.3 Eventos y Listeners
+**Archivos:**
+- `app/Events/TestCompleted.php` - Evento cuando se completa el test
+- `app/Listeners/SendWelcomeEmail.php` - Envía correo de bienvenida al registrarse
+- `app/Listeners/SendTestResultNotification.php` - Envía resultados del test
+
+#### 13.4 EventServiceProvider
+**Archivo:** `app/Providers/EventServiceProvider.php`
+- Registra eventos: Registered → SendWelcomeEmail
+- Registra eventos: TestCompleted → SendTestResultNotification
+
+#### 13.5 Integración
+- `TestVocacionalController` ahora dispensa evento TestCompleted al guardar resultado
+- `RegisteredUserController` (Breeze) ya dispara evento Registered → listener envía welcome email
+
+#### 13.6 Configuración SMTP
+El sistema usa la configuración de `.env`:
+- MAIL_MAILER=smtp (cambiar de log a smtp para producción)
+- MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
+- MAIL_FROM_ADDRESS configurable
+
+---
+
 ## RESUMEN DE IMPLEMENTACIÓN POR FASE
 
 ### Fase 1 — Autenticación ✅
@@ -395,9 +437,9 @@ resources/js/Pages/Admin/
 - `resources/js/Pages/Auth/` (Login, Register, ForgotPassword, ResetPassword, etc.)
 
 **Estado actual:**
-- ⚠️ Sin 2FA
+- ✅ Sistema de correo configurado
+- ✅ 2FA implementado
 - ⚠️ Sin social login
-- ⚠️ Email verification no funcional (sin SMTP)
 - ✅ Tests de autenticación pasando
 
 ---

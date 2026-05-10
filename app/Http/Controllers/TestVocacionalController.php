@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TestCompleted;
 use App\Http\Requests\SubmitTestVocacionalRequest;
 use App\Models\Carrera;
 use App\Models\Pregunta;
@@ -55,6 +56,16 @@ class TestVocacionalController extends Controller
 
         if (auth()->check()) {
             $this->guardarResultado(auth()->id(), $respuestas, $response);
+
+            $user = auth()->user();
+            TestCompleted::dispatch(
+                user: $user,
+                result: $response,
+                profileName: $perfilData['nombre'] ?? $perfilData,
+                profileDescription: $perfilData['descripcion'] ?? '',
+                topDimensions: array_keys(array_filter($resultado['vector_normalizado'])),
+                topCareers: $topCarreras
+            );
         }
 
         return response()->json($response);
