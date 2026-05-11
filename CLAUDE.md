@@ -1260,12 +1260,31 @@ La sección debe seguir este formato:
 
 ---
 
+## 17. REGISTRO DE AVANCE POR FASE
+
+### Regla Obligatoria de Registro
+
+**Cada vez que una fase del PROJECT_STATUS.md sea completada, debe resumirse en 1 o 2 renglones dentro del mismo archivo como registro de avance técnico.**
+
+El registro debe agregarse en la sección `## HISTORIAL DE FASES COMPLETADAS` de PROJECT_STATUS.md usando el formato:
+
+```
+- ✅ [YYYY-MM-DD] Fase X completada: <resumen en 1-2 líneas de qué se implementó y qué archivos cambiaron>
+```
+
+Ejemplo:
+```
+- ✅ [2026-05-11] Fase 1 completada: Corregidos 6 bugs críticos (2FA, ActivityLog, Pregunta::with, perfil, token acumulación, route conflict). Archivos: LoginController, api_routes, web.php.
+```
+
+---
+
 ## REGLA DE ORO
 
 **Cuando dudes, consulta el código existente. Si aún no está claro, pregunta primero antes de hacer cambios importantes.**
 
 ---
 
-**Última actualización:** 2026-05-09  
-**Versión:** 1.0  
+**Última actualización:** 2026-05-11  
+**Versión:** 1.1  
 **Mantenedor:** Team Orienta.me

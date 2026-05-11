@@ -63,7 +63,6 @@ class RegisterController extends Controller
         // Iniciar sesión automáticamente
         Auth::login($user);
 
-        // Redirigir al dashboard
-        return redirect(route('dashboard'));
+        return redirect()->route('verification.notice');
     }
 }

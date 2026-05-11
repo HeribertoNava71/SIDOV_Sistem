@@ -12,6 +12,7 @@ class EventServiceProvider extends ServiceProvider
 {
     protected $listen = [
         Registered::class => [
+            \Illuminate\Auth\Listeners\SendEmailVerificationNotification::class,
             SendWelcomeEmail::class,
         ],
         TestCompleted::class => [

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 
@@ -12,39 +12,31 @@ interface Permission {
     id: number; name: string; description: string; module: string;
 }
 
+interface PageProps {
+    roles: Role[];
+    permissions: Permission[];
+    [key: string]: any;
+}
+
 export default function RolesIndex() {
-    const [roles, setRoles] = useState<Role[]>([]);
-    const [permissions, setPermissions] = useState<Permission[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { roles: initialRoles, permissions: initialPermissions } = usePage<PageProps>().props;
+    const [roles] = useState(initialRoles);
+    const [permissions] = useState(initialPermissions);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Role | null>(null);
-
-    useEffect(() => { fetchData(); }, []);
-
-    const fetchData = async () => {
-        try {
-            const [rolesRes, permsRes] = await Promise.all([
-                fetch('/api/admin/roles', { credentials: 'include' }),
-                fetch('/api/admin/permissions', { credentials: 'include' }),
-            ]);
-            if (rolesRes.ok) { const data = await rolesRes.json(); setRoles(data.data || []); }
-            if (permsRes.ok) { const data = await permsRes.json(); setPermissions(data.data || []); }
-        } catch (error) { console.error('Error:', error); }
-        finally { setLoading(false); }
-    };
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este rol?')) return;
         try {
             await fetch(`/api/admin/entities/roles/${id}`, { method: 'DELETE', credentials: 'include' });
-            setRoles(roles.filter(r => r.id !== id));
+            window.location.reload();
         } catch (error) { console.error('Error:', error); }
     };
 
     const openEdit = (role: Role) => { setEditingItem(role); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { fetchData(); closeForm(); };
+    const handleSuccess = () => { window.location.reload(); };
 
     return (
         <AdminLayout>

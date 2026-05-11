@@ -9,9 +9,7 @@ interface AdminLayoutProps {
 const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: 'chart', exact: true },
     { name: 'Universidades', href: '/admin/universities', icon: 'university' },
-    { name: 'Carreras', href: '/admin/carrers', icon: 'careers' },
     { name: 'Becas', href: '/admin/scholarships', icon: 'scholarship' },
-    { name: 'Preguntas', href: '/admin/questions', icon: 'question' },
     { name: 'Usuarios', href: '/admin/users', icon: 'users' },
     { name: 'Roles', href: '/admin/roles', icon: 'roles' },
     { name: 'Logs', href: '/admin/logs', icon: 'logs' },

@@ -19,6 +19,7 @@ public function index(Request $request): Response
     {
         $user = $request->user();
 
+        $user->tokens()->where('name', 'auth-token')->delete();
         $token = $user->createToken('auth-token')->plainTextToken;
 
         $stats = $this->statsService->getUserStats($user);

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 
@@ -8,22 +8,17 @@ interface User {
     created_at: string; roles?: { id: number; name: string }[];
 }
 
+interface PageProps {
+    users: User[];
+    [key: string]: any;
+}
+
 export default function UsersIndex() {
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { users: initialUsers } = usePage<PageProps>().props;
+    const [users, setUsers] = useState(initialUsers);
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<User | null>(null);
-
-    useEffect(() => { fetchUsers(); }, []);
-
-    const fetchUsers = async () => {
-        try {
-            const res = await fetch('/api/admin/users', { credentials: 'include' });
-            if (res.ok) { const data = await res.json(); setUsers(data.data || []); }
-        } catch (error) { console.error('Error:', error); }
-        finally { setLoading(false); }
-    };
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este usuario?')) return;
@@ -36,7 +31,7 @@ export default function UsersIndex() {
     const openEdit = (user: User) => { setEditingItem(user); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { fetchUsers(); closeForm(); };
+    const handleSuccess = () => { window.location.reload(); };
 
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||

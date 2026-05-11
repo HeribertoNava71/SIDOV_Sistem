@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class Carrera extends Model
@@ -42,5 +43,10 @@ class Carrera extends Model
     public function universidad(): BelongsTo
     {
         return $this->belongsTo(Universidad::class);
+    }
+
+    public function materias(): HasMany
+    {
+        return $this->hasMany(Materia::class);
     }
 }

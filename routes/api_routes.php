@@ -28,7 +28,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin/public')->group(function () 
             'total_users' => \App\Models\User::count(),
             'total_roles' => \App\Models\Role::count(),
             'total_permissions' => \App\Models\Permission::count(),
-            'recent_logs' => \App\Models\ActivityLog::count(),
+            'recent_logs' => \App\Models\AdminLog::count(),
             'total_universidades' => \App\Models\Universidad::count(),
             'total_carreras' => \App\Models\Carrera::count(),
         ]);
@@ -40,9 +40,27 @@ Route::middleware(['auth', 'admin'])->prefix('admin/public')->group(function () 
         ]);
     });
 
-    Route::get('/carreras', function () {
+    Route::get('/carreras', function (\Illuminate\Http\Request $request) {
+        $query = \App\Models\Carrera::with('universidad:id,nombre')->orderBy('nombre');
+
+        if ($request->has('universidad_id')) {
+            $query->where('universidad_id', $request->universidad_id);
+        }
+
         return response()->json([
-            'data' => \App\Models\Carrera::with('universidad:id,nombre')->orderBy('nombre')->get(),
+            'data' => $query->get(),
+        ]);
+    });
+
+    Route::get('/materias', function (\Illuminate\Http\Request $request) {
+        $query = \App\Models\Materia::orderBy('semestre')->orderBy('nombre');
+
+        if ($request->has('carrera_id')) {
+            $query->where('carrera_id', $request->carrera_id);
+        }
+
+        return response()->json([
+            'data' => $query->get(),
         ]);
     });
 
@@ -54,13 +72,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin/public')->group(function () 
 
     Route::get('/preguntas', function () {
         return response()->json([
-            'data' => \App\Models\Pregunta::with('opciones')->orderBy('orden')->get(),
+            'data' => \App\Models\Pregunta::orderBy('orden')->get(),
         ]);
     });
 
     Route::get('/logs', function () {
         return response()->json([
-            'data' => \App\Models\ActivityLog::with('user:id,name')->orderByDesc('created_at')->limit(20)->get(),
+            'data' => \App\Models\AdminLog::with('user:id,name')->orderByDesc('created_at')->limit(20)->get(),
         ]);
     });
 });
