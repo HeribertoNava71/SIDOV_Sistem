@@ -162,6 +162,33 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ]);
     })->name('roles');
 
+    Route::get('/carreras', function () {
+        $carreras = \App\Models\Carrera::with('universidad:id,nombre')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'nombre' => $c->nombre,
+                'universidad' => $c->universidad?->nombre ?? '',
+                'universidad_id' => $c->universidad_id,
+                'descripcion' => $c->descripcion,
+                'icono' => $c->icono,
+                'activa' => $c->activa,
+            ]);
+        $universidades = \App\Models\Universidad::orderBy('nombre')->get(['id', 'nombre']);
+        return Inertia::render('Admin/Carrers/Index', [
+            'carreras' => $carreras,
+            'universidades' => $universidades,
+        ]);
+    })->name('carreras');
+
+    Route::get('/questions', function () {
+        $preguntas = \App\Models\Pregunta::orderBy('orden')->get();
+        return Inertia::render('Admin/Questions/Index', [
+            'preguntas' => $preguntas,
+        ]);
+    })->name('questions');
+
     Route::get('/logs', function () {
         $logs = \App\Models\AdminLog::with('user:id,name')->orderByDesc('created_at')->paginate(20);
         return Inertia::render('Admin/Logs', [

@@ -23,7 +23,8 @@ export default function UsersIndex() {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este usuario?')) return;
         try {
-            await fetch(`/api/admin/entities/users/${id}`, { method: 'DELETE', credentials: 'include' });
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }, credentials: 'include' });
             setUsers(users.filter(u => u.id !== id));
         } catch (error) { console.error('Error:', error); }
     };

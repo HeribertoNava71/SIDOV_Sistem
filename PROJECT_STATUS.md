@@ -408,11 +408,16 @@ middleware('admin')         /admin/public → auth (session) + admin
 2. **Fase 2 – Seguridad** → Estado: ✅ COMPLETADA (2026-05-11)
    - 6 subtareas completadas (2A-2F). Ver historial.
 
-3. **Fase 3 – Panel Admin Completo** → Estado: ⚠️ PARCIAL
-   - Dependencias: Fase 1 y Fase 2 completas
+3. **Fase 3 – Panel Admin Completo** → Estado: ⚠️ PARCIAL (3A-3C completas, 3D-3F pendientes)
+   - 3A ✅ Menú admin con Carreras y Preguntas
+   - 3B ✅ Rutas `/admin/carreras` y `/admin/questions` + páginas React
+   - 3C ✅ `UserAdminController` (store/update/destroy) + rutas `/api/admin/users`
+   - 3D ⚠️ Roles CRUD ya usa rutas correctas (`/api/admin/roles`) — frontend corregido
+   - 3E ❌ Paginación en vistas admin
+   - 3F ❌ CRUD de Materias
 
-4. **Fase 4 – Datos** → Estado: ⚠️ PARCIAL (4/51 carreras con materias)
-   - Dependencias: Fase 3 (para poder agregar datos desde el admin)
+4. **Fase 4 – Datos** → Estado: ✅ PARCIAL COMPLETA (51/51 carreras con materias)
+   - MallaCurricularSeeder: 2976 materias en 51 carreras, 0 filas omitidas
 
 5. **Fase 5 – Frontend UX** → Estado: ⚠️ PARCIAL
    - Dependencias: Fases 1, 3, 4
@@ -433,6 +438,8 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase H completada: Admin Panel + MapaTamaulipas — 7 universidades, 51 carreras, 185 materias (4 carreras), Sanctum token en dashboard. Archivos: DashboardController, web.php, api_routes.php, Admin/* pages.
 - ✅ [2026-05-11] Fase 1 completada: 8 bugs críticos corregidos — 2FA login (session + logout), ActivityLog→AdminLog, Pregunta::with() inválido, ruta /profile (ProfileController), token acumulación (revocación previa), email verification listener, RegisterController redirect, check_roles.php eliminado. Archivos: LoginController, api_routes.php, web.php, DashboardController, EventServiceProvider, RegisterController.
 - ✅ [2026-05-11] Fase 2 completada: Seguridad — 2A: eliminación Bearer token de localStorage (EnsureFrontendRequestsAreStateful + session auth en admin forms + logout revoca tokens); 2B: throttle:60,1 en 3 grupos admin API; 2C: email personal sanitizado en PROJECT_STATUS; 2D: CSP sin unsafe-eval ni 127.0.0.1 en connect-src; 2E: SoftDeletes en User/Carrera/Universidad/Scholarship (4 migrations); 2F: AdminLog::log() en store/update/destroy de 4 controllers CRUD. 161 tests pasan.
+- ✅ [2026-05-11] Fase 3 (parcial) completada: Panel Admin — 3A: Carreras+Preguntas en menú AdminLayout; 3B: rutas web /admin/carreras y /admin/questions; 3C: UserAdminController (store/update/destroy con hash password + AdminLog), rutas /api/admin/users, fix DELETE URL en Users/Index.tsx, form con campo password. MallaCurricularSeeder reescrito: 2976 materias en 51 carreras (100% CSV). SoftDeletes 4 migrations aplicadas.
+- ✅ [2026-05-11] Fase 4A completada: MallaCurricularSeeder — CSV Mallas_Curriculares_UT_Tamaulipas.csv procesado con 2976 materias en 51 carreras, 0 filas omitidas. Fix alias "Lic. En Admón." → "LIC. EN ADMINISTRACIÓN". Base de datos ahora tiene malla curricular completa para todas las universidades tecnológicas de Tamaulipas.
 
 ---
 
@@ -445,7 +452,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 | permissions | 15+ | por módulo |
 | universidades | 7 | Tamaulipas |
 | carreras | 51 | Tamaulipas activas |
-| materias | 185 | Solo 4 carreras — faltan 47 |
+| materias | 2976 | 51/51 carreras — completo |
 | preguntas | 32 | Test vocacional |
 | courses | 0 | Sin datos |
 | tutors | 0 | Sin datos |
@@ -466,8 +473,8 @@ middleware('admin')         /admin/public → auth (session) + admin
 | [app/Http/Controllers/DashboardController.php](app/Http/Controllers/DashboardController.php) | Dashboard | ⚠️ Token acumula |
 | [app/Providers/EventServiceProvider.php](app/Providers/EventServiceProvider.php) | Eventos | ⚠️ Falta SendEmailVerification |
 | [app/Http/Controllers/TwoFactorController.php](app/Http/Controllers/TwoFactorController.php) | 2FA | ✅ OK (el bug es en Login) |
-| [resources/js/Layouts/Admin/AdminLayout.tsx](resources/js/Layouts/Admin/AdminLayout.tsx) | Layout admin | ⚠️ Menú incompleto |
-| [resources/js/Pages/Admin/Users/Index.tsx](resources/js/Pages/Admin/Users/Index.tsx) | Admin users | ❌ Ruta delete inexistente |
+| [resources/js/Layouts/Admin/AdminLayout.tsx](resources/js/Layouts/Admin/AdminLayout.tsx) | Layout admin | ✅ Menú completo (8 items) |
+| [resources/js/Pages/Admin/Users/Index.tsx](resources/js/Pages/Admin/Users/Index.tsx) | Admin users | ✅ DELETE /api/admin/users/{id} |
 
 ---
 

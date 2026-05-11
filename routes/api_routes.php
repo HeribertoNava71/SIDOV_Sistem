@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\UniversidadAdminController;
 use App\Http\Controllers\Admin\CarreraAdminController;
 use App\Http\Controllers\Admin\ScholarshipAdminController;
 use App\Http\Controllers\Admin\PreguntaAdminController;
+use App\Http\Controllers\Admin\UserAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -351,6 +352,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:60,1'])->
 
     Route::get('/users', [AdminController::class, 'users']);
     Route::get('/users/{id}', [AdminController::class, 'user'])->where('id', '[0-9]+');
+    Route::post('/users', [UserAdminController::class, 'store']);
+    Route::put('/users/{id}', [UserAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/users/{id}', [UserAdminController::class, 'destroy'])->where('id', '[0-9]+');
     Route::put('/users/{id}/roles', [AdminController::class, 'updateUserRoles'])->where('id', '[0-9]+');
 
     Route::get('/roles', [AdminController::class, 'roles']);

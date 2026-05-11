@@ -8,141 +8,144 @@ use Illuminate\Database\Seeder;
 
 class MallaCurricularSeeder extends Seeder
 {
-    private array $semesterMap = [
-        'I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, 'V' => 5,
-        'VI' => 6, 'VII' => 7, 'VIII' => 8, 'IX' => 9, 'X' => 10,
-        '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5,
-        '6' => 6, '7' => 7, '8' => 8, '9' => 9, '10' => 10,
+    private array $carreraCache = [];
+
+    private array $carreraAliases = [
+        'Lic. En Admón. Y Gestión Empresarial' => 'LIC. EN ADMINISTRACIÓN Y GESTIÓN EMPRESARIAL',
     ];
 
-    private array $carreraUniversidadMap = [];
-
-    private array $carreraNameMap = [
-        'LIC. EN ADMÓN. Y GESTIÓN EMPRESARIAL' => 'LIC. EN ADMINISTRACIÓN Y GESTIÓN EMPRESARIAL',
+    private array $uniMap = [
+        // New CSV format
+        'UP Altamira - Universidad Politécnica' => 'Universidad Politécnica de Altamira',
+        'UP Victoria - Universidad Politécnica' => 'Universidad Politécnica de Victoria',
+        'UT Altamira' => 'Universidad Tecnológica de Altamira',
+        'UT Matamoros - Modalidad BIS' => 'Universidad Tecnológica de Matamoros',
+        'UT Nuevo Laredo' => 'Universidad Tecnológica de Nuevo Laredo',
+        'UT Tamaulipas Norte' => 'Universidad Tecnológica de Tamaulipas Norte',
+        'UT del Mar de Tamaulipas Bicentenario' => 'Universidad Tecnológica del Mar de Tamaulipas Bicentenario',
+        // Old CSV format aliases
+        'UT Matamoros (Modalidad BIS)' => 'Universidad Tecnológica de Matamoros',
+        'UT Matamoros' => 'Universidad Tecnológica de Matamoros',
+        'UP Victoria' => 'Universidad Politécnica de Victoria',
+        'UP Altamira' => 'Universidad Politécnica de Altamira',
     ];
 
     public function run(): void
     {
-        $csvPath = base_path('mallas_curriculares.csv');
+        $newCsv = base_path('Mallas_Curriculares_UT_Tamaulipas.csv');
+        $oldCsv = base_path('mallas_curriculares.csv');
 
-        if (!file_exists($csvPath)) {
-            $this->command->error('CSV file not found: ' . $csvPath);
+        $csvPath = file_exists($newCsv) ? $newCsv : (file_exists($oldCsv) ? $oldCsv : null);
+
+        if (!$csvPath) {
+            $this->command->error('No se encontró ningún archivo CSV de mallas curriculares.');
             return;
         }
 
+        $this->command->info("Usando CSV: {$csvPath}");
+
         Materia::truncate();
-        Carrera::whereNotNull('id')->update(['vector' => '[]']);
 
         $handle = fopen($csvPath, 'r');
-        $header = fgetcsv($handle);
+        $header = fgetcsv($handle, 0, ',', '"', '');
+        $isNewFormat = count($header) >= 5;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 4) continue;
+        $created = 0;
+        $skipped = 0;
 
-            $universidadRaw = trim($row[0]);
-            $carreraRaw = trim($row[1]);
-            $cuatrimestreRaw = trim($row[2]);
-            $materiaNombre = trim($row[3]);
+        while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
+            if ($isNewFormat) {
+                if (count($row) < 5) continue;
+                $universidadRaw = trim($row[0]);
+                $carreraRaw = trim($row[1]);
+                $semestre = (int) trim($row[2]);
+                $materiaNombre = trim($row[4]);
+            } else {
+                if (count($row) < 4) continue;
+                $universidadRaw = trim($row[0]);
+                $carreraRaw = trim($row[1]);
+                $semestre = $this->parseSemester(trim($row[2]));
+                $materiaNombre = trim($row[3]);
+            }
+
+            if (empty($materiaNombre)) continue;
 
             $carreraId = $this->getCarreraId($universidadRaw, $carreraRaw);
-            if (!$carreraId) continue;
+            if (!$carreraId) {
+                $skipped++;
+                continue;
+            }
 
-            $semestre = $this->parseSemester($cuatrimestreRaw);
             $tipo = $this->determineTipo($materiaNombre, $semestre);
 
-            Materia::updateOrCreate(
+            Materia::firstOrCreate(
                 [
                     'carrera_id' => $carreraId,
                     'nombre' => $materiaNombre,
                     'semestre' => $semestre,
                 ],
-                [
-                    'tipo' => $tipo,
-                ]
+                ['tipo' => $tipo]
             );
+            $created++;
         }
 
         fclose($handle);
 
         $totalMaterias = Materia::count();
         $totalCarreras = Carrera::whereIn('id', Materia::distinct()->pluck('carrera_id'))->count();
-        $this->command->info("Se han creado {$totalMaterias} materias para {$totalCarreras} carreras.");
+        $this->command->info("Materias creadas: {$totalMaterias} en {$totalCarreras} carreras. Filas omitidas: {$skipped}.");
     }
 
     private function getCarreraId(string $universidadRaw, string $carreraRaw): ?int
     {
-        $carreraNormalized = $this->carreraNameMap[$carreraRaw] ?? $carreraRaw;
-        $key = $universidadRaw . '|' . $carreraNormalized;
+        $universidadNombre = $this->uniMap[$universidadRaw] ?? $universidadRaw;
+        $carreraRaw = $this->carreraAliases[$carreraRaw] ?? $carreraRaw;
+        $key = $universidadNombre . '|||' . strtoupper($carreraRaw);
 
-        if (isset($this->carreraUniversidadMap[$key])) {
-            return $this->carreraUniversidadMap[$key];
+        if (isset($this->carreraCache[$key])) {
+            return $this->carreraCache[$key];
         }
 
-        $uniMap = [
-            'UT Nuevo Laredo' => 'Universidad Tecnológica de Nuevo Laredo',
-            'UT Tamaulipas Norte' => 'Universidad Tecnológica de Tamaulipas Norte',
-            'UT Matamoros (Modalidad BIS)' => 'Universidad Tecnológica de Matamoros',
-            'UT Matamoros' => 'Universidad Tecnológica de Matamoros',
-            'UP Victoria' => 'Universidad Politécnica de Victoria',
-            'UP Altamira' => 'Universidad Politécnica de Altamira',
-            'LIC. EN ADMÓN. Y GESTIÓN EMPRESARIAL' => 'LIC. EN ADMINISTRACIÓN Y GESTIÓN EMPRESARIAL',
-            'UT del Mar de Tamaulipas Bicentenario' => 'Universidad Tecnológica del Mar de Tamaulipas Bicentenario',
-            'UP Altamira' => 'Universidad Politécnica de Altamira',
-            'UT Altamira' => 'Universidad Tecnológica de Altamira',
-        ];
+        // Exact case-insensitive match
+        $carrera = Carrera::whereHas('universidad', fn ($q) => $q->where('nombre', $universidadNombre))
+            ->whereRaw('UPPER(nombre) = UPPER(?)', [$carreraRaw])
+            ->first();
 
-        $universidadNombre = $uniMap[$universidadRaw] ?? $universidadRaw;
-
-        $carrera = Carrera::whereHas('universidad', function ($q) use ($universidadNombre) {
-            $q->where('nombre', $universidadNombre);
-        })->where('nombre', $carreraNormalized)->first();
-
+        // Fuzzy fallback: contains match
         if (!$carrera) {
-            $carrera = Carrera::whereHas('universidad', function ($q) use ($universidadNombre) {
-                $q->where('nombre', 'like', '%' . $universidadNombre . '%');
-            })->where('nombre', 'like', '%' . $carreraRaw . '%')->first();
+            $carrera = Carrera::whereHas('universidad', fn ($q) => $q->where('nombre', 'like', '%' . $universidadNombre . '%'))
+                ->whereRaw('UPPER(nombre) LIKE UPPER(?)', ['%' . substr($carreraRaw, 0, 20) . '%'])
+                ->first();
         }
 
         if ($carrera) {
-            $this->carreraUniversidadMap[$key] = $carrera->id;
+            $this->carreraCache[$key] = $carrera->id;
             return $carrera->id;
         }
 
-        $this->command->warn("Carrera no encontrada: {$carreraRaw} en {$universidadRaw}");
+        $this->command->warn("No encontrada: [{$universidadRaw}] → [{$carreraRaw}]");
         return null;
     }
 
-    private function parseSemester(string $cuatrimestreRaw): int
+    private function parseSemester(string $raw): int
     {
-        foreach ($this->semesterMap as $key => $value) {
-            if (stripos($cuatrimestreRaw, $key) !== false) {
-                return $value;
-            }
+        if (preg_match('/\d+/', $raw, $m)) {
+            return (int) $m[0];
         }
-
-        if (preg_match('/\d+/', $cuatrimestreRaw, $matches)) {
-            return (int) $matches[0];
+        $map = ['I' => 1, 'II' => 2, 'III' => 3, 'IV' => 4, 'V' => 5,
+                'VI' => 6, 'VII' => 7, 'VIII' => 8, 'IX' => 9, 'X' => 10];
+        foreach ($map as $k => $v) {
+            if (stripos($raw, $k) !== false) return $v;
         }
-
         return 1;
     }
 
     private function determineTipo(string $nombre, int $semestre): string
     {
-        $nombreUpper = strtoupper($nombre);
-
-        if (stripos($nombreUpper, 'ESTADÍA') !== false) {
-            return 'estadía';
-        }
-
-        if (stripos($nombreUpper, 'PROYECTO INTEGRADOR') !== false) {
-            return 'integradora';
-        }
-
-        if (stripos($nombreUpper, 'OPTATIVA') !== false) {
-            return 'optativa';
-        }
-
+        $upper = strtoupper($nombre);
+        if (stripos($upper, 'ESTADÍA') !== false) return 'estadía';
+        if (stripos($upper, 'PROYECTO INTEGRADOR') !== false) return 'integradora';
+        if (stripos($upper, 'OPTATIVA') !== false) return 'optativa';
         return 'normal';
     }
 }
