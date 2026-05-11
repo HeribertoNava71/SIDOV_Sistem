@@ -19,9 +19,6 @@ public function index(Request $request): Response
     {
         $user = $request->user();
 
-        $user->tokens()->where('name', 'auth-token')->delete();
-        $token = $user->createToken('auth-token')->plainTextToken;
-
         $stats = $this->statsService->getUserStats($user);
 
         $recentActivity = $this->activityService->getRecentActivities($user, 10);
@@ -29,7 +26,6 @@ public function index(Request $request): Response
         return Inertia::render('Dashboard/Index', [
             'auth' => [
                 'user' => $user,
-                'token' => $token,
             ],
             'stats' => $stats->toArray(),
             'recentActivity' => $recentActivity->map(fn($a) => $a->toArray())->toArray(),

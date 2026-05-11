@@ -16,9 +16,9 @@ export default function Form({ user, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const url = user?.id ? `/api/admin/entities/users/${user.id}` : '/api/admin/entities/users';
-            const res = await fetch(url, { method: user?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const url = user?.id ? `/api/admin/users/${user.id}` : '/api/admin/users';
+            const res = await fetch(url, { method: user?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, credentials: 'include', body: JSON.stringify(form) });
             if (res.ok) { onSuccess(); onClose(); }
         } catch (error) { console.error('Error:', error); }
         finally { setSaving(false); }

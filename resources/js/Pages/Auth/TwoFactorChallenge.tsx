@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
 export default function TwoFactorChallenge() {
     const [code, setCode] = useState('');
@@ -12,7 +12,7 @@ export default function TwoFactorChallenge() {
         setError('');
 
         try {
-            const res = await fetch('/api/two-factor/challenge', {
+            const res = await fetch('/two-factor/challenge', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -22,12 +22,10 @@ export default function TwoFactorChallenge() {
                 body: JSON.stringify({ code }),
             });
 
-            const data = await res.json();
-
-            if (res.ok && data.token) {
-                localStorage.setItem('auth_token', data.token);
+            if (res.ok) {
                 window.location.href = '/dashboard';
             } else {
+                const data = await res.json();
                 setError(data.error || 'Código inválido.');
             }
         } catch (err) {

@@ -402,12 +402,11 @@ middleware('admin')         /admin/public → auth (session) + admin
 
 **Lo que sigue (ordenado por impacto/urgencia):**
 
-1. **Fase 1 – Correcciones Críticas** → Estado: ❌ NO INICIADA
-   - Son 8 subfases, estimado: 2-4 horas
-   - Dependencias: ninguna — se pueden hacer de inmediato
+1. **Fase 1 – Correcciones Críticas** → Estado: ✅ COMPLETADA (2026-05-11)
+   - 8 bugs críticos corregidos. Commit: ee88f16
 
-2. **Fase 2 – Seguridad** → Estado: ❌ NO INICIADA
-   - Dependencias: Fase 1 completa
+2. **Fase 2 – Seguridad** → Estado: ✅ COMPLETADA (2026-05-11)
+   - 6 subtareas completadas (2A-2F). Ver historial.
 
 3. **Fase 3 – Panel Admin Completo** → Estado: ⚠️ PARCIAL
    - Dependencias: Fase 1 y Fase 2 completas
@@ -433,6 +432,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase G completada: Autenticación completa — email verification, 2FA, password reset, LoginController flow. Archivos: User.php, LoginController, TwoFactorController, templates email.
 - ✅ [2026-05-11] Fase H completada: Admin Panel + MapaTamaulipas — 7 universidades, 51 carreras, 185 materias (4 carreras), Sanctum token en dashboard. Archivos: DashboardController, web.php, api_routes.php, Admin/* pages.
 - ✅ [2026-05-11] Fase 1 completada: 8 bugs críticos corregidos — 2FA login (session + logout), ActivityLog→AdminLog, Pregunta::with() inválido, ruta /profile (ProfileController), token acumulación (revocación previa), email verification listener, RegisterController redirect, check_roles.php eliminado. Archivos: LoginController, api_routes.php, web.php, DashboardController, EventServiceProvider, RegisterController.
+- ✅ [2026-05-11] Fase 2 completada: Seguridad — 2A: eliminación Bearer token de localStorage (EnsureFrontendRequestsAreStateful + session auth en admin forms + logout revoca tokens); 2B: throttle:60,1 en 3 grupos admin API; 2C: email personal sanitizado en PROJECT_STATUS; 2D: CSP sin unsafe-eval ni 127.0.0.1 en connect-src; 2E: SoftDeletes en User/Carrera/Universidad/Scholarship (4 migrations); 2F: AdminLog::log() en store/update/destroy de 4 controllers CRUD. 161 tests pasan.
 
 ---
 
@@ -440,7 +440,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 
 | Tabla | Registros | Notas |
 |-------|-----------|-------|
-| users | 2 | test@example.com (admin), poncho.pjm.5a@gmail.com |
+| users | 2 | test@example.com (admin), dev@example.com |
 | roles | 2 | admin, user |
 | permissions | 15+ | por módulo |
 | universidades | 7 | Tamaulipas |

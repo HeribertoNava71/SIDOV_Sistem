@@ -8,7 +8,6 @@
  */
 
 import { Head, Link } from '@inertiajs/react';
-import { useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card, { StatCard } from '@/Components/UI/Card';
 import Button from '@/Components/UI/Button';
@@ -16,12 +15,6 @@ import { DashboardProps } from '@/types';
 
 export default function Dashboard({ auth, stats }: DashboardProps) {
     const user = auth.user;
-
-    useEffect(() => {
-        if (auth.token) {
-            localStorage.setItem('auth_token', auth.token);
-        }
-    }, [auth.token]);
 
     const xpProgress = (stats.xp / stats.nextLevelXp) * 100;
 

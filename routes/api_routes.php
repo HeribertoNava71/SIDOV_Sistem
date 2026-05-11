@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'admin'])->prefix('admin/public')->group(function () {
+Route::middleware(['auth', 'admin', 'throttle:60,1'])->prefix('admin/public')->group(function () {
     Route::get('/stats', function () {
         return response()->json([
             'total_users' => \App\Models\User::count(),
@@ -345,7 +345,7 @@ Route::prefix('carreras')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:60,1'])->group(function () {
 
     Route::get('/stats', [AdminController::class, 'stats']);
 
@@ -371,7 +371,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin/entities')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin/entities')->middleware(['auth', 'admin', 'throttle:60,1'])->group(function () {
 
     Route::get('/universidades', [UniversidadAdminController::class, 'index']);
     Route::post('/universidades', [UniversidadAdminController::class, 'store']);

@@ -48,7 +48,7 @@ export interface DashboardStats {
 }
 
 export interface DashboardProps extends PageProps {
-    auth: { user: User | null; token?: string };
+    auth: { user: User | null };
     stats: DashboardStats;
     recentActivity: Activity[];
     recommendations: {

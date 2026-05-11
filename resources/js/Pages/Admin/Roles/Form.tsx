@@ -22,9 +22,9 @@ export default function Form({ role, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const url = role?.id ? `/api/admin/entities/roles/${role.id}` : '/api/admin/entities/roles';
-            const res = await fetch(url, { method: role?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const url = role?.id ? `/api/admin/roles/${role.id}` : '/api/admin/roles';
+            const res = await fetch(url, { method: role?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, credentials: 'include', body: JSON.stringify(form) });
             if (res.ok) { onSuccess(); onClose(); }
         } catch (error) { console.error('Error:', error); }
         finally { setSaving(false); }

@@ -17,6 +17,9 @@ class LogoutController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Revocar todos los tokens Sanctum del usuario
+        $request->user()?->tokens()->delete();
+
         // Cerrar sesión
         Auth::guard('web')->logout();
 

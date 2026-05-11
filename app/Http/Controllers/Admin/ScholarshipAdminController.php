@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreScholarshipRequest;
 use App\Http\Requests\Admin\UpdateScholarshipRequest;
+use App\Models\AdminLog;
 use App\Models\Scholarship;
 use Illuminate\Http\JsonResponse;
 
@@ -37,6 +38,8 @@ class ScholarshipAdminController extends Controller
             }
         }
 
+        AdminLog::log(auth()->id(), 'create', 'scholarship', $scholarship->id, null, $scholarship->toArray());
+
         return response()->json([
             'data' => $scholarship->load('requirements'),
             'message' => 'Beca creada exitosamente',
@@ -68,7 +71,10 @@ class ScholarshipAdminController extends Controller
             ], 404);
         }
 
+        $oldData = $scholarship->toArray();
         $scholarship->update($request->validated());
+
+        AdminLog::log(auth()->id(), 'update', 'scholarship', $scholarship->id, $oldData, $scholarship->fresh()->toArray());
 
         return response()->json([
             'data' => $scholarship->fresh()->load('requirements'),
@@ -92,8 +98,11 @@ class ScholarshipAdminController extends Controller
             ], 422);
         }
 
+        $snapshot = $scholarship->toArray();
         $scholarship->requirements()->delete();
         $scholarship->delete();
+
+        AdminLog::log(auth()->id(), 'delete', 'scholarship', $scholarship->id, $snapshot, null);
 
         return response()->json([
             'message' => 'Beca eliminada exitosamente',
