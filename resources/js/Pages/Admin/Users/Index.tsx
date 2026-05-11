@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 
@@ -8,13 +8,21 @@ interface User {
     created_at: string; roles?: { id: number; name: string }[];
 }
 
+interface Pagination {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+}
+
 interface PageProps {
     users: User[];
+    pagination: Pagination;
     [key: string]: any;
 }
 
 export default function UsersIndex() {
-    const { users: initialUsers } = usePage<PageProps>().props;
+    const { users: initialUsers, pagination } = usePage<PageProps>().props;
     const [users, setUsers] = useState(initialUsers);
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -32,7 +40,11 @@ export default function UsersIndex() {
     const openEdit = (user: User) => { setEditingItem(user); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { window.location.reload(); };
+    const handleSuccess = () => { router.reload(); };
+
+    const goToPage = (page: number) => {
+        router.get('/admin/users', { page }, { preserveScroll: true, preserveState: true });
+    };
 
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -95,6 +107,37 @@ export default function UsersIndex() {
                     </tbody>
                 </table>
             </div>
+
+            {pagination.last_page > 1 && (
+                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+                    <span>{pagination.total} usuarios en total</span>
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => goToPage(pagination.current_page - 1)}
+                            disabled={pagination.current_page === 1}
+                            className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                        >
+                            ‹ Anterior
+                        </button>
+                        {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(p => (
+                            <button
+                                key={p}
+                                onClick={() => goToPage(p)}
+                                className={`px-3 py-1.5 rounded-lg border ${p === pagination.current_page ? 'bg-[#46178F] text-white border-[#46178F]' : 'border-slate-300 hover:bg-slate-50'}`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => goToPage(pagination.current_page + 1)}
+                            disabled={pagination.current_page === pagination.last_page}
+                            className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                        >
+                            Siguiente ›
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {showForm && <Form user={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />}
         </AdminLayout>

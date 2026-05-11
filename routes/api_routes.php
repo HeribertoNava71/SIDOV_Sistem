@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UniversidadAdminController;
 use App\Http\Controllers\Admin\CarreraAdminController;
 use App\Http\Controllers\Admin\ScholarshipAdminController;
+use App\Http\Controllers\Admin\MateriaAdminController;
 use App\Http\Controllers\Admin\PreguntaAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use Illuminate\Support\Facades\Route;
@@ -400,6 +401,11 @@ Route::prefix('admin/entities')->middleware(['auth', 'admin', 'throttle:60,1'])-
     Route::get('/preguntas/{id}', [PreguntaAdminController::class, 'show'])->where('id', '[0-9]+');
     Route::put('/preguntas/{id}', [PreguntaAdminController::class, 'update'])->where('id', '[0-9]+');
     Route::delete('/preguntas/{id}', [PreguntaAdminController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::get('/materias', [MateriaAdminController::class, 'index']);
+    Route::post('/materias', [MateriaAdminController::class, 'store']);
+    Route::put('/materias/{id}', [MateriaAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/materias/{id}', [MateriaAdminController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
 

@@ -137,8 +137,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ]);
     })->name('scholarships');
 
-    Route::get('/users', function () {
-        $users = \App\Models\User::with('roles:id,name')->orderBy('name')->get()->map(function ($u) {
+    Route::get('/users', function (\Illuminate\Http\Request $request) {
+        $paginator = \App\Models\User::with('roles:id,name')
+            ->orderBy('name')
+            ->paginate(25);
+        $users = collect($paginator->items())->map(function ($u) {
             return [
                 'id' => $u->id,
                 'name' => $u->name,
@@ -150,6 +153,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         });
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+            ],
         ]);
     })->name('users');
 
