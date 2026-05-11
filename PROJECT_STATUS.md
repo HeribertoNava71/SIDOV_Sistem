@@ -408,13 +408,13 @@ middleware('admin')         /admin/public → auth (session) + admin
 2. **Fase 2 – Seguridad** → Estado: ✅ COMPLETADA (2026-05-11)
    - 6 subtareas completadas (2A-2F). Ver historial.
 
-3. **Fase 3 – Panel Admin Completo** → Estado: ⚠️ PARCIAL (3A-3C completas, 3D-3F pendientes)
+3. **Fase 3 – Panel Admin Completo** → Estado: ✅ COMPLETADA (2026-05-11)
    - 3A ✅ Menú admin con Carreras y Preguntas
    - 3B ✅ Rutas `/admin/carreras` y `/admin/questions` + páginas React
    - 3C ✅ `UserAdminController` (store/update/destroy) + rutas `/api/admin/users`
-   - 3D ⚠️ Roles CRUD ya usa rutas correctas (`/api/admin/roles`) — frontend corregido
-   - 3E ❌ Paginación en vistas admin
-   - 3F ❌ CRUD de Materias
+   - 3D ✅ Roles CRUD usa rutas correctas (`/api/admin/roles`) — frontend corregido
+   - 3E ✅ Paginación en vistas admin (Users: paginate(25) + controles React)
+   - 3F ✅ CRUD de Materias inline en Carreras (`MateriaAdminController` + panel expandible)
 
 4. **Fase 4 – Datos** → Estado: ✅ PARCIAL COMPLETA (51/51 carreras con materias)
    - MallaCurricularSeeder: 2976 materias en 51 carreras, 0 filas omitidas
@@ -440,6 +440,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase 2 completada: Seguridad — 2A: eliminación Bearer token de localStorage (EnsureFrontendRequestsAreStateful + session auth en admin forms + logout revoca tokens); 2B: throttle:60,1 en 3 grupos admin API; 2C: email personal sanitizado en PROJECT_STATUS; 2D: CSP sin unsafe-eval ni 127.0.0.1 en connect-src; 2E: SoftDeletes en User/Carrera/Universidad/Scholarship (4 migrations); 2F: AdminLog::log() en store/update/destroy de 4 controllers CRUD. 161 tests pasan.
 - ✅ [2026-05-11] Fase 3 (parcial) completada: Panel Admin — 3A: Carreras+Preguntas en menú AdminLayout; 3B: rutas web /admin/carreras y /admin/questions; 3C: UserAdminController (store/update/destroy con hash password + AdminLog), rutas /api/admin/users, fix DELETE URL en Users/Index.tsx, form con campo password. MallaCurricularSeeder reescrito: 2976 materias en 51 carreras (100% CSV). SoftDeletes 4 migrations aplicadas.
 - ✅ [2026-05-11] Fase 4A completada: MallaCurricularSeeder — CSV Mallas_Curriculares_UT_Tamaulipas.csv procesado con 2976 materias en 51 carreras, 0 filas omitidas. Fix alias "Lic. En Admón." → "LIC. EN ADMINISTRACIÓN". Base de datos ahora tiene malla curricular completa para todas las universidades tecnológicas de Tamaulipas.
+- ✅ [2026-05-11] Fase 3 completada: 3E paginación Users (paginate(25) + controles Inertia router), 3F MateriaAdminController (index/store/update/destroy + AdminLog), rutas /api/admin/entities/materias, Carrers/Index.tsx con panel expandible de materias (lazy load, add/edit/delete inline, CSRF).
 
 ---
 
