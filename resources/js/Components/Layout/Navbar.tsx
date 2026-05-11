@@ -11,7 +11,7 @@ export default function Navbar() {
     { name: 'Aprende', href: '/learn' },
     { name: 'Aspira', href: '/aspire' },
     { name: 'Universidades', href: '/universities' },
-    { name: 'Test Wrapped', href: '/test-wrapped' },  // ← Añadir esto
+    { name: 'Test Wrapped', href: '/test-wrapped' },  
     { name: 'Contacto', href: '/contact' },
     ];
 

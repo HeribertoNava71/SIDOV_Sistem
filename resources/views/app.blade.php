@@ -14,7 +14,7 @@
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-        <!-- Scripts -->
+        <!-- Scripts --> 
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])

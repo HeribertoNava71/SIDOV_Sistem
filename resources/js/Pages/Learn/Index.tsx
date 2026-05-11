@@ -1,243 +1,225 @@
 /**
- * Página: Learn Index (Aprende - Maqueta)
+ * Página: Learn Index (Aprende)
  * Ruta: GET /learn
  * Nombre: learn.index
- * 
- * Página principal del módulo Aprende con listado de
- * cursos gratuitos/de pago y tutores disponibles.
+ *
+ * Muestra exclusivamente 3 cursos escalados de programación
+ * por Heriberto Geovanny Nava López:
+ *   1. Básico (🌱) → 2. Intermedio (🚀) → 3. Avanzado (🔥)
  */
 
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card from '@/Components/UI/Card';
 import Button from '@/Components/UI/Button';
-import { LearnPageProps, Course, Tutor } from '@/types';
+import type { LearnIndexProps, Course } from '@/types/learn';
 
-export default function LearnIndex({ auth, courses, tutors, categories }: LearnPageProps) {
-    const [activeTab, setActiveTab] = useState<'courses' | 'tutors'>('courses');
-    const [selectedCategory, setSelectedCategory] = useState('Todos');
-    const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
+const LEVEL_LABELS: Record<string, string> = {
+    basico: 'Básico',
+    intermedio: 'Intermedio',
+    avanzado: 'Avanzado',
+};
 
-    // Filtrar cursos
-    const filteredCourses = courses.filter(course => {
-        const categoryMatch = selectedCategory === 'Todos' || course.category === selectedCategory;
-        const priceMatch = priceFilter === 'all' || 
-            (priceFilter === 'free' && course.price === null) ||
-            (priceFilter === 'paid' && course.price !== null);
-        return categoryMatch && priceMatch;
-    });
-
+export default function LearnIndex({ courses }: LearnIndexProps) {
     return (
         <AuthenticatedLayout>
-            <Head title="Aprende - Cursos y Tutores" />
+            <Head title="Aprende — Programación con Python" />
 
-            {/* Hero */}
-            <section className="bg-gradient-to-br from-[#E21B3C]/10 via-white to-[#EB670F]/10 py-16">
-                <div className="max-w-7xl mx-auto px-6 text-center">
+            {/* ───── Hero ───── */}
+            <section className="bg-gradient-to-br from-[#1368CE]/10 via-white to-[#46178F]/10 py-16">
+                <div className="max-w-5xl mx-auto px-6 text-center">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#46178F]/10 text-[#46178F] mb-4">
                         📚 Aprende
                     </span>
                     <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                        Impulsa tu <span className="bg-gradient-to-r from-[#E21B3C] to-[#EB670F] bg-clip-text text-transparent">trayectoria académica</span>
+                        Fundamentos de{' '}
+                        <span className="bg-gradient-to-r from-[#1368CE] to-[#46178F] bg-clip-text text-transparent">
+                            Programación
+                        </span>
                     </h1>
-                    <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                        Cursos gratuitos y de pago, tutores calificados y recursos para prepararte para tu futuro profesional.
+                    <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-2">
+                        De cero a tu primer proyecto real con Python, en 8 módulos y 8 horas.
+                    </p>
+                    <p className="text-sm text-slate-500">
+                        Por <strong>Heriberto Geovanny Nava López</strong>
                     </p>
                 </div>
             </section>
 
-            {/* Tabs */}
-            <section className="border-b border-slate-200 bg-white sticky top-20 z-30">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="flex gap-8">
-                        <button
-                            onClick={() => setActiveTab('courses')}
-                            className={`py-4 px-2 border-b-2 font-medium transition-colors ${
-                                activeTab === 'courses'
-                                    ? 'border-[#46178F] text-[#46178F]'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                            }`}
-                        >
-                            Cursos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('tutors')}
-                            className={`py-4 px-2 border-b-2 font-medium transition-colors ${
-                                activeTab === 'tutors'
-                                    ? 'border-[#46178F] text-[#46178F]'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                            }`}
-                        >
-                            Tutores
-                        </button>
+            {/* ───── Ruta visual ───── */}
+            <section className="py-4 bg-white border-b border-slate-200">
+                <div className="max-w-5xl mx-auto px-6">
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                        {courses.map((course, idx) => (
+                            <div key={course.id} className="flex items-center gap-2">
+                                <span
+                                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-medium ${
+                                        course.unlocked
+                                            ? 'bg-slate-900 text-white'
+                                            : 'bg-slate-100 text-slate-400'
+                                    }`}
+                                >
+                                    {course.emoji} {LEVEL_LABELS[course.level]}
+                                </span>
+                                {idx < courses.length - 1 && (
+                                    <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Content */}
+            {/* ───── Cursos ───── */}
             <section className="py-12">
-                <div className="max-w-7xl mx-auto px-6">
-                    {activeTab === 'courses' ? (
-                        <>
-                            {/* Filters */}
-                            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-                                <div className="flex flex-wrap gap-2">
-                                    {categories.map(cat => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => setSelectedCategory(cat)}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                                selectedCategory === cat
-                                                    ? 'bg-[#46178F] text-white'
-                                                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                                            }`}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2">
-                                    {[
-                                        { value: 'all', label: 'Todos' },
-                                        { value: 'free', label: 'Gratis' },
-                                        { value: 'paid', label: 'De pago' },
-                                    ].map(filter => (
-                                        <button
-                                            key={filter.value}
-                                            onClick={() => setPriceFilter(filter.value as any)}
-                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                                                priceFilter === filter.value
-                                                    ? 'bg-slate-900 text-white'
-                                                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                                            }`}
-                                        >
-                                            {filter.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                <div className="max-w-5xl mx-auto px-6 space-y-8">
+                    {courses.map((course, idx) => (
+                        <CourseCard key={course.id} course={course} index={idx} />
+                    ))}
+                </div>
+            </section>
 
-                            {/* Courses Grid */}
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredCourses.map((course) => (
-                                    <CourseCard key={course.id} course={course} />
-                                ))}
+            {/* ───── Footer info ───── */}
+            <section className="py-12 bg-slate-50 border-t border-slate-200">
+                <div className="max-w-5xl mx-auto px-6 text-center">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6">Lo que ganarás al completar todo</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {[
+                            { emoji: '⏱️', value: '8 horas', label: 'de contenido' },
+                            { emoji: '🧪', value: '30+', label: 'ejercicios' },
+                            { emoji: '⚡', value: '925', label: 'XP totales' },
+                            { emoji: '🏅', value: '8', label: 'insignias' },
+                        ].map((stat) => (
+                            <div key={stat.label} className="bg-white rounded-2xl p-6 shadow-sm">
+                                <span className="text-3xl mb-2 block">{stat.emoji}</span>
+                                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                                <p className="text-sm text-slate-500">{stat.label}</p>
                             </div>
-
-                            {filteredCourses.length === 0 && (
-                                <div className="text-center py-16">
-                                    <p className="text-slate-600">No se encontraron cursos con los filtros seleccionados.</p>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        /* Tutors Grid */
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {tutors.map((tutor) => (
-                                <TutorCard key={tutor.id} tutor={tutor} />
-                            ))}
-                        </div>
-                    )}
+                        ))}
+                    </div>
                 </div>
             </section>
         </AuthenticatedLayout>
     );
 }
 
-// =============================================
-// COMPONENTE: CourseCard (Tarjeta de Curso)
-// =============================================
-function CourseCard({ course }: { course: Course }) {
+// ═══════════════════════════════════════════════
+// Componente: CourseCard
+// ═══════════════════════════════════════════════
+function CourseCard({ course, index }: { course: Course; index: number }) {
+    const locked = !course.unlocked;
+
     return (
-        <Card padding="none" className="group cursor-pointer">
-            {/* Image placeholder */}
-            <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#46178F]/20 to-[#1368CE]/20 group-hover:opacity-70 transition-opacity" />
-                <div className="absolute top-4 right-4">
-                    {course.price === null ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#26890C] text-white">
-                            Gratis
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-900">
-                            ${course.price} MXN
-                        </span>
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+        >
+            <Card padding="none" className={`overflow-hidden ${locked ? 'opacity-70' : ''}`}>
+                {/* Header con gradiente */}
+                <div className={`bg-gradient-to-r ${course.hero_gradient} px-8 py-6 text-white relative`}>
+                    <span className="absolute top-4 right-4 text-5xl opacity-20 font-bold">
+                        {course.emoji}
+                    </span>
+                    <div className="flex items-center gap-3 mb-2">
+                        <span className="text-3xl">{course.emoji}</span>
+                        <div>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-white/20">
+                                {LEVEL_LABELS[course.level]} · {Math.round(course.duration_minutes / 60)} h
+                            </span>
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-1">{course.title}</h2>
+                    <p className="text-white/80 text-sm">{course.subtitle}</p>
+
+                    {/* Barra de progreso */}
+                    {!locked && course.progress_pct > 0 && (
+                        <div className="mt-4">
+                            <div className="flex justify-between text-xs mb-1">
+                                <span>Progreso</span>
+                                <span>{course.progress_pct}%</span>
+                            </div>
+                            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-white rounded-full transition-all duration-500"
+                                    style={{ width: `${course.progress_pct}%` }}
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
-                <div className="absolute bottom-4 left-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-slate-700">
-                        {course.category}
-                    </span>
-                </div>
-            </div>
-            <div className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-[#46178F] transition-colors">
-                    {course.title}
-                </h3>
-                <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                    {course.description}
-                </p>
-                <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-                    <span>{course.instructor}</span>
-                </div>
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-1">
-                        <svg className="w-4 h-4 text-[#D89E00]" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="font-medium">{course.rating}</span>
-                        <span className="text-slate-400">({course.students.toLocaleString()})</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <span>{course.duration}</span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-[#46178F]/10 text-[#46178F]">
-                            {course.level}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </Card>
-    );
-}
 
-// =============================================
-// COMPONENTE: TutorCard (Tarjeta de Tutor)
-// =============================================
-function TutorCard({ tutor }: { tutor: Tutor }) {
-    return (
-        <Card>
-            <div className="flex gap-6">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl font-bold text-white">
-                        {tutor.name.split(' ').map(n => n[0]).join('')}
-                    </span>
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900">{tutor.name}</h3>
-                    <p className="text-[#46178F] font-medium text-sm mb-2">{tutor.specialty}</p>
-                    <p className="text-sm text-slate-600 mb-4">{tutor.bio}</p>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                                <svg className="w-4 h-4 text-[#D89E00]" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <span className="font-medium">{tutor.rating}</span>
-                            </div>
-                            <span className="text-slate-400 text-sm">({tutor.reviews} reseñas)</span>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-lg font-bold text-slate-900">${tutor.price}</p>
-                            <p className="text-xs text-slate-500">por hora</p>
+                {/* Body */}
+                <div className="p-8">
+                    <p className="text-slate-600 mb-6">{course.description}</p>
+
+                    {/* Learning outcomes */}
+                    <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-slate-900 mb-3">Lo que aprenderás:</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {course.learning_outcomes.map((outcome, i) => (
+                                <div key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#26890C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {outcome}
+                                </div>
+                            ))}
                         </div>
                     </div>
+
+                    {/* Módulos preview */}
+                    {course.modules_preview && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-semibold text-slate-900 mb-3">Módulos:</h3>
+                            <div className="space-y-2">
+                                {course.modules_preview.map((mod) => (
+                                    <div
+                                        key={mod.order_in_course}
+                                        className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl text-sm"
+                                    >
+                                        <span className="text-xl">{mod.badge_emoji}</span>
+                                        <span className="flex-1 font-medium text-slate-700">{mod.title}</span>
+                                        <span className="text-slate-400">{mod.duration_minutes} min</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CTA */}
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <span>⏱️ {Math.round(course.duration_minutes / 60)} horas</span>
+                            <span>📦 {course.module_count} módulos</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#26890C]/10 text-[#26890C]">
+                                {course.price === null ? 'Gratis' : `$${course.price} MXN`}
+                            </span>
+                        </div>
+
+                        {locked ? (
+                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Completa {course.prerequisite?.title ?? 'el anterior'} primero
+                            </div>
+                        ) : (
+                            <Link href={`/learn/${course.slug}`}>
+                                <Button>
+                                    {course.progress_pct > 0 ? 'Continuar' : 'Comenzar'}
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-                <Button variant="secondary" className="flex-1">Ver Perfil</Button>
-                <Button className="flex-1">Agendar Clase</Button>
-            </div>
-        </Card>
+            </Card>
+        </motion.div>
     );
 }

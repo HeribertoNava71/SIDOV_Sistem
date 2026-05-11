@@ -26,12 +26,9 @@ Route::get('/universidades-tamaulipas', function () {
     return Inertia::render('Universities/MapaTamaulipas');
 })->name('universidades.mapa');
 
-// Detalles de cada universidad
+// Detalles de cada universidad — redirige al mapa con el drawer abierto
 Route::get('/universidad/{id}', function ($id) {
-    return Inertia::render('Universities/DetalleUniversidad', [
-        'universidadId' => (int) $id,
-        'animacionEntrada' => true,
-    ]);
+    return redirect('/universidades-tamaulipas?uni='.(int) $id);
 })->name('universidad.detalle');
 
 // Página de universidades general
@@ -74,9 +71,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
     
-    // Módulo Aprende
+    // Módulo Aprende (Programación con Python · 3 cursos · 8 módulos)
     Route::prefix('learn')->name('learn.')->group(function () {
         Route::get('/', [LearnController::class, 'index'])->name('index');
+        Route::get('/{course:slug}', [LearnController::class, 'show'])->name('course.show');
+        Route::get('/{course:slug}/modulo/{module:slug}', [LearnController::class, 'module'])->name('module.show');
+        Route::post('/modulo/{module}/completar', [LearnController::class, 'complete'])->name('module.complete');
     });
 
     // Módulo Aspira (becas)
