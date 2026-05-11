@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
-use Illuminate\View\View;
+use Inertia\Inertia;
 
 class TwoFactorController extends Controller
 {
-    public function showSetup(): View
+    public function showSetup()
     {
         $user = Auth::user();
         $twoFactor = $user->twoFactorAuthentication ?? new TwoFactorAuthentication(['user_id' => $user->id]);
@@ -31,7 +31,7 @@ class TwoFactorController extends Controller
 
         $qrCodeUrl = $twoFactor->getQRCodeUrl($user->email);
 
-        return view('auth.two-factor-setup', [
+        return Inertia::render('Auth/TwoFactorSetup', [
             'qrCodeUrl' => $qrCodeUrl,
             'secret' => $twoFactor->secret,
         ]);
@@ -92,9 +92,9 @@ class TwoFactorController extends Controller
         return redirect()->route('dashboard')->with('status', '2FA deshabilitado.');
     }
 
-    public function showChallenge(): View
+    public function showChallenge()
     {
-        return view('auth.two-factor-challenge');
+        return Inertia::render('Auth/TwoFactorChallenge');
     }
 
     public function challenge(Request $request): JsonResponse|RedirectResponse

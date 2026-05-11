@@ -53,7 +53,6 @@ export default function UniversidadForm({ universidad, onSuccess, onCancel }: Pr
         setErrors({});
 
         try {
-            const token = localStorage.getItem('auth_token');
             const url = universidad?.id
                 ? `/api/admin/entities/universidades/${universidad.id}`
                 : '/api/admin/entities/universidades';
@@ -61,10 +60,8 @@ export default function UniversidadForm({ universidad, onSuccess, onCancel }: Pr
 
             const res = await fetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(formData),
             });
 

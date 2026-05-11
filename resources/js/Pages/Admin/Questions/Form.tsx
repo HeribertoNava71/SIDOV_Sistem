@@ -39,11 +39,11 @@ export default function Form({ pregunta, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
             const url = pregunta?.id ? `/api/admin/entities/preguntas/${pregunta.id}` : '/api/admin/entities/preguntas';
             const res = await fetch(url, {
                 method: pregunta?.id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ ...form, opciones }),
             });
             if (res.ok) { onSuccess(); onClose(); }

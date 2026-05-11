@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 
@@ -10,28 +10,21 @@ interface Scholarship {
     is_active: boolean; is_featured: boolean; university_id: string;
 }
 
+interface PageProps {
+    scholarships: Scholarship[];
+    [key: string]: any;
+}
+
 export default function ScholarshipsIndex() {
-    const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { scholarships: initialScholarships } = usePage<PageProps>().props;
+    const [scholarships, setScholarships] = useState(initialScholarships);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Scholarship | null>(null);
-
-    useEffect(() => { fetchData(); }, []);
-
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/admin/entities/scholarships', { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) { const data = await res.json(); setScholarships(data.data || []); }
-        } catch (error) { console.error('Error:', error); }
-        finally { setLoading(false); }
-    };
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta beca?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
-            await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+            await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', credentials: 'include' });
             setScholarships(scholarships.filter(s => s.id !== id));
         } catch (error) { console.error('Error:', error); }
     };
@@ -39,7 +32,7 @@ export default function ScholarshipsIndex() {
     const openEdit = (item: Scholarship) => { setEditingItem(item); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { fetchData(); closeForm(); };
+    const handleSuccess = () => { window.location.reload(); };
 
     return (
         <AdminLayout>

@@ -22,11 +22,11 @@ export default function CarrerForm({ carrera, universidades, onSuccess, onCancel
         e.preventDefault();
         setSubmitting(true);
         try {
-            const token = localStorage.getItem('auth_token');
             const url = carrera?.id ? `/api/admin/entities/carreras/${carrera.id}` : '/api/admin/entities/carreras';
             const res = await fetch(url, {
                 method: carrera?.id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(formData),
             });
             if (res.ok) onSuccess();

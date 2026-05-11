@@ -102,25 +102,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Two-Factor Authentication
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
-        Route::get('/setup', function () {
-            $user = auth()->user();
-            $twoFactor = $user->twoFactorAuthentication ?? new \App\Models\TwoFactorAuthentication(['user_id' => $user->id]);
-
-            if ($twoFactor->isEnabled()) {
-                return redirect()->route('dashboard')->with('status', '2FA ya esta habilitado.');
-            }
-
-            if (!$twoFactor->secret) {
-                $secret = $twoFactor->generateSecret();
-                $twoFactor->secret = $secret;
-                $twoFactor->save();
-            }
-
-            return Inertia::render('Auth/TwoFactorSetup', [
-                'qrCodeUrl' => $twoFactor->getQRCodeUrl($user->email),
-                'secret' => $twoFactor->secret,
-            ]);
-        })->name('setup');
+        Route::get('/setup', [App\Http\Controllers\TwoFactorController::class, 'showSetup'])
+            ->name('setup');
 
         Route::post('/enable', [App\Http\Controllers\TwoFactorController::class, 'enable'])
             ->name('enable');
@@ -128,9 +111,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/disable', [App\Http\Controllers\TwoFactorController::class, 'disable'])
             ->name('disable');
 
-        Route::get('/challenge', function () {
-            return Inertia::render('Auth/TwoFactorChallenge');
-        })->name('challenge');
+        Route::get('/challenge', [App\Http\Controllers\TwoFactorController::class, 'showChallenge'])
+            ->name('challenge');
 
         Route::post('/challenge', [App\Http\Controllers\TwoFactorController::class, 'challenge'])
             ->name('challenge.verify')
@@ -146,23 +128,61 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Admin/Dashboard');
+        $stats = [
+            'total_users' => \App\Models\User::count(),
+            'total_roles' => \App\Models\Role::count(),
+            'total_permissions' => \App\Models\Permission::count(),
+            'recent_logs' => \App\Models\ActivityLog::count(),
+        ];
+        $recentLogs = \App\Models\ActivityLog::with('user:id,name')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => $stats,
+            'recentLogs' => $recentLogs,
+        ]);
     })->name('dashboard');
 
     Route::get('/universities', function () {
-        return Inertia::render('Admin/Universities/Index');
+        $universidades = \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get();
+        return Inertia::render('Admin/Universities/Index', [
+            'universidades' => $universidades,
+        ]);
     })->name('universities');
 
     Route::get('/carrers', function () {
-        return Inertia::render('Admin/Carrers/Index');
+        $carreras = \App\Models\Carrera::with('universidad:id,nombre')->orderBy('nombre')->get()->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'nombre' => $c->nombre,
+                'universidad' => $c->universidad?->nombre ?? '-',
+                'universidad_id' => $c->universidad_id,
+                'descripcion' => $c->descripcion,
+                'icono' => $c->icono,
+                'activa' => $c->activa,
+            ];
+        });
+        $universidades = \App\Models\Universidad::select('id', 'nombre')->orderBy('nombre')->get();
+        return Inertia::render('Admin/Carrers/Index', [
+            'carreras' => $carreras,
+            'universidades' => $universidades,
+        ]);
     })->name('carrers');
 
     Route::get('/scholarships', function () {
-        return Inertia::render('Admin/Scholarships/Index');
+        $scholarships = \App\Models\Scholarship::orderBy('name')->get();
+        return Inertia::render('Admin/Scholarships/Index', [
+            'scholarships' => $scholarships,
+        ]);
     })->name('scholarships');
 
     Route::get('/questions', function () {
-        return Inertia::render('Admin/Questions/Index');
+        $preguntas = \App\Models\Pregunta::with('opciones')->orderBy('orden')->get();
+        return Inertia::render('Admin/Questions/Index', [
+            'preguntas' => $preguntas,
+        ]);
     })->name('questions');
 
     Route::get('/users', function () {

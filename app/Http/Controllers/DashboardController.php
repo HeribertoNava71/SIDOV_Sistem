@@ -15,15 +15,21 @@ class DashboardController extends Controller
         private ActivityService $activityService,
     ) {}
 
-    public function index(Request $request): Response
+public function index(Request $request): Response
     {
         $user = $request->user();
+
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         $stats = $this->statsService->getUserStats($user);
 
         $recentActivity = $this->activityService->getRecentActivities($user, 10);
 
         return Inertia::render('Dashboard/Index', [
+            'auth' => [
+                'user' => $user,
+                'token' => $token,
+            ],
             'stats' => $stats->toArray(),
             'recentActivity' => $recentActivity->map(fn($a) => $a->toArray())->toArray(),
             'recommendations' => [

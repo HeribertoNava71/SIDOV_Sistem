@@ -18,11 +18,57 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| ENDPOINTS ADMIN - PROTECCIÓN
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'admin'])->prefix('admin/public')->group(function () {
+    Route::get('/stats', function () {
+        return response()->json([
+            'total_users' => \App\Models\User::count(),
+            'total_roles' => \App\Models\Role::count(),
+            'total_permissions' => \App\Models\Permission::count(),
+            'recent_logs' => \App\Models\ActivityLog::count(),
+            'total_universidades' => \App\Models\Universidad::count(),
+            'total_carreras' => \App\Models\Carrera::count(),
+        ]);
+    });
+
+    Route::get('/universidades', function () {
+        return response()->json([
+            'data' => \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get(),
+        ]);
+    });
+
+    Route::get('/carreras', function () {
+        return response()->json([
+            'data' => \App\Models\Carrera::with('universidad:id,nombre')->orderBy('nombre')->get(),
+        ]);
+    });
+
+    Route::get('/scholarships', function () {
+        return response()->json([
+            'data' => \App\Models\Scholarship::orderBy('name')->get(),
+        ]);
+    });
+
+    Route::get('/preguntas', function () {
+        return response()->json([
+            'data' => \App\Models\Pregunta::with('opciones')->orderBy('orden')->get(),
+        ]);
+    });
+
+    Route::get('/logs', function () {
+        return response()->json([
+            'data' => \App\Models\ActivityLog::with('user:id,name')->orderByDesc('created_at')->limit(20)->get(),
+        ]);
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
 | Rutas API para Test Vocacional Wrapped
 |--------------------------------------------------------------------------
-|
-| Añade estas rutas a tu archivo routes/api.php
-|
 */
 
 Route::prefix('test')->group(function () {
@@ -307,7 +353,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin/entities')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin/entities')->middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/universidades', [UniversidadAdminController::class, 'index']);
     Route::post('/universidades', [UniversidadAdminController::class, 'store']);

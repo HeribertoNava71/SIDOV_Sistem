@@ -23,10 +23,9 @@ export default function RolesIndex() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('auth_token');
             const [rolesRes, permsRes] = await Promise.all([
-                fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('/api/admin/permissions', { headers: { Authorization: `Bearer ${token}` } }),
+                fetch('/api/admin/roles', { credentials: 'include' }),
+                fetch('/api/admin/permissions', { credentials: 'include' }),
             ]);
             if (rolesRes.ok) { const data = await rolesRes.json(); setRoles(data.data || []); }
             if (permsRes.ok) { const data = await permsRes.json(); setPermissions(data.data || []); }
@@ -37,8 +36,7 @@ export default function RolesIndex() {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este rol?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
-            await fetch(`/api/admin/entities/roles/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+            await fetch(`/api/admin/entities/roles/${id}`, { method: 'DELETE', credentials: 'include' });
             setRoles(roles.filter(r => r.id !== id));
         } catch (error) { console.error('Error:', error); }
     };

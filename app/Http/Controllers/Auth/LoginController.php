@@ -47,10 +47,6 @@ class LoginController extends Controller
 
         $twoFactor = $user->twoFactorAuthentication;
         if ($twoFactor && $twoFactor->isEnabled()) {
-            $request->session()->put('2fa_pending_user_id', $user->id);
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
             return redirect()->route('two-factor.challenge');
         }
 

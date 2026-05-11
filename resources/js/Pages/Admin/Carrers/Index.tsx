@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import CarrerForm from './Form';
 
@@ -18,52 +18,35 @@ interface Carrera {
     activa: boolean;
 }
 
+interface PageProps {
+    carreras: Carrera[];
+    universidades: Universidad[];
+    [key: string]: any;
+}
+
 export default function CarrersIndex() {
-    const [carreras, setCarreras] = useState<Carrera[]>([]);
-    const [universidades, setUniversidades] = useState<Universidad[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { carreras: initialCarreras, universidades } = usePage<PageProps>().props;
+    const [carreras, setCarreras] = useState(initialCarreras);
     const [showForm, setShowForm] = useState(false);
     const [editingCarrera, setEditingCarrera] = useState<Carrera | null>(null);
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const [carrerasRes, unisRes] = await Promise.all([
-                fetch('/api/admin/entities/carreras', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('/api/admin/entities/universidades', { headers: { Authorization: `Bearer ${token}` } }),
-            ]);
-
-            if (carrerasRes.ok) {
-                const data = await carrerasRes.json();
-                setCarreras(data.data || []);
-            }
-            if (unisRes.ok) {
-                const data = await unisRes.json();
-                setUniversidades(data.data || []);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta carrera?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
             await fetch(`/api/admin/entities/carreras/${id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
             });
             setCarreras(carreras.filter(c => c.id !== id));
         } catch (error) {
             console.error('Error:', error);
         }
+    };
+
+    const handleSuccess = () => {
+        setShowForm(false);
+        setEditingCarrera(null);
+        window.location.reload();
     };
 
     return (
@@ -90,7 +73,7 @@ export default function CarrersIndex() {
                 <CarrerForm
                     carrera={editingCarrera}
                     universidades={universidades}
-                    onSuccess={() => { setShowForm(false); fetchData(); }}
+                    onSuccess={handleSuccess}
                     onCancel={() => setShowForm(false)}
                 />
             ) : (

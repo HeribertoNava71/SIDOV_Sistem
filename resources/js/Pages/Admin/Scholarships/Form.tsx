@@ -32,12 +32,12 @@ export default function Form({ scholarship, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
             const url = scholarship?.id ? `/api/admin/entities/scholarships/${scholarship.id}` : '/api/admin/entities/scholarships';
             const method = scholarship?.id ? 'PUT' : 'POST';
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(data),
             });
             if (res.ok) { onSuccess(); onClose(); }

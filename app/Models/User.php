@@ -95,7 +95,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return $this->roles()->count() > 0;
+        return $this->hasRole('admin');
     }
 
     public function twoFactorAuthentication(): HasOne

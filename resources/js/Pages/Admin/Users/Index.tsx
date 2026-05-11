@@ -19,8 +19,7 @@ export default function UsersIndex() {
 
     const fetchUsers = async () => {
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch('/api/admin/users', { credentials: 'include' });
             if (res.ok) { const data = await res.json(); setUsers(data.data || []); }
         } catch (error) { console.error('Error:', error); }
         finally { setLoading(false); }
@@ -29,8 +28,7 @@ export default function UsersIndex() {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este usuario?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
-            await fetch(`/api/admin/entities/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+            await fetch(`/api/admin/entities/users/${id}`, { method: 'DELETE', credentials: 'include' });
             setUsers(users.filter(u => u.id !== id));
         } catch (error) { console.error('Error:', error); }
     };

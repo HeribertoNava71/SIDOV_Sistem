@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import UniversidadForm from './Form';
 
@@ -19,33 +19,17 @@ interface Universidad {
     carreras_count?: number;
 }
 
+interface PageProps {
+    universidades: Universidad[];
+    [key: string]: any;
+}
+
 export default function UniversitiesIndex() {
-    const [universidades, setUniversidades] = useState<Universidad[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { universidades: initialUniversidades } = usePage<PageProps>().props;
+    const [universidades, setUniversidades] = useState(initialUniversidades);
     const [showForm, setShowForm] = useState(false);
     const [editingUniversidad, setEditingUniversidad] = useState<Universidad | null>(null);
     const [deletingId, setDeletingId] = useState<number | null>(null);
-
-    useEffect(() => {
-        fetchUniversidades();
-    }, []);
-
-    const fetchUniversidades = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/admin/entities/universidades', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setUniversidades(data.data || []);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleCreate = () => {
         setEditingUniversidad(null);
@@ -59,19 +43,16 @@ export default function UniversitiesIndex() {
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Estás seguro de eliminar esta universidad?')) return;
+        setDeletingId(id);
 
         try {
-            const token = localStorage.getItem('auth_token');
             const res = await fetch(`/api/admin/entities/universidades/${id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
             });
 
             if (res.ok) {
                 setUniversidades(universidades.filter(u => u.id !== id));
-            } else {
-                const data = await res.json();
-                alert(data.message || 'Error al eliminar');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -83,7 +64,7 @@ export default function UniversitiesIndex() {
     const handleFormSuccess = () => {
         setShowForm(false);
         setEditingUniversidad(null);
-        fetchUniversidades();
+        window.location.reload();
     };
 
     return (
@@ -114,11 +95,7 @@ export default function UniversitiesIndex() {
                 />
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-16">
-                            <div className="w-10 h-10 border-4 border-[#46178F] border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : universidades.length === 0 ? (
+                    {universidades.length === 0 ? (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
