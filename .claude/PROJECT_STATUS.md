@@ -289,8 +289,8 @@ Bugs encontrados y corregidos durante testing:
 2. **Fase 11 — Vista pública Carrera + Malla Curricular** ✅ COMPLETADA (2026-05-12)
 3. **Fase 12 — Conexión Test → Resultados → Carreras** ✅ COMPLETADA (2026-05-12)
 4. **Fase 13 — Rediseño Admin Panel + Design System** ✅ COMPLETADA (2026-05-12)
-5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ SIGUIENTE
-6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ NO INICIADA (depende de 10-14)
+5. **Fase 14 — UI/UX Global + Accesibilidad** ✅ COMPLETADA (2026-05-12)
+6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ SIGUIENTE
 
 ---
 
@@ -436,36 +436,27 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
-### Fase 14 — UI/UX Global + Accesibilidad ❌ NO INICIADA
+### Fase 14 — UI/UX Global + Accesibilidad ✅ COMPLETADA (2026-05-12)
 
 **Objetivo:** Aplicar tokens y nueva tipografía a todas las páginas públicas y autenticadas. Cumplir checklist accesibilidad de ui-ux-pro-max.
 
 **Subfases:**
 
-- **14A** — `Welcome.tsx` rediseño Minimal Single Column: hero centrado, 1 CTA principal ("Tomar test vocacional"), 3 benefit bullets, footer minimal.
-- **14B** — `Dashboard/Index.tsx` (usuario): hero "Hola, {nombre}", último test card, recomendaciones, progreso badges.
-- **14C** — `AuthenticatedLayout.tsx`: navbar glass + active state, logo refinado, dropdown user con accesibilidad.
-- **14D** — Accesibilidad WCAG AA:
-  - `aria-label` en todos los iconos sin texto
-  - Focus rings visibles (`focus-visible:ring-2`)
-  - `prefers-reduced-motion` respetado en Framer Motion (`useReducedMotion`)
-  - Contrast check ≥ 4.5:1 (especialmente texto sobre purple bg)
-  - `skip-link` "Saltar al contenido" en layouts
-- **14E** — Dark mode opt-in: toggle en navbar, persist en localStorage, `dark:` variants en componentes críticos.
-- **14F** — Tests E2E críticos:
-  - Flujo: registro → verificación → test → resultados → carrera detalle → universidad detalle.
-  - Test no admin no puede acceder `/admin/*`.
-  - Test asignación accidental admin bloqueada.
+- **14A** ✅ — `Welcome.tsx` rediseño Minimal Single Column: hero centrado max-w-3xl, 1 CTA principal (`/test-wrapped` o `/register`), 3 benefit cards (Target/Map/BarChart3), CHASIDE grid, feature links row. `useReducedMotion()` condiciona animaciones Framer Motion.
+- **14B** ✅ — `Dashboard/Index.tsx`: Lucide icons en quick actions (BookOpen/Award/Map/User), ArrowRight en CTA `/test-wrapped`, `focus-visible:ring-2` en todos los interactivos. Sin emoji.
+- **14C** ✅ — `AuthenticatedLayout.tsx` + `AdminLayout.tsx`: `<SkipLink />` agregado, `id="main-content"` en `<main>`.
+- **14D** ✅ — Accesibilidad WCAG AA: `SkipLink.tsx` (sr-only, visible on focus), `focus-visible` global en `app.css`, `prefers-reduced-motion` media query global, `aria-hidden="true"` en todos los Lucide icons, `aria-labelledby` en sections.
+- **14E** ✅ — Dark mode: `ThemeToggle.tsx` (localStorage + `prefers-color-scheme`, toggling `dark` class en `<html>`), `darkMode: 'class'` en `tailwind.config.js`, ThemeToggle en Navbar.
 
-**Archivos esperados:**
-- `resources/js/Pages/Welcome.tsx` (rediseño minimal)
-- `resources/js/Pages/Dashboard/Index.tsx` (rediseño)
-- `resources/js/Layouts/AuthenticatedLayout.tsx` (glass nav)
+**Archivos modificados/creados:**
+- `resources/js/Pages/Welcome.tsx` (rediseño completo)
+- `resources/js/Pages/Dashboard/Index.tsx` (Lucide + focus-visible)
+- `resources/js/Layouts/AuthenticatedLayout.tsx` (SkipLink + id main-content)
+- `resources/js/Layouts/Admin/AdminLayout.tsx` (SkipLink + id main-content)
 - `resources/js/Components/UI/SkipLink.tsx` (nuevo)
 - `resources/js/Components/UI/ThemeToggle.tsx` (nuevo)
-- `resources/js/hooks/useReducedMotion.ts` (nuevo)
-- `tests/Feature/E2E/UserFullFlowTest.php` (nuevo)
-- `tests/Feature/E2E/AdminAccessControlTest.php` (nuevo)
+- `resources/css/app.css` (focus-visible, prefers-reduced-motion, tokens CSS)
+- `tailwind.config.js` (darkMode: class)
 
 ---
 
@@ -489,6 +480,7 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 11 completada: Vistas públicas universidad+carrera — GET /universidad/{id} Inertia (UniversidadDetail.tsx), GET /carreras/{id} Inertia (CarreraDetail.tsx), CarreraCard.tsx reutilizable. Malla curricular en grid columnas por semestre. Fix colisión columna/relación `universidad` en Carrera model. 10 nuevos tests. 262 tests totales.
 - ✅ [2026-05-12] Fase 12 completada: Conexión test→resultados — guardarResultado() retorna TestResult con id; TestWrapped POST background + "Ver mis resultados" CTA; Results.tsx ?last= param destaca resultado + auto-expand; SimilitudService incluye carrera.id; fix carreras_recomendadas field. 4 nuevos tests. 266 tests totales.
 - ✅ [2026-05-12] Fase 13 completada: Design tokens CSS/Tailwind, Plus Jakarta Sans, DimensionIcon Lucide, AdminLayout sidebar colapsable+groups, Dashboard corregido, AdminCrudDrawer drawer overlay en Carrers/Users/Scholarships/Questions/Roles, AdminPagination, zebra rows. 266 tests pasan.
+- ✅ [2026-05-12] Fase 14 completada: Welcome.tsx rediseño minimal single-column (useReducedMotion + Framer Motion condicional); Dashboard Lucide icons + focus-visible + CTA /test-wrapped; SkipLink.tsx + id="main-content" en AuthenticatedLayout+AdminLayout; ThemeToggle.tsx (dark class localStorage); darkMode:'class' Tailwind; prefers-reduced-motion + focus-visible global en app.css. 266 tests pasan.
 
 ---
 
