@@ -12,7 +12,22 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::get('/universidades-tamaulipas', function () {
-    $universidades = \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get();
+    $universidades = \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get()
+        ->map(fn ($u) => [
+            'id'            => $u->id,
+            'nombre'        => $u->nombre,
+            'nombreCorto'   => $u->nombre_corto,
+            'ciudad'        => $u->ciudad,
+            'latitud'       => $u->latitud,
+            'longitud'      => $u->longitud,
+            'colorPrimario' => $u->color_primario,
+            'sitioWeb'      => $u->sitio_web,
+            'direccion'     => $u->direccion,
+            'telefono'      => $u->telefono,
+            'email'         => $u->email,
+            'descripcion'   => $u->descripcion,
+            'carrerasCount' => $u->carreras_count,
+        ]);
     return Inertia::render('Universities/MapaTamaulipas', [
         'universidades' => $universidades,
     ]);

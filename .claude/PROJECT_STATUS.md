@@ -239,22 +239,26 @@ Bugs encontrados y corregidos durante testing:
 
 **Orden de ejecución:** 8A primero (sin código, solo migración), luego 8B (migración + seeder + backend + frontend + tests).
 
+> ✅ **8A COMPLETADA (2026-05-12):** `php artisan migrate` — 4 migraciones aplicadas. `/api/scholarships` devuelve 200.
+> ✅ **8B COMPLETADA (2026-05-12):** Migración display fields + seeder + Universidad model + web.php + Universities/Index.tsx.
+
+#### BUG-13 — CRÍTICO: `/universidades-tamaulipas` página en blanco (React crash)
+- **Causa 1 (principal):** Ruta `web.php:14` pasa `Universidad::withCount('carreras')->get()` con campos snake_case (`nombre_corto`, `color_primario`, `carreras_count`). El componente `MapaTamaulipas.tsx` espera camelCase (`nombreCorto`, `colorPrimario`, `carrerasCount`). `uni.nombreCorto.startsWith('UP')` → `undefined.startsWith` → `TypeError` → crash React → página en blanco.
+- **Causa 2 (secundaria):** `useState` ×3 y `useEffect` declarados en líneas 229–262, DESPUÉS del early return `if (universidades.length === 0)` en línea 215 → violación React Rules of Hooks.
+- **Fix 8C — 2 archivos:**
+  1. **`routes/web.php:14`** — cambiar `.get()` por `.get()->map(fn($u) => [...])` mapeando snake_case → camelCase explícitamente.
+  2. **`MapaTamaulipas.tsx:215`** — mover los 3 `useState` y `useEffect` ANTES del early return (hooks siempre al tope del componente).
+
 ---
 
 ## PARTE 4 — PRÓXIMOS PASOS INMEDIATOS
 
 **Lo que sigue (ordenado por impacto/urgencia):**
 
-1. **Fase 8A — Fix Becas** (5 min)
-   - Estado: ❌ NO INICIADA
-   - Solo: `php artisan migrate`
+1. **Fase 8C — Fix MapaTamaulipas** (30 min) ❌ NO INICIADA
+   - Solo 2 archivos: web.php (mapeo camelCase) + MapaTamaulipas.tsx (hooks al tope)
 
-2. **Fase 8B — Fix Universidades** (2–3 horas)
-   - Estado: ❌ NO INICIADA
-   - Pasos: migración + seeder + web.php + Universities/Index.tsx + tests
-   - Dependencias: Fase 8A completada
-
-3. **Fase 7 — Producción**
+2. **Fase 7 — Producción**
    - Estado: ❌ NO INICIADA
    - Dependencias: Fase 8 completada
 
