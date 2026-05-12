@@ -16,6 +16,11 @@ class Universidad extends Model
     protected $fillable = [
         'nombre',
         'nombre_corto',
+        'tipo',
+        'calificacion',
+        'num_estudiantes',
+        'num_programas',
+        'ranking',
         'ciudad',
         'latitud',
         'longitud',
@@ -30,6 +35,10 @@ class Universidad extends Model
     protected $casts = [
         'latitud' => 'float',
         'longitud' => 'float',
+        'calificacion' => 'float',
+        'num_estudiantes' => 'integer',
+        'num_programas' => 'integer',
+        'ranking' => 'integer',
     ];
 
     public function carreras(): HasMany

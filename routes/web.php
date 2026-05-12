@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\TestVocacionalController;
+use App\Models\Universidad;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,7 +23,15 @@ Route::get('/universidad/{id}', function ($id) {
 })->name('universidad.detalle');
 
 Route::get('/universities', function () {
-    return Inertia::render('Universities/Index');
+    $universidades = Universidad::select([
+        'id', 'nombre', 'nombre_corto', 'tipo', 'calificacion',
+        'num_estudiantes', 'num_programas', 'ranking',
+        'ciudad', 'color_primario', 'sitio_web', 'descripcion',
+    ])->orderByDesc('calificacion')->get();
+
+    return Inertia::render('Universities/Index', [
+        'universities' => $universidades,
+    ]);
 })->name('universities.index');
 
 Route::get('/contact', function () {

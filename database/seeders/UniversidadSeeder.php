@@ -13,6 +13,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Tecnológica de Nuevo Laredo',
                 'nombre_corto' => 'UTNL',
+                'tipo' => 'Pública',
+                'calificacion' => 4.1,
+                'num_estudiantes' => 3200,
+                'num_programas' => 12,
+                'ranking' => null,
                 'ciudad' => 'Nuevo Laredo',
                 'latitud' => 27.462,
                 'longitud' => -99.56,
@@ -26,6 +31,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Tecnológica de Tamaulipas Norte',
                 'nombre_corto' => 'UTTN',
+                'tipo' => 'Pública',
+                'calificacion' => 4.3,
+                'num_estudiantes' => 5100,
+                'num_programas' => 18,
+                'ranking' => null,
                 'ciudad' => 'Reynosa',
                 'latitud' => 26.062,
                 'longitud' => -98.278,
@@ -39,6 +49,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Tecnológica de Matamoros',
                 'nombre_corto' => 'UTM',
+                'tipo' => 'Pública',
+                'calificacion' => 4.0,
+                'num_estudiantes' => 2800,
+                'num_programas' => 10,
+                'ranking' => null,
                 'ciudad' => 'H. Matamoros',
                 'latitud' => 25.842,
                 'longitud' => -97.535,
@@ -52,6 +67,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Politécnica de Victoria',
                 'nombre_corto' => 'UPV',
+                'tipo' => 'Pública',
+                'calificacion' => 4.4,
+                'num_estudiantes' => 4200,
+                'num_programas' => 14,
+                'ranking' => null,
                 'ciudad' => 'Cd. Victoria',
                 'latitud' => 23.722,
                 'longitud' => -99.155,
@@ -64,7 +84,12 @@ class UniversidadSeeder extends Seeder
             ],
             [
                 'nombre' => 'Universidad Tecnológica del Mar de Tamaulipas Bicentenario',
-                'nombre_corto' => 'UTMarT',
+                'nombre_corto' => 'UTMTB',
+                'tipo' => 'Pública',
+                'calificacion' => 3.9,
+                'num_estudiantes' => 1600,
+                'num_programas' => 8,
+                'ranking' => null,
                 'ciudad' => 'La Pesca, Soto la Marina',
                 'latitud' => 23.74,
                 'longitud' => -97.76,
@@ -78,6 +103,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Politécnica de Altamira',
                 'nombre_corto' => 'UPA',
+                'tipo' => 'Pública',
+                'calificacion' => 4.2,
+                'num_estudiantes' => 3600,
+                'num_programas' => 16,
+                'ranking' => null,
                 'ciudad' => 'Altamira',
                 'latitud' => 22.42,
                 'longitud' => -97.99,
@@ -91,6 +121,11 @@ class UniversidadSeeder extends Seeder
             [
                 'nombre' => 'Universidad Tecnológica de Altamira',
                 'nombre_corto' => 'UTA',
+                'tipo' => 'Pública',
+                'calificacion' => 4.1,
+                'num_estudiantes' => 3300,
+                'num_programas' => 12,
+                'ranking' => null,
                 'ciudad' => 'Altamira',
                 'latitud' => 22.38,
                 'longitud' => -97.92,
@@ -104,7 +139,7 @@ class UniversidadSeeder extends Seeder
         ];
 
         foreach ($universidades as $u) {
-            Universidad::create($u);
+            Universidad::updateOrCreate(['nombre_corto' => $u['nombre_corto']], $u);
         }
     }
 }
