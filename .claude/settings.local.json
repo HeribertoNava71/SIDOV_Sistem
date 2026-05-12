@@ -32,7 +32,11 @@
       "Bash(Find \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\resources\\\\js\\\\Pages\\\\Test\" -type f)",
       "Bash(find app/Http/Controllers -name \"ScholarshipController.php\")",
       "Bash(ls app/Http/Controllers/Aspire/)",
-      "Bash(find app *)"
+      "Bash(find app *)",
+      "Bash(python \"C:\\\\Users\\\\ponch\\\\.claude\\\\plugins\\\\marketplaces\\\\ui-ux-pro-max-skill\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"education vocational orientation SaaS modern minimal trust\" --design-system -p \"Orienta.me\" -f markdown)",
+      "Bash(python \"C:\\\\Users\\\\ponch\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.5.0\\\\src\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"education vocational orientation SaaS modern minimal trust\" --design-system -p \"Orienta.me\" -f markdown)",
+      "Bash(git rm *)",
+      "Bash(grep -c \"escenario\\\\|{$\" resources/js/Pages/Test/TestWrapped.tsx)"
     ]
   }
 }

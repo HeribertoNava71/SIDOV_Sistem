@@ -6,7 +6,9 @@ interface DashboardStats {
     total_users: number;
     total_roles: number;
     total_permissions: number;
-    recent_logs: number;
+    total_universidades: number;
+    total_carreras: number;
+    total_materias: number;
 }
 
 interface Activity {
@@ -28,34 +30,10 @@ export default function AdminDashboard() {
     const { auth, stats, recentLogs } = usePage<DashboardProps>().props;
 
     const statCards = [
-        {
-            title: 'Total Usuarios',
-            value: stats?.total_users || 0,
-            icon: 'users',
-            bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-500',
-        },
-        {
-            title: 'Roles',
-            value: stats?.total_roles || 0,
-            icon: 'shield',
-            bgColor: 'bg-purple-50',
-            iconColor: 'text-purple-500',
-        },
-        {
-            title: 'Permisos',
-            value: stats?.total_permissions || 0,
-            icon: 'key',
-            bgColor: 'bg-green-50',
-            iconColor: 'text-green-500',
-        },
-        {
-            title: 'Logs Recientes',
-            value: stats?.recent_logs || 0,
-            icon: 'document',
-            bgColor: 'bg-orange-50',
-            iconColor: 'text-orange-500',
-        },
+        { title: 'Usuarios',      value: stats?.total_users         || 0, icon: 'users',    bgColor: 'bg-blue-50',    iconColor: 'text-blue-500',   href: '/admin/users' },
+        { title: 'Universidades', value: stats?.total_universidades || 0, icon: 'shield',   bgColor: 'bg-violet-50',  iconColor: 'text-violet-500', href: '/admin/universities' },
+        { title: 'Carreras',      value: stats?.total_carreras      || 0, icon: 'key',      bgColor: 'bg-emerald-50', iconColor: 'text-emerald-500',href: '/admin/carreras' },
+        { title: 'Materias',      value: stats?.total_materias      || 0, icon: 'document', bgColor: 'bg-amber-50',   iconColor: 'text-amber-500',  href: '/admin/carreras' },
     ];
 
     const iconSvgs: Record<string, JSX.Element> = {
@@ -67,7 +45,7 @@ export default function AdminDashboard() {
 
     const quickActions = [
         { title: 'Agregar Universidad', href: '/admin/universities?action=create', color: 'blue' },
-        { title: 'Agregar Carrera', href: '/admin/carrers?action=create', color: 'purple' },
+        { title: 'Agregar Carrera', href: '/admin/carreras?action=create', color: 'purple' },
         { title: 'Agregar Beca', href: '/admin/scholarships?action=create', color: 'green' },
         { title: 'Agregar Pregunta', href: '/admin/questions?action=create', color: 'orange' },
     ];
@@ -94,9 +72,10 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statCards.map((stat, index) => (
-                    <div
+                    <a
                         key={index}
-                        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200"
+                        href={stat.href}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all block"
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div className={`w-14 h-14 rounded-xl ${stat.bgColor} flex items-center justify-center ${stat.iconColor}`}>
@@ -107,7 +86,7 @@ export default function AdminDashboard() {
                             {stat.value}
                         </p>
                         <p className="text-sm text-slate-500">{stat.title}</p>
-                    </div>
+                    </a>
                 ))}
             </div>
 

@@ -288,7 +288,7 @@ Bugs encontrados y corregidos durante testing:
 1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ✅ COMPLETADA (2026-05-12)
 2. **Fase 11 — Vista pública Carrera + Malla Curricular** ✅ COMPLETADA (2026-05-12)
 3. **Fase 12 — Conexión Test → Resultados → Carreras** ✅ COMPLETADA (2026-05-12)
-4. **Fase 13 — Rediseño Admin Panel + Design System** ❌ NO INICIADA
+4. **Fase 13 — Rediseño Admin Panel + Design System** ⚠️ PARCIAL (13D+13E ✅, resto pendiente)
 5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ NO INICIADA
 6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ NO INICIADA (depende de 10-14)
 
@@ -387,7 +387,7 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
-### Fase 13 — Rediseño Admin Panel + Design System ❌ NO INICIADA
+### Fase 13 — Rediseño Admin Panel + Design System ⚠️ PARCIAL
 
 **Objetivo:** Sistema de diseño coherente basado en tokens semánticos. Panel admin rediseñado: jerarquía visual clara, búsqueda global, CRUD por drawer/modal compartido, KPI reales.
 
@@ -407,17 +407,16 @@ Bugs encontrados y corregidos durante testing:
   - `resources/js/Pages/Test/TestWrapped.tsx` (opciones)
   - `resources/js/Pages/Welcome.tsx`
   - `resources/js/Pages/Dashboard/Index.tsx`
-- **13D** — `AdminLayout.tsx` rediseño:
-  - Sidebar colapsable estilo glass con backdrop-blur
-  - Active state con indicador lateral (no solo bg purple)
-  - Breadcrumb dinámico en header (página actual)
-  - Búsqueda global (CMD+K) que busca universidades/carreras/usuarios
-  - User avatar con badge "ADMIN" visible
-- **13E** — `Admin/Dashboard.tsx` rediseño:
-  - KPI cards con sparkline mensual (Recharts AreaChart pequeño)
-  - Quick Actions con URLs correctas: corregir `/admin/carrers` → `/admin/carreras`
-  - Sección "Actividad reciente" con avatars + timestamps relativos
-  - Card "Tests completados últimos 7d" con LineChart
+- **13D** ✅ — `AdminLayout.tsx` rediseño:
+  - Sidebar colapsable + grupos "Contenido" / "Sistema"
+  - Active state corregido (window.location.pathname, indicador dot violeta)
+  - Header dinámico con nombre de página actual
+  - Mobile: hamburger + overlay backdrop + slide-in sidebar
+  - Profile dropdown con cierre al hacer click fuera
+- **13E** ✅ — `Admin/Dashboard.tsx` rediseño:
+  - Stats interface corregida (total_universidades/carreras/materias)
+  - Stat cards clickables con href
+  - Quick Actions: URL corregida `/admin/carrers` → `/admin/carreras`
 - **13F** — `Admin/AdminCrudDrawer.tsx` componente compartido para create/edit. Reemplaza `Form.tsx` aislados de Users/Carrers/Universities/Scholarships/Questions/Roles.
 - **13G** — Admin tablas: zebra rows, columns sortables (sort indicator aria-sort), paginación uniforme, skeleton loader.
 - **13H** — Tests: snapshot `AdminLayoutTest`, navegación sidebar funcional.
@@ -489,6 +488,7 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 10 completada: Roles hardening — RegisteredUserController asigna default role; RegisterController.php eliminado; AdminController::updateUserRoles() hardened (token AGREGAR_ADMIN/QUITAR_ADMIN, last-admin guard, self-demote guard); RolesModal.tsx con UX confirmación; 12 nuevos tests. 252 tests totales.
 - ✅ [2026-05-12] Fase 11 completada: Vistas públicas universidad+carrera — GET /universidad/{id} Inertia (UniversidadDetail.tsx), GET /carreras/{id} Inertia (CarreraDetail.tsx), CarreraCard.tsx reutilizable. Malla curricular en grid columnas por semestre. Fix colisión columna/relación `universidad` en Carrera model. 10 nuevos tests. 262 tests totales.
 - ✅ [2026-05-12] Fase 12 completada: Conexión test→resultados — guardarResultado() retorna TestResult con id; TestWrapped POST background + "Ver mis resultados" CTA; Results.tsx ?last= param destaca resultado + auto-expand; SimilitudService incluye carrera.id; fix carreras_recomendadas field. 4 nuevos tests. 266 tests totales.
+- ⚠️ [2026-05-12] Fase 13 parcial (13D+13E): AdminLayout.tsx reescrito — sidebar colapsable, grupos nav, active state fix, mobile overlay, profile dropdown. Dashboard.tsx — stats interface corregida, stat cards clickables, typo /admin/carrers→/admin/carreras. 266 tests pasan.
 
 ---
 
