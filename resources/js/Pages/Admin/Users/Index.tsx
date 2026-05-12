@@ -3,6 +3,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 import RolesModal from './RolesModal';
+import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
 import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface User {
@@ -164,7 +165,9 @@ export default function UsersIndex() {
                 </div>
             )}
 
-            {showForm && <Form user={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />}
+            <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Usuario' : 'Nuevo Usuario'}>
+                <Form user={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />
+            </AdminCrudDrawer>
             {rolesUser && (
                 <RolesModal
                     user={rolesUser}

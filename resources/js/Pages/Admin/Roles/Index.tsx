@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
 import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Role {
@@ -102,7 +103,9 @@ export default function RolesIndex() {
                 </div>
             </div>
 
-            {showForm && <Form role={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />}
+            <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Rol' : 'Nuevo Rol'}>
+                <Form role={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />
+            </AdminCrudDrawer>
             <Toast toast={toast} />
         </AdminLayout>
     );

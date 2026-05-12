@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
 import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Scholarship {
@@ -82,7 +83,9 @@ export default function ScholarshipsIndex() {
                     </tbody>
                 </table>
             </div>
-            {showForm && <Form scholarship={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />}
+            <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Beca' : 'Nueva Beca'}>
+                <Form scholarship={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />
+            </AdminCrudDrawer>
             <Toast toast={toast} />
         </AdminLayout>
     );
