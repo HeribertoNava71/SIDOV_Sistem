@@ -1,5 +1,19 @@
 # architecture.md
 
+> ⚠️ **Documento desactualizado**
+> Este archivo refleja la arquitectura inicial del proyecto (pre-Fase 3).
+> No incluye: `UserAdminController`, `MateriaAdminController`, `Toast.tsx`,
+> `TwoFactorRecoveryCodes.tsx`, seeders de cursos/tutores/becas, ni los
+> 2976 registros de materias en BD.
+>
+> **Para el estado actual del sistema, consultar `PROJECT_STATUS.md`.**
+> `PROJECT_STATUS.md` tiene precedencia sobre este documento en caso de contradicción.
+>
+> **Última actualización de este documento:** 2026-05-01 (pre-auditoría)
+> **Última actualización del sistema:** ver `PROJECT_STATUS.md`
+
+---
+
 ## ARQUITECTURA ACTUAL DEL SISTEMA
 
 ### Visión General
@@ -509,7 +523,6 @@ jobs
 
 1. **Agregar Repository Pattern**
    ```php
-   // En lugar de usar Model directo en Controller
    interface TestResultRepository {
        save(TestResult): void;
        findByUser(userId): Collection;
@@ -518,14 +531,12 @@ jobs
 
 2. **Implementar Service Locator**
    ```php
-   // app/Providers/AppServiceProvider.php
    $this->app->singleton(ScoringService::class);
    $this->app->singleton(SimilitudService::class);
    ```
 
 3. **Agregar Data Transfer Objects (DTOs)**
    ```php
-   // Separar datos de entrada/salida
    class TestResultDTO {
        public function __construct(
            public array $respuestas,
@@ -536,7 +547,6 @@ jobs
 
 4. **Extraer Queries a Scopes**
    ```php
-   // User::query()->recentlyTested()->get()
    public function scopeRecentlyTested(Builder $q) {
        return $q->whereHas('testResults', fn($q) => 
            $q->where('created_at', '>', now()->subDays(7))
@@ -546,56 +556,28 @@ jobs
 
 5. **Implementar Event Sourcing**
    ```php
-   // Cuando se envía test, dispara evento
    TestSubmitted::dispatch($testResult);
    ```
 
 ### Mediano Plazo (Refactoring gradual)
 
-6. **Migrar a CQRS**
-   - Separar Commands (escribir) de Queries (leer)
-   - Mejora testabilidad
-
+6. **Migrar a CQRS** — Separar Commands de Queries
 7. **Implementar Value Objects**
    ```php
    class Vector {
        private array $dimensions;
-       public function __construct(array $dims) {}
        public function similarityTo(Vector $other): float {}
    }
    ```
-
-8. **Agregar Domain Events**
-   - UserRegistered
-   - TestCompleted
-   - CareerMatched
-
+8. **Agregar Domain Events** — UserRegistered, TestCompleted, CareerMatched
 9. **Usar Policies para Autorización**
-   ```php
-   // Reemplazar middleware con Gate/Policy
-   $this->authorize('view', $testResult);
-   ```
-
 10. **Implementar Presenter/Formatter Pattern**
-    ```php
-    // En lugar de renderizar directamente
-    new TestResultPresenter($testResult)->toArray()
-    ```
 
 ### Largo Plazo (Arquitectura Nueva)
 
 11. **Considerar Microservicios**
-    - Servicio de Test (escala independientemente)
-    - Servicio de Cursos
-    - Servicio de Becas
-
-12. **Event-Driven Architecture**
-    - Kafka/RabbitMQ para eventos
-    - Procesamiento asincrónico
-
-13. **GraphQL**
-    - Reemplazar REST
-    - Mayor flexibilidad en frontend
+12. **Event-Driven Architecture** (Kafka/RabbitMQ)
+13. **GraphQL** — Reemplazar REST
 
 ---
 
@@ -646,4 +628,3 @@ jobs
 9. Migrar a GraphQL (optional)
 10. Considerar microservicios (futuro)
 11. Implementar CQRS (futuro)
-

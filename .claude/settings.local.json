@@ -14,7 +14,25 @@
       "Bash(curl -sS -L --max-time 30 \"https://raw.githubusercontent.com/strotgen/mexico-leaflet/master/states.geojson\" -o mexico.geojson)",
       "Bash(python -c \"import json; d=json.load\\(open\\('mexico.geojson',encoding='utf-8'\\)\\); print\\('Features:', len\\(d['features']\\)\\); names=[f['properties'] for f in d['features']]; [print\\(n\\) for n in names[:3]]\")",
       "Bash(python scripts/gen_map_path.py)",
-      "Bash(python scripts/patch_universidades_latlon.py)"
+      "Bash(python scripts/patch_universidades_latlon.py)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\check_roles.php\" -Force)",
+      "Bash(php artisan *)",
+      "Bash(php -r ' *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit -m 'docs: marcar Fase 3 como completada en PROJECT_STATUS.md *)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\database\\\\migrations\" -File | Where-Object {$_.Name -match '\\(course|tutor|scholarship\\)'} | Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\database\\\\migrations\" -File | Where-Object {$_.Name -match '\\(course|tutor|scholarship\\)'} | Select-Object Name, FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\resources\\\\js\\\\Pages\\\\Profile\" -Recurse -File)",
+      "Bash(Find \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\resources\\\\js\\\\Pages\\\\Profile\" -type f)",
+      "Bash(Find \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\resources\\\\js\\\\Pages\\\\Auth\" -type f)",
+      "Bash(Find \"c:\\\\Users\\\\ponch\\\\Documents\\\\Cosos Mios\\\\SIDOV_Sistem\\\\resources\\\\js\\\\Pages\\\\Test\" -type f)",
+      "Bash(find app/Http/Controllers -name \"ScholarshipController.php\")",
+      "Bash(ls app/Http/Controllers/Aspire/)",
+      "Bash(find app *)"
     ]
   }
 }
