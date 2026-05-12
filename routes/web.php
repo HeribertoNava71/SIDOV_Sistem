@@ -34,8 +34,76 @@ Route::get('/universidades-tamaulipas', function () {
 })->name('universidades.mapa');
 
 Route::get('/universidad/{id}', function ($id) {
-    return redirect('/universidades-tamaulipas?uni='.(int) $id);
+    $universidad = \App\Models\Universidad::withCount('carreras')
+        ->findOrFail((int) $id);
+    $carreras = \App\Models\Carrera::where('universidad_id', $id)
+        ->where('activa', true)
+        ->withCount('materias')
+        ->orderBy('nombre')
+        ->get()
+        ->map(fn ($c) => [
+            'id'          => $c->id,
+            'nombre'      => $c->nombre,
+            'descripcion' => $c->descripcion,
+            'icono'       => $c->icono,
+            'materias_count' => $c->materias_count,
+        ]);
+    return Inertia::render('Universities/UniversidadDetail', [
+        'universidad' => [
+            'id'             => $universidad->id,
+            'nombre'         => $universidad->nombre,
+            'nombreCorto'    => $universidad->nombre_corto,
+            'tipo'           => $universidad->tipo,
+            'calificacion'   => $universidad->calificacion,
+            'numEstudiantes' => $universidad->num_estudiantes,
+            'numProgramas'   => $universidad->num_programas,
+            'ciudad'         => $universidad->ciudad,
+            'latitud'        => $universidad->latitud,
+            'longitud'       => $universidad->longitud,
+            'colorPrimario'  => $universidad->color_primario,
+            'sitioWeb'       => $universidad->sitio_web,
+            'direccion'      => $universidad->direccion,
+            'telefono'       => $universidad->telefono,
+            'email'          => $universidad->email,
+            'descripcion'    => $universidad->descripcion,
+            'carrerasCount'  => $universidad->carreras_count,
+        ],
+        'carreras' => $carreras,
+    ]);
 })->name('universidad.detalle');
+
+Route::get('/carreras/{id}', function ($id) {
+    $carrera = \App\Models\Carrera::with('materias')
+        ->where('activa', true)
+        ->findOrFail((int) $id);
+    $uni = $carrera->universidad_id
+        ? \App\Models\Universidad::find($carrera->universidad_id, ['id', 'nombre', 'nombre_corto', 'color_primario'])
+        : null;
+    $materiasPorSemestre = $carrera->materias
+        ->groupBy('semestre')
+        ->map(fn ($ms) => $ms->map(fn ($m) => [
+            'id'     => $m->id,
+            'nombre' => $m->nombre,
+            'tipo'   => $m->tipo,
+        ])->values())
+        ->toArray();
+    ksort($materiasPorSemestre);
+    return Inertia::render('Universities/CarreraDetail', [
+        'carrera' => [
+            'id'          => $carrera->id,
+            'nombre'      => $carrera->nombre,
+            'descripcion' => $carrera->descripcion,
+            'icono'       => $carrera->icono,
+        ],
+        'universidad' => $uni ? [
+            'id'           => $uni->id,
+            'nombre'       => $uni->nombre,
+            'nombreCorto'  => $uni->nombre_corto,
+            'colorPrimario' => $uni->color_primario,
+        ] : null,
+        'materiasPorSemestre' => $materiasPorSemestre,
+    ]);
+})->name('carrera.detalle');
 
 Route::get('/universities', function () {
     $universidades = Universidad::withCount('carreras')

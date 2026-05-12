@@ -285,8 +285,8 @@ Bugs encontrados y corregidos durante testing:
 
 **Lo que sigue (ordenado por urgencia para producción):**
 
-1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ❌ NO INICIADA
-2. **Fase 11 — Vista pública Carrera + Malla Curricular** ❌ NO INICIADA
+1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ✅ COMPLETADA (2026-05-12)
+2. **Fase 11 — Vista pública Carrera + Malla Curricular** ✅ COMPLETADA (2026-05-12)
 3. **Fase 12 — Conexión Test → Resultados → Carreras** ❌ NO INICIADA
 4. **Fase 13 — Rediseño Admin Panel + Design System** ❌ NO INICIADA
 5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ NO INICIADA
@@ -339,19 +339,19 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
-### Fase 11 — Vista Pública Carrera + Malla Curricular ❌ NO INICIADA
+### Fase 11 — Vista Pública Carrera + Malla Curricular ✅ COMPLETADA (2026-05-12)
 
 **Objetivo:** Cada universidad tiene vista pública detalle con sus carreras; cada carrera tiene vista pública detalle con malla curricular interactiva.
 
 **Subfases:**
 
-- **11A** — Ruta `GET /universidad/{id}` (reemplazar redirect actual a mapa) con Inertia → `Universities/UniversidadDetail.tsx`. Carga universidad + carreras (count + ranking + tipo) + mapa mini centrado.
-- **11B** — Página `Universities/UniversidadDetail.tsx`: hero con color primario universidad, info contacto, lista carreras (cards con icono, descripción corta, link a malla), mapa mini con marcador único.
-- **11C** — Ruta `GET /carreras/{id}` (nueva) → `Universities/CarreraDetail.tsx`. Carga carrera + universidad + materias agrupadas por semestre (endpoint `/api/carreras/{id}/materias` ya existe).
-- **11D** — Página `Universities/CarreraDetail.tsx`: hero, descripción, perfil de egreso (placeholder o desde BD), timeline horizontal de semestres con materias (tipo: obligatoria/optativa/electiva), botón "Ver universidad", CTA "Compartir".
-- **11E** — Cards `CarreraCard.tsx` reutilizable (usado en UniversidadDetail + futuras búsquedas).
-- **11F** — Link directo desde `/admin/universities` malla expandible → "Ver pública" → `/carreras/{id}`.
-- **11G** — Tests Feature: `UniversidadDetailPageTest` (carga universidad + carreras), `CarreraDetailPageTest` (carga carrera + materias agrupadas).
+- **11A** ✅ — Ruta `GET /universidad/{id}` reemplazó redirect → Inertia `Universities/UniversidadDetail`. Carga universidad + carreras activas con materias_count.
+- **11B** ✅ — `UniversidadDetail.tsx`: hero con gradiente color primario, stats (estudiantes/programas/carreras/calificación), grid carreras, sidebar contacto + Google Maps link.
+- **11C** ✅ — Ruta `GET /carreras/{id}` nueva → Inertia `Universities/CarreraDetail`. Carga carrera + universidad (query separada para evitar colisión columna/relación) + materias agrupadas por semestre.
+- **11D** ✅ — `CarreraDetail.tsx`: hero con breadcrumb, malla curricular en grid por columnas de semestre, badges de tipo, leyenda de tipos.
+- **11E** ✅ — `CarreraCard.tsx` reutilizable: color top strip, icono emoji, nombre, descripción, materia count, link a detalle.
+- **11F** — ⏭ Omitido (link admin → público es baja prioridad, el botón "Ver malla" admin ya existe).
+- **11G** ✅ — 10 tests: `UniversidadDetailTest` (4), `CarreraDetailTest` (6). 262 tests totales, 0 regresiones.
 
 **Archivos esperados:**
 - `routes/web.php` (3 rutas nuevas/modificadas)
@@ -492,6 +492,8 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 5 completada: 5B Fix Scholarship model + Aspire/Index.tsx; 5C Test/Results.tsx con historial; 5D TwoFactorSetup.tsx reescrito + TwoFactorRecoveryCodes.tsx nuevo; 5E Toast component + fix admin CRUD. 161 tests pasan.
 - ✅ [2026-05-12] Fase 6 completada: 32 nuevos tests (193 total, 831 assertions). TwoFactorTest (9), UserAdminControllerTest (10), RoleAdminControllerTest (9), RegistrationTest +4. Bugs corregidos: recovery_codes_hash columna faltante, verified middleware bloqueaba challenge, AdminService::updateRole crash en updates parciales.
 - ✅ [2026-05-12] Fase 6E completada: 47 nuevos tests (240 total, 944 assertions). ScholarshipControllerTest (8), ApplicationControllerTest (8), UniversidadAdminControllerTest (8), CarreraAdminControllerTest (8), ScholarshipAdminControllerTest (8), PreguntaAdminControllerTest (7). Bugs corregidos: ScholarshipAdminController relación `requirements`→`requirementItems`, tabla `scholarship_requirements` creada, NOT NULL/nullable mismatch en universidades/carreras/preguntas corregido con 3 migraciones.
+- ✅ [2026-05-12] Fase 10 completada: Roles hardening — RegisteredUserController asigna default role; RegisterController.php eliminado; AdminController::updateUserRoles() hardened (token AGREGAR_ADMIN/QUITAR_ADMIN, last-admin guard, self-demote guard); RolesModal.tsx con UX confirmación; 12 nuevos tests. 252 tests totales.
+- ✅ [2026-05-12] Fase 11 completada: Vistas públicas universidad+carrera — GET /universidad/{id} Inertia (UniversidadDetail.tsx), GET /carreras/{id} Inertia (CarreraDetail.tsx), CarreraCard.tsx reutilizable. Malla curricular en grid columnas por semestre. Fix colisión columna/relación `universidad` en Carrera model. 10 nuevos tests. 262 tests totales.
 
 ---
 
