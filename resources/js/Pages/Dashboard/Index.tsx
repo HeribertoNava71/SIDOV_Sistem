@@ -8,6 +8,7 @@
  */
 
 import { Head, Link } from '@inertiajs/react';
+import { BookOpen, Award, Map, User, ArrowRight } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Card, { StatCard } from '@/Components/UI/Card';
 import Button from '@/Components/UI/Button';
@@ -28,19 +29,18 @@ export default function Dashboard({ auth, stats }: DashboardProps) {
                     <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">
-                                ¡Hola, {user?.name}! 👋
+                                Hola, {user?.name}
                             </h1>
                             <p className="text-slate-600 mt-1">
                                 Aquí está tu resumen de progreso y recomendaciones.
                             </p>
                         </div>
-                        <Link href="/test">
-                            <Button size="lg">
-                                Iniciar Test CHASIDE
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </Button>
+                        <Link
+                            href="/test-wrapped"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-xl font-semibold hover:bg-violet-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                        >
+                            Tomar test vocacional
+                            <ArrowRight className="w-5 h-5" aria-hidden="true" />
                         </Link>
                     </div>
 
@@ -112,16 +112,18 @@ export default function Dashboard({ auth, stats }: DashboardProps) {
                                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Accesos Rápidos</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {[
-                                        { name: 'Aprende', icon: '📚', href: '/learn', color: 'bg-[#E21B3C]/10 text-[#E21B3C]' },
-                                        { name: 'Becas', icon: '🎯', href: '/aspire', color: 'bg-[#1368CE]/10 text-[#1368CE]' },
-                                        { name: 'Universidades', icon: '🗺️', href: '/universities', color: 'bg-[#26890C]/10 text-[#26890C]' },
-                                        { name: 'Mi Perfil', icon: '👤', href: '/profile', color: 'bg-[#46178F]/10 text-[#46178F]' },
-                                    ].map((action) => (
-                                        <Link key={action.name} href={action.href}>
-                                            <div className={`${action.color} rounded-2xl p-4 text-center cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5`}>
-                                                <span className="text-3xl mb-2 block">{action.icon}</span>
-                                                <span className="font-medium text-sm">{action.name}</span>
-                                            </div>
+                                        { name: 'Aprende', icon: BookOpen, href: '/learn',        color: 'bg-red-50 text-red-600' },
+                                        { name: 'Becas',   icon: Award,    href: '/aspire',       color: 'bg-blue-50 text-blue-600' },
+                                        { name: 'Mapa',    icon: Map,      href: '/universities', color: 'bg-green-50 text-green-600' },
+                                        { name: 'Perfil',  icon: User,     href: '/profile',      color: 'bg-violet-50 text-violet-600' },
+                                    ].map(({ name, icon: Icon, href, color }) => (
+                                        <Link
+                                            key={name}
+                                            href={href}
+                                            className={`${color} rounded-2xl p-4 flex flex-col items-center gap-2 transition-all hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2`}
+                                        >
+                                            <Icon className="w-7 h-7" aria-hidden="true" />
+                                            <span className="font-medium text-sm">{name}</span>
                                         </Link>
                                     ))}
                                 </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { User } from '@/types';
+import ThemeToggle from '@/Components/UI/ThemeToggle';
 
 export default function Navbar() {
     const { auth } = usePage<{ auth: { user: User | null } }>().props;
@@ -55,7 +56,8 @@ export default function Navbar() {
                 </div>
 
                 {/* Auth Buttons / Profile */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
                     {auth.user ? (
                         <>
                             <Link

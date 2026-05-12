@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { User } from '@/types';
+import SkipLink from '@/Components/UI/SkipLink';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -233,6 +234,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
+            <SkipLink />
             {/* Desktop sidebar */}
             <aside
                 className={`hidden lg:flex flex-col fixed inset-y-0 left-0 bg-slate-900 transition-all duration-300 z-40 ${
@@ -332,7 +334,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                     </div>
                 </header>
 
-                <main className="flex-1 p-5 lg:p-6">
+                <main id="main-content" className="flex-1 p-5 lg:p-6">
                     {children}
                 </main>
             </div>
