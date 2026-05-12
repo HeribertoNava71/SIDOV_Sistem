@@ -288,8 +288,8 @@ Bugs encontrados y corregidos durante testing:
 1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ✅ COMPLETADA (2026-05-12)
 2. **Fase 11 — Vista pública Carrera + Malla Curricular** ✅ COMPLETADA (2026-05-12)
 3. **Fase 12 — Conexión Test → Resultados → Carreras** ✅ COMPLETADA (2026-05-12)
-4. **Fase 13 — Rediseño Admin Panel + Design System** ⚠️ PARCIAL (13D+13E ✅, resto pendiente)
-5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ NO INICIADA
+4. **Fase 13 — Rediseño Admin Panel + Design System** ✅ COMPLETADA (2026-05-12)
+5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ SIGUIENTE
 6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ NO INICIADA (depende de 10-14)
 
 ---
@@ -387,7 +387,7 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
-### Fase 13 — Rediseño Admin Panel + Design System ⚠️ PARCIAL
+### Fase 13 — Rediseño Admin Panel + Design System ✅ COMPLETADA (2026-05-12)
 
 **Objetivo:** Sistema de diseño coherente basado en tokens semánticos. Panel admin rediseñado: jerarquía visual clara, búsqueda global, CRUD por drawer/modal compartido, KPI reales.
 
@@ -488,7 +488,7 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 10 completada: Roles hardening — RegisteredUserController asigna default role; RegisterController.php eliminado; AdminController::updateUserRoles() hardened (token AGREGAR_ADMIN/QUITAR_ADMIN, last-admin guard, self-demote guard); RolesModal.tsx con UX confirmación; 12 nuevos tests. 252 tests totales.
 - ✅ [2026-05-12] Fase 11 completada: Vistas públicas universidad+carrera — GET /universidad/{id} Inertia (UniversidadDetail.tsx), GET /carreras/{id} Inertia (CarreraDetail.tsx), CarreraCard.tsx reutilizable. Malla curricular en grid columnas por semestre. Fix colisión columna/relación `universidad` en Carrera model. 10 nuevos tests. 262 tests totales.
 - ✅ [2026-05-12] Fase 12 completada: Conexión test→resultados — guardarResultado() retorna TestResult con id; TestWrapped POST background + "Ver mis resultados" CTA; Results.tsx ?last= param destaca resultado + auto-expand; SimilitudService incluye carrera.id; fix carreras_recomendadas field. 4 nuevos tests. 266 tests totales.
-- ⚠️ [2026-05-12] Fase 13 parcial (13D+13E): AdminLayout.tsx reescrito — sidebar colapsable, grupos nav, active state fix, mobile overlay, profile dropdown. Dashboard.tsx — stats interface corregida, stat cards clickables, typo /admin/carrers→/admin/carreras. 266 tests pasan.
+- ✅ [2026-05-12] Fase 13 completada: Design tokens CSS/Tailwind, Plus Jakarta Sans, DimensionIcon Lucide, AdminLayout sidebar colapsable+groups, Dashboard corregido, AdminCrudDrawer drawer overlay en Carrers/Users/Scholarships/Questions/Roles, AdminPagination, zebra rows. 266 tests pasan.
 
 ---
 
