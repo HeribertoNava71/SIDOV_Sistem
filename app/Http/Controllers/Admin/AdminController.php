@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\Admin\AdminService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
+    public const ADMIN_GRANT_CONFIRMATION = 'AGREGAR_ADMIN';
+    public const ADMIN_REVOKE_CONFIRMATION = 'QUITAR_ADMIN';
+
     public function __construct(
         private AdminService $adminService
     ) {}
@@ -44,9 +49,62 @@ class AdminController extends Controller
         $validated = $request->validate([
             'role_ids' => 'required|array',
             'role_ids.*' => 'exists:roles,id',
+            'confirmation' => 'nullable|string',
         ]);
 
-        $user = $this->adminService->updateUserRoles($id, $validated['role_ids']);
+        $targetUser = User::with('roles')->find($id);
+        if (!$targetUser) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $newRoleIds = array_map('intval', $validated['role_ids']);
+        $oldRoleIds = $targetUser->roles->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+        $adminRole = Role::where('name', 'admin')->first();
+        if ($adminRole === null) {
+            return response()->json(['message' => 'Rol admin no existe en el sistema'], 500);
+        }
+
+        $isGrantingAdmin = in_array($adminRole->id, $newRoleIds, true)
+            && !in_array($adminRole->id, $oldRoleIds, true);
+
+        $isRevokingAdmin = in_array($adminRole->id, $oldRoleIds, true)
+            && !in_array($adminRole->id, $newRoleIds, true);
+
+        $confirmation = $validated['confirmation'] ?? null;
+
+        if ($isGrantingAdmin && $confirmation !== self::ADMIN_GRANT_CONFIRMATION) {
+            return response()->json([
+                'message' => 'Otorgar privilegios de administrador requiere confirmación explícita.',
+                'requires_confirmation' => 'admin_grant',
+                'expected_token' => self::ADMIN_GRANT_CONFIRMATION,
+            ], 422);
+        }
+
+        if ($isRevokingAdmin) {
+            if ($confirmation !== self::ADMIN_REVOKE_CONFIRMATION) {
+                return response()->json([
+                    'message' => 'Quitar privilegios de administrador requiere confirmación explícita.',
+                    'requires_confirmation' => 'admin_revoke',
+                    'expected_token' => self::ADMIN_REVOKE_CONFIRMATION,
+                ], 422);
+            }
+
+            $adminCount = User::whereHas('roles', fn ($q) => $q->where('roles.id', $adminRole->id))->count();
+            if ($adminCount <= 1) {
+                return response()->json([
+                    'message' => 'No se puede quitar el rol admin: es el último administrador del sistema.',
+                ], 422);
+            }
+
+            if ($targetUser->id === auth()->id()) {
+                return response()->json([
+                    'message' => 'No puedes quitarte el rol admin a ti mismo. Pide a otro administrador hacerlo.',
+                ], 422);
+            }
+        }
+
+        $user = $this->adminService->updateUserRoles($id, $newRoleIds);
 
         return response()->json([
             'data' => $user,

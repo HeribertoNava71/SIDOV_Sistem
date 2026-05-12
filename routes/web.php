@@ -177,8 +177,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
                 'roles' => $u->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name]),
             ];
         });
+        $allRoles = \App\Models\Role::orderBy('name')->get(['id', 'name', 'description', 'color']);
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
+            'allRoles' => $allRoles,
+            'currentUserId' => auth()->id(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),

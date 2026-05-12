@@ -281,14 +281,202 @@ Bugs encontrados y corregidos durante testing:
 
 ## PARTE 4 — PRÓXIMOS PASOS INMEDIATOS
 
-**Lo que sigue (ordenado por impacto/urgencia):**
+**Última actualización:** 2026-05-12
 
-1. **Fase 9 — Mapa en /universities** ❌ NO INICIADA
-   - 2 archivos: web.php + Universities/Index.tsx
+**Lo que sigue (ordenado por urgencia para producción):**
 
-2. **Fase 7 — Producción**
-   - Estado: ❌ NO INICIADA
-   - Dependencias: Fase 9 completada
+1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ❌ NO INICIADA
+2. **Fase 11 — Vista pública Carrera + Malla Curricular** ❌ NO INICIADA
+3. **Fase 12 — Conexión Test → Resultados → Carreras** ❌ NO INICIADA
+4. **Fase 13 — Rediseño Admin Panel + Design System** ❌ NO INICIADA
+5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ NO INICIADA
+6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ NO INICIADA (depende de 10-14)
+
+---
+
+### Fase 10 — Seguridad de Roles para Producción ✅ COMPLETADA (2026-05-12)
+
+**Objetivo:** Cerrar riesgo de asignación accidental de rol admin y garantizar que cada usuario tenga rol al registrarse.
+
+**Bugs activos detectados (2026-05-12):**
+
+#### BUG-14 — CRÍTICO: Usuarios nuevos sin rol
+- **Causa:** `RegisteredUserController::store` crea User pero nunca invoca `$user->roles()->attach(Role::getDefaultRole())`. El método `Role::getDefaultRole()` existe pero está huérfano.
+- **Impacto:** Usuarios registrados quedan sin rol → no pueden invocar `isAdmin()` correctamente, lógica de permisos incoherente.
+
+#### BUG-15 — CRÍTICO: Role escalation sin restricciones
+- **Causa:** `AdminController::updateUserRoles` valida `role_ids.* exists:roles,id` pero NO restringe asignación de rol `admin`. Cualquier admin actual puede convertir a cualquier usuario en admin con un toggle UI.
+- **Impacto producción:** Riesgo directo de dar admin por error.
+
+#### BUG-16 — MEDIO: Dos registration controllers
+- **Causa:** `RegisterController.php` y `RegisteredUserController.php` ambos existen. `routes/auth.php` usa `RegisterController`. `RegisteredUserController` está huérfano.
+
+**Subfases:**
+
+- **10A** ✅ — Rol `user` con `is_default=true` ya existía en BD (id=2). Verificado vía tinker.
+- **10B** ✅ — `RegisteredUserController::store` ahora invoca `Role::getDefaultRole()` y attach al user creado. Mensajes de validación en español agregados.
+- **10C** ✅ — `RegisterController.php` huérfano eliminado. `routes/auth.php` migrado a `RegisteredUserController`. `php artisan route:list --path=register` confirma ambas rutas resuelven.
+- **10D** ✅ — `AdminController::updateUserRoles` endurecido:
+  - Constantes `ADMIN_GRANT_CONFIRMATION = 'AGREGAR_ADMIN'` y `ADMIN_REVOKE_CONFIRMATION = 'QUITAR_ADMIN'`.
+  - 422 + `requires_confirmation` + `expected_token` cuando falta o no coincide token.
+  - Bloqueo del último admin (`adminCount <= 1`) y self-revoke incluso si hay otros admins.
+- **10E** ✅ — Nuevo modal `Admin/Users/RolesModal.tsx` con checkbox por rol, badge "Privilegios totales" en admin, input de confirmación requerido sólo si se otorga/revoca admin, bloqueo visual de self-demote. Botón "Roles" agregado en cada fila de `Users/Index.tsx`. `web.php` pasa ahora `allRoles` + `currentUserId` como props.
+- **10F** ✅ — 12 tests nuevos (31 assertions):
+  - `RegistrationDefaultRoleTest` (3 tests): rol default asignado, no admin, registro sobrevive sin default.
+  - `UserRoleEscalationTest` (9 tests): grant sin token rechazado, token incorrecto rechazado, token correcto OK, revoke sin token rechazado, revoke con token OK, último admin bloqueado, self-revoke bloqueado, no-admin recibe 403, role change rutinario sin token OK.
+  - Suite global: 252 tests, 975 assertions (+12, +31).
+
+**Archivos esperados:**
+- `app/Http/Controllers/Auth/RegisteredUserController.php` (modificar)
+- `app/Http/Controllers/Auth/RegisterController.php` (eliminar)
+- `app/Http/Controllers/Admin/AdminController.php` (endurecer updateUserRoles)
+- `app/Services/Admin/AdminService.php` (lógica de validación admin)
+- `resources/js/Pages/Admin/Users/Form.tsx` o `Index.tsx` (modal confirm)
+- `database/seeders/RolePermissionSeeder.php` (verificar default role flag)
+- `tests/Feature/Auth/RegistrationTest.php` (extender)
+- `tests/Feature/Admin/UserRoleEscalationTest.php` (nuevo)
+- `routes/auth.php` (actualizar imports si necesario)
+
+---
+
+### Fase 11 — Vista Pública Carrera + Malla Curricular ❌ NO INICIADA
+
+**Objetivo:** Cada universidad tiene vista pública detalle con sus carreras; cada carrera tiene vista pública detalle con malla curricular interactiva.
+
+**Subfases:**
+
+- **11A** — Ruta `GET /universidad/{id}` (reemplazar redirect actual a mapa) con Inertia → `Universities/UniversidadDetail.tsx`. Carga universidad + carreras (count + ranking + tipo) + mapa mini centrado.
+- **11B** — Página `Universities/UniversidadDetail.tsx`: hero con color primario universidad, info contacto, lista carreras (cards con icono, descripción corta, link a malla), mapa mini con marcador único.
+- **11C** — Ruta `GET /carreras/{id}` (nueva) → `Universities/CarreraDetail.tsx`. Carga carrera + universidad + materias agrupadas por semestre (endpoint `/api/carreras/{id}/materias` ya existe).
+- **11D** — Página `Universities/CarreraDetail.tsx`: hero, descripción, perfil de egreso (placeholder o desde BD), timeline horizontal de semestres con materias (tipo: obligatoria/optativa/electiva), botón "Ver universidad", CTA "Compartir".
+- **11E** — Cards `CarreraCard.tsx` reutilizable (usado en UniversidadDetail + futuras búsquedas).
+- **11F** — Link directo desde `/admin/universities` malla expandible → "Ver pública" → `/carreras/{id}`.
+- **11G** — Tests Feature: `UniversidadDetailPageTest` (carga universidad + carreras), `CarreraDetailPageTest` (carga carrera + materias agrupadas).
+
+**Archivos esperados:**
+- `routes/web.php` (3 rutas nuevas/modificadas)
+- `resources/js/Pages/Universities/UniversidadDetail.tsx` (nuevo)
+- `resources/js/Pages/Universities/CarreraDetail.tsx` (nuevo)
+- `resources/js/Components/Universities/CarreraCard.tsx` (nuevo)
+- `resources/js/Components/Universities/MallaTimeline.tsx` (nuevo)
+- `tests/Feature/Universities/UniversidadDetailPageTest.php` (nuevo)
+- `tests/Feature/Universities/CarreraDetailPageTest.php` (nuevo)
+
+---
+
+### Fase 12 — Conexión Test → Resultados → Carreras ❌ NO INICIADA
+
+**Objetivo:** Tras completar el test, el usuario llega a `/results` con su último resultado destacado y puede navegar directo a las carreras recomendadas.
+
+**Bugs activos:**
+
+#### BUG-20 — MEDIO: TestWrapped no redirige a Results
+- **Causa:** `TestWrapped.tsx` muestra resultado in-place pero no ofrece link claro a `/results` historial.
+
+**Subfases:**
+
+- **12A** — `TestVocacionalController::submit` retorna el `id` del `TestResult` creado para que frontend redirija.
+- **12B** — `TestWrapped.tsx`: tras `axios.post('/api/test/submit')` exitoso para usuario autenticado, mostrar pantalla "✅ Resultado guardado" con CTA "Ver mis resultados" → `router.visit('/results?last=' + id)`.
+- **12C** — `Test/Results.tsx`: si `?last={id}` en URL, hacer scroll/expand al resultado correspondiente y badge "🎉 Tu test más reciente".
+- **12D** — En cards de `top_carreras` de Results, cada carrera recomendada linkea a `/carreras/{id}` (depende Fase 11C). Para resultados pre-Fase-11, fallback a búsqueda.
+- **12E** — `Dashboard/Index.tsx`: card "Tu último test" mostrando perfil dominante + CTA "Ver historial completo".
+- **12F** — `TestResult` model: scope `latestForUser($userId)` y `with('carreras')` cuando carrera_id se almacene.
+- **12G** — Tests: `TestSubmitRedirectTest` (autenticado obtiene id + redirect path), `ResultsHighlightTest` (last param destaca correcto).
+
+**Archivos esperados:**
+- `app/Http/Controllers/TestVocacionalController.php` (return id en submit)
+- `resources/js/Pages/Test/TestWrapped.tsx` (success screen + redirect)
+- `resources/js/Pages/Test/Results.tsx` (last query param)
+- `resources/js/Pages/Dashboard/Index.tsx` (card último test)
+- `app/Models/TestResult.php` (scope latestForUser)
+- `tests/Feature/Test/TestSubmitRedirectTest.php` (nuevo)
+
+---
+
+### Fase 13 — Rediseño Admin Panel + Design System ❌ NO INICIADA
+
+**Objetivo:** Sistema de diseño coherente basado en tokens semánticos. Panel admin rediseñado: jerarquía visual clara, búsqueda global, CRUD por drawer/modal compartido, KPI reales.
+
+**Recomendaciones (ui-ux-pro-max):**
+- **Pattern:** Minimal Single Column / Sidebar (admin)
+- **Style:** Glassmorphism light + soporte dark
+- **Tokens:** Primary `#2563EB`, Accent `#EA580C`, Background `#F8FAFC`, Foreground `#1E293B`, Muted `#E9EFF8`, Border `#E2E8F0`, Destructive `#DC2626`
+- **Typography:** Plus Jakarta Sans (Google Fonts)
+- **Icons:** Lucide React (SVG) — eliminar emoji-icons
+
+**Subfases:**
+
+- **13A** — Design tokens en `resources/css/app.css`: definir CSS variables semánticas (`--color-primary`, `--color-on-primary`, etc.) light + dark, mapear en `tailwind.config.js` como `theme.colors.primary`, `accent`, etc.
+- **13B** — Tipografía: agregar Plus Jakarta Sans en `app.blade.php` + `tailwind.config.js` (`fontFamily.sans`).
+- **13C** — Reemplazar emojis por componentes Lucide React (`Heart`, `Code`, `Palette`, `BarChart3`, `Target`, `FlaskConical`, `ClipboardList`):
+  - `resources/js/Pages/Test/Results.tsx` (DIMENSION_EMOJI → DIMENSION_ICON)
+  - `resources/js/Pages/Test/TestWrapped.tsx` (opciones)
+  - `resources/js/Pages/Welcome.tsx`
+  - `resources/js/Pages/Dashboard/Index.tsx`
+- **13D** — `AdminLayout.tsx` rediseño:
+  - Sidebar colapsable estilo glass con backdrop-blur
+  - Active state con indicador lateral (no solo bg purple)
+  - Breadcrumb dinámico en header (página actual)
+  - Búsqueda global (CMD+K) que busca universidades/carreras/usuarios
+  - User avatar con badge "ADMIN" visible
+- **13E** — `Admin/Dashboard.tsx` rediseño:
+  - KPI cards con sparkline mensual (Recharts AreaChart pequeño)
+  - Quick Actions con URLs correctas: corregir `/admin/carrers` → `/admin/carreras`
+  - Sección "Actividad reciente" con avatars + timestamps relativos
+  - Card "Tests completados últimos 7d" con LineChart
+- **13F** — `Admin/AdminCrudDrawer.tsx` componente compartido para create/edit. Reemplaza `Form.tsx` aislados de Users/Carrers/Universities/Scholarships/Questions/Roles.
+- **13G** — Admin tablas: zebra rows, columns sortables (sort indicator aria-sort), paginación uniforme, skeleton loader.
+- **13H** — Tests: snapshot `AdminLayoutTest`, navegación sidebar funcional.
+
+**Archivos esperados:**
+- `resources/css/app.css` (tokens CSS)
+- `tailwind.config.js` (mapear tokens, font, dark mode class)
+- `resources/views/app.blade.php` (font preconnect)
+- `resources/js/Layouts/Admin/AdminLayout.tsx` (rediseño)
+- `resources/js/Pages/Admin/Dashboard.tsx` (rediseño + URLs corregidas)
+- `resources/js/Components/Admin/AdminCrudDrawer.tsx` (nuevo)
+- `resources/js/Components/Admin/StatsCard.tsx` (nuevo con sparkline)
+- `resources/js/Components/Icons/DimensionIcon.tsx` (nuevo)
+- `resources/js/Pages/Test/Results.tsx` (Lucide icons)
+- `resources/js/Pages/Test/TestWrapped.tsx` (Lucide icons en opciones)
+- `resources/js/Pages/Welcome.tsx` (Lucide icons)
+
+---
+
+### Fase 14 — UI/UX Global + Accesibilidad ❌ NO INICIADA
+
+**Objetivo:** Aplicar tokens y nueva tipografía a todas las páginas públicas y autenticadas. Cumplir checklist accesibilidad de ui-ux-pro-max.
+
+**Subfases:**
+
+- **14A** — `Welcome.tsx` rediseño Minimal Single Column: hero centrado, 1 CTA principal ("Tomar test vocacional"), 3 benefit bullets, footer minimal.
+- **14B** — `Dashboard/Index.tsx` (usuario): hero "Hola, {nombre}", último test card, recomendaciones, progreso badges.
+- **14C** — `AuthenticatedLayout.tsx`: navbar glass + active state, logo refinado, dropdown user con accesibilidad.
+- **14D** — Accesibilidad WCAG AA:
+  - `aria-label` en todos los iconos sin texto
+  - Focus rings visibles (`focus-visible:ring-2`)
+  - `prefers-reduced-motion` respetado en Framer Motion (`useReducedMotion`)
+  - Contrast check ≥ 4.5:1 (especialmente texto sobre purple bg)
+  - `skip-link` "Saltar al contenido" en layouts
+- **14E** — Dark mode opt-in: toggle en navbar, persist en localStorage, `dark:` variants en componentes críticos.
+- **14F** — Tests E2E críticos:
+  - Flujo: registro → verificación → test → resultados → carrera detalle → universidad detalle.
+  - Test no admin no puede acceder `/admin/*`.
+  - Test asignación accidental admin bloqueada.
+
+**Archivos esperados:**
+- `resources/js/Pages/Welcome.tsx` (rediseño minimal)
+- `resources/js/Pages/Dashboard/Index.tsx` (rediseño)
+- `resources/js/Layouts/AuthenticatedLayout.tsx` (glass nav)
+- `resources/js/Components/UI/SkipLink.tsx` (nuevo)
+- `resources/js/Components/UI/ThemeToggle.tsx` (nuevo)
+- `resources/js/hooks/useReducedMotion.ts` (nuevo)
+- `tests/Feature/E2E/UserFullFlowTest.php` (nuevo)
+- `tests/Feature/E2E/AdminAccessControlTest.php` (nuevo)
+
+---
+
+
 
 ---
 
@@ -366,4 +554,4 @@ Bugs encontrados y corregidos durante testing:
 ---
 
 **Última actualización:** 2026-05-12
-**Versión del documento:** 2.3 (Fase 8 plan agregado — bugs universidades + becas documentados)
+**Versión del documento:** 2.4 (Fases 10–14 agregadas: seguridad roles, malla pública, test→results, admin redesign, UI global)
