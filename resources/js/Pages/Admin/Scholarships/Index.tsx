@@ -63,7 +63,7 @@ export default function ScholarshipsIndex() {
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                         {scholarships.map(s => (
-                            <tr key={s.id} className="hover:bg-slate-50">
+                            <tr key={s.id} className="even:bg-slate-50/60 hover:bg-violet-50/30 transition-colors">
                                 <td className="px-6 py-4 font-medium">{s.name}</td>
                                 <td className="px-6 py-4 text-slate-600">{s.provider || '-'}</td>
                                 <td className="px-6 py-4 text-center">{s.amount || '-'}</td>

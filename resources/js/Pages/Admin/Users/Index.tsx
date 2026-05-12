@@ -4,6 +4,7 @@ import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 import RolesModal from './RolesModal';
 import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
+import AdminPagination from '@/Components/Admin/AdminPagination';
 import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface User {
@@ -134,36 +135,13 @@ export default function UsersIndex() {
                 </table>
             </div>
 
-            {pagination.last_page > 1 && (
-                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                    <span>{pagination.total} usuarios en total</span>
-                    <div className="flex gap-1">
-                        <button
-                            onClick={() => goToPage(pagination.current_page - 1)}
-                            disabled={pagination.current_page === 1}
-                            className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
-                        >
-                            ‹ Anterior
-                        </button>
-                        {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(p => (
-                            <button
-                                key={p}
-                                onClick={() => goToPage(p)}
-                                className={`px-3 py-1.5 rounded-lg border ${p === pagination.current_page ? 'bg-[#46178F] text-white border-[#46178F]' : 'border-slate-300 hover:bg-slate-50'}`}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => goToPage(pagination.current_page + 1)}
-                            disabled={pagination.current_page === pagination.last_page}
-                            className="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
-                        >
-                            Siguiente ›
-                        </button>
-                    </div>
-                </div>
-            )}
+            <AdminPagination
+                currentPage={pagination.current_page}
+                lastPage={pagination.last_page}
+                total={pagination.total}
+                label="usuarios en total"
+                onPageChange={goToPage}
+            />
 
             <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Usuario' : 'Nuevo Usuario'}>
                 <Form user={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />

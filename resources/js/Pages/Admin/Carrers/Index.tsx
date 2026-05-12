@@ -299,7 +299,7 @@ export default function CarrersIndex() {
                     <tbody className="divide-y divide-slate-200">
                         {filtered.map((carrera) => (
                             <>
-                                <tr key={carrera.id} className="hover:bg-slate-50">
+                                <tr key={carrera.id} className="even:bg-slate-50/60 hover:bg-violet-50/30 transition-colors">
                                     <td className="px-6 py-4">
                                         <p className="font-medium text-slate-900">{carrera.nombre}</p>
                                     </td>
