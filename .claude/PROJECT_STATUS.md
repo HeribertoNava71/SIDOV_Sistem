@@ -418,8 +418,8 @@ Bugs encontrados y corregidos durante testing:
   - Stat cards clickables con href
   - Quick Actions: URL corregida `/admin/carrers` → `/admin/carreras`
 - **13F** — `Admin/AdminCrudDrawer.tsx` componente compartido para create/edit. Reemplaza `Form.tsx` aislados de Users/Carrers/Universities/Scholarships/Questions/Roles.
-- **13G** — Admin tablas: zebra rows, columns sortables (sort indicator aria-sort), paginación uniforme, skeleton loader.
-- **13H** — Tests: snapshot `AdminLayoutTest`, navegación sidebar funcional.
+- **13G** ✅ — AdminPagination uniforme en Users/Carrers/Scholarships; zebra rows en Carrers+Scholarships+Users; sortable columns (Name/Email/Registro con aria-sort + ChevronUp/Down) en Users/Index.tsx.
+- **13H** ✅ — `AdminLayoutTest.php`: 11 tests (admin accede, non-admin 403, guest redirect, todas las páginas admin, unverified redirect).
 
 **Archivos esperados:**
 - `resources/css/app.css` (tokens CSS)
@@ -447,6 +447,7 @@ Bugs encontrados y corregidos durante testing:
 - **14C** ✅ — `AuthenticatedLayout.tsx` + `AdminLayout.tsx`: `<SkipLink />` agregado, `id="main-content"` en `<main>`.
 - **14D** ✅ — Accesibilidad WCAG AA: `SkipLink.tsx` (sr-only, visible on focus), `focus-visible` global en `app.css`, `prefers-reduced-motion` media query global, `aria-hidden="true"` en todos los Lucide icons, `aria-labelledby` en sections.
 - **14E** ✅ — Dark mode: `ThemeToggle.tsx` (localStorage + `prefers-color-scheme`, toggling `dark` class en `<html>`), `darkMode: 'class'` en `tailwind.config.js`, ThemeToggle en Navbar.
+- **14F** ✅ — `tests/Feature/E2E/UserFullFlowTest.php` (8 tests: register, test access, submit+result_id, results, carrera detail, universidad detail) + `tests/Feature/E2E/AdminAccessControlTest.php` (16 tests: regular blocked, guest redirect, admin accede, API blocked, role escalation guards).
 
 **Archivos modificados/creados:**
 - `resources/js/Pages/Welcome.tsx` (rediseño completo)
@@ -481,6 +482,7 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 12 completada: Conexión test→resultados — guardarResultado() retorna TestResult con id; TestWrapped POST background + "Ver mis resultados" CTA; Results.tsx ?last= param destaca resultado + auto-expand; SimilitudService incluye carrera.id; fix carreras_recomendadas field. 4 nuevos tests. 266 tests totales.
 - ✅ [2026-05-12] Fase 13 completada: Design tokens CSS/Tailwind, Plus Jakarta Sans, DimensionIcon Lucide, AdminLayout sidebar colapsable+groups, Dashboard corregido, AdminCrudDrawer drawer overlay en Carrers/Users/Scholarships/Questions/Roles, AdminPagination, zebra rows. 266 tests pasan.
 - ✅ [2026-05-12] Fase 14 completada: Welcome.tsx rediseño minimal single-column (useReducedMotion + Framer Motion condicional); Dashboard Lucide icons + focus-visible + CTA /test-wrapped; SkipLink.tsx + id="main-content" en AuthenticatedLayout+AdminLayout; ThemeToggle.tsx (dark class localStorage); darkMode:'class' Tailwind; prefers-reduced-motion + focus-visible global en app.css. 266 tests pasan.
+- ✅ [2026-05-12] Fase 13G+13H+14F completadas: Users/Index.tsx zebra rows + sortable columns (aria-sort + Lucide ChevronUp/Down); AdminLayoutTest.php (11 tests admin access/403/redirect); E2E UserFullFlowTest (8 tests) + AdminAccessControlTest (16 tests data-provider). 319 tests totales, 1187 assertions.
 
 ---
 
