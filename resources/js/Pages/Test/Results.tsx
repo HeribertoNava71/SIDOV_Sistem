@@ -1,12 +1,19 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 
 interface TopCarrera {
+    id?: number;
     nombre: string;
-    similitud: number;
+    similitud?: number;
     universidad?: string;
+    afinidad?: number;
+}
+
+interface CarreraConAfinidad {
+    carrera: TopCarrera;
+    afinidad: number;
 }
 
 interface TestResult {
@@ -15,9 +22,9 @@ interface TestResult {
     dimension_secundaria: string;
     perfil_dominante: string;
     perfil_secundario: string | null;
-    fortalezas: string[];
-    top_carreras: TopCarrera[];
-    vector_normalizado: Record<string, number>;
+    fortalezas: unknown;
+    carreras_recomendadas: unknown;
+    vector_normalizado: unknown;
     created_at: string;
 }
 
@@ -48,11 +55,46 @@ const DIMENSION_EMOJI: Record<string, string> = {
     organizacion: '📋',
 };
 
+function parseArray<T>(value: unknown): T[] {
+    if (Array.isArray(value)) return value as T[];
+    if (typeof value === 'string') {
+        try { return JSON.parse(value) as T[]; } catch { return []; }
+    }
+    return [];
+}
+
+function parseVector(value: unknown): Record<string, number> {
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, number>;
+    if (typeof value === 'string') {
+        try { return JSON.parse(value) as Record<string, number>; } catch { return {}; }
+    }
+    return {};
+}
+
+function normalizeCarreras(raw: unknown): TopCarrera[] {
+    const items = parseArray<CarreraConAfinidad | TopCarrera>(raw);
+    return items.map((item) => {
+        if ('carrera' in item && item.carrera) {
+            const c = item.carrera as TopCarrera;
+            return { ...c, afinidad: (item as CarreraConAfinidad).afinidad };
+        }
+        return item as TopCarrera;
+    });
+}
+
+function getLastParam(): number | null {
+    if (typeof window === 'undefined') return null;
+    const p = new URLSearchParams(window.location.search).get('last');
+    return p ? parseInt(p, 10) || null : null;
+}
+
 export default function Results({ auth }: PageProps) {
     const [historial, setHistorial] = useState<TestResult[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expanded, setExpanded] = useState<number | null>(null);
+    const lastId = useRef<number | null>(getLastParam());
+    const highlightRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         fetch('/api/test/historial', { headers: { 'Accept': 'application/json' } })
@@ -61,14 +103,27 @@ export default function Results({ auth }: PageProps) {
                 return res.json();
             })
             .then(data => {
-                setHistorial(data.historial || []);
+                const items: TestResult[] = data.historial || [];
+                setHistorial(items);
                 setLoading(false);
+                if (lastId.current) {
+                    const found = items.find(r => r.id === lastId.current);
+                    if (found) setExpanded(found.id);
+                } else if (items.length > 0) {
+                    setExpanded(items[0].id);
+                }
             })
             .catch(err => {
                 setError(err.message);
                 setLoading(false);
             });
     }, []);
+
+    useEffect(() => {
+        if (expanded && highlightRef.current) {
+            highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [expanded, historial]);
 
     const formatDate = (dateString: string) =>
         new Date(dateString).toLocaleDateString('es-MX', {
@@ -78,30 +133,6 @@ export default function Results({ auth }: PageProps) {
             hour: '2-digit',
             minute: '2-digit',
         });
-
-    const parseFortalezas = (fortalezas: unknown): string[] => {
-        if (Array.isArray(fortalezas)) return fortalezas as string[];
-        if (typeof fortalezas === 'string') {
-            try { return JSON.parse(fortalezas); } catch { return []; }
-        }
-        return [];
-    };
-
-    const parseTopCarreras = (carreras: unknown): TopCarrera[] => {
-        if (Array.isArray(carreras)) return carreras as TopCarrera[];
-        if (typeof carreras === 'string') {
-            try { return JSON.parse(carreras); } catch { return []; }
-        }
-        return [];
-    };
-
-    const parseVector = (vector: unknown): Record<string, number> => {
-        if (vector && typeof vector === 'object' && !Array.isArray(vector)) return vector as Record<string, number>;
-        if (typeof vector === 'string') {
-            try { return JSON.parse(vector); } catch { return {}; }
-        }
-        return {};
-    };
 
     return (
         <AuthenticatedLayout>
@@ -169,15 +200,21 @@ export default function Results({ auth }: PageProps) {
                             </div>
 
                             {historial.map((result, idx) => {
-                                const fortalezas = parseFortalezas(result.fortalezas);
-                                const topCarreras = parseTopCarreras(result.top_carreras);
+                                const fortalezas = parseArray<string>(result.fortalezas);
+                                const topCarreras = normalizeCarreras(result.carreras_recomendadas);
                                 const vector = parseVector(result.vector_normalizado);
                                 const isExpanded = expanded === result.id;
+                                const isHighlighted = lastId.current === result.id;
 
                                 return (
                                     <div
                                         key={result.id}
-                                        className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+                                        ref={isHighlighted ? (el) => { highlightRef.current = el; } : undefined}
+                                        className={`rounded-2xl shadow-sm border overflow-hidden transition-all ${
+                                            isHighlighted
+                                                ? 'border-[#46178F] ring-2 ring-[#46178F]/20 bg-white'
+                                                : 'border-slate-200 bg-white'
+                                        }`}
                                     >
                                         <button
                                             onClick={() => setExpanded(isExpanded ? null : result.id)}
@@ -204,7 +241,12 @@ export default function Results({ auth }: PageProps) {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3 flex-shrink-0">
-                                                    {idx === 0 && (
+                                                    {isHighlighted && (
+                                                        <span className="text-xs px-2 py-1 bg-[#46178F] text-white rounded-full font-medium">
+                                                            🎉 Más reciente
+                                                        </span>
+                                                    )}
+                                                    {!isHighlighted && idx === 0 && (
                                                         <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">
                                                             Más reciente
                                                         </span>
@@ -222,7 +264,7 @@ export default function Results({ auth }: PageProps) {
                                         {isExpanded && (
                                             <div className="px-6 pb-6 border-t border-slate-100">
                                                 <div className="grid md:grid-cols-2 gap-6 mt-6">
-                                                    {/* Perfil */}
+                                                    {/* Perfil dimensional */}
                                                     {Object.keys(vector).length > 0 && (
                                                         <div>
                                                             <h4 className="text-sm font-semibold text-slate-700 mb-3">Perfil de dimensiones</h4>
@@ -253,19 +295,42 @@ export default function Results({ auth }: PageProps) {
                                                             <div>
                                                                 <h4 className="text-sm font-semibold text-slate-700 mb-3">Top carreras recomendadas</h4>
                                                                 <div className="space-y-2">
-                                                                    {topCarreras.slice(0, 3).map((c, i) => (
-                                                                        <div key={i} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2">
-                                                                            <div>
-                                                                                <p className="text-sm font-medium text-slate-800">{c.nombre}</p>
-                                                                                {c.universidad && (
-                                                                                    <p className="text-xs text-slate-400">{c.universidad}</p>
-                                                                                )}
+                                                                    {topCarreras.slice(0, 3).map((c, i) => {
+                                                                        const afinidad = c.afinidad ?? c.similitud;
+                                                                        return (
+                                                                            <div key={i} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 group">
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    {c.id ? (
+                                                                                        <Link
+                                                                                            href={`/carreras/${c.id}`}
+                                                                                            className="text-sm font-medium text-slate-800 hover:text-[#46178F] transition-colors line-clamp-1"
+                                                                                        >
+                                                                                            {c.nombre}
+                                                                                        </Link>
+                                                                                    ) : (
+                                                                                        <p className="text-sm font-medium text-slate-800 line-clamp-1">{c.nombre}</p>
+                                                                                    )}
+                                                                                    {c.universidad && (
+                                                                                        <p className="text-xs text-slate-400 truncate">{c.universidad}</p>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                                                    {afinidad != null && (
+                                                                                        <span className="text-sm font-bold text-[#46178F]">
+                                                                                            {Math.round(Number(afinidad))}%
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {c.id && (
+                                                                                        <Link href={`/carreras/${c.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                                            </svg>
+                                                                                        </Link>
+                                                                                    )}
+                                                                                </div>
                                                                             </div>
-                                                                            <span className="text-sm font-bold text-[#46178F]">
-                                                                                {Math.round((c.similitud ?? 0) * 100)}%
-                                                                            </span>
-                                                                        </div>
-                                                                    ))}
+                                                                        );
+                                                                    })}
                                                                 </div>
                                                             </div>
                                                         )}

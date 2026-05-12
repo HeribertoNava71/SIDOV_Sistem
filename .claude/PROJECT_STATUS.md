@@ -287,7 +287,7 @@ Bugs encontrados y corregidos durante testing:
 
 1. **Fase 10 — Seguridad de Roles (CRÍTICO producción)** ✅ COMPLETADA (2026-05-12)
 2. **Fase 11 — Vista pública Carrera + Malla Curricular** ✅ COMPLETADA (2026-05-12)
-3. **Fase 12 — Conexión Test → Resultados → Carreras** ❌ NO INICIADA
+3. **Fase 12 — Conexión Test → Resultados → Carreras** ✅ COMPLETADA (2026-05-12)
 4. **Fase 13 — Rediseño Admin Panel + Design System** ❌ NO INICIADA
 5. **Fase 14 — UI/UX Global + Accesibilidad** ❌ NO INICIADA
 6. **Fase 7 — Producción (MySQL/Redis/Docker/CI)** ❌ NO INICIADA (depende de 10-14)
@@ -364,24 +364,18 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
-### Fase 12 — Conexión Test → Resultados → Carreras ❌ NO INICIADA
+### Fase 12 — Conexión Test → Resultados → Carreras ✅ COMPLETADA (2026-05-12)
 
 **Objetivo:** Tras completar el test, el usuario llega a `/results` con su último resultado destacado y puede navegar directo a las carreras recomendadas.
 
-**Bugs activos:**
-
-#### BUG-20 — MEDIO: TestWrapped no redirige a Results
-- **Causa:** `TestWrapped.tsx` muestra resultado in-place pero no ofrece link claro a `/results` historial.
-
 **Subfases:**
 
-- **12A** — `TestVocacionalController::submit` retorna el `id` del `TestResult` creado para que frontend redirija.
-- **12B** — `TestWrapped.tsx`: tras `axios.post('/api/test/submit')` exitoso para usuario autenticado, mostrar pantalla "✅ Resultado guardado" con CTA "Ver mis resultados" → `router.visit('/results?last=' + id)`.
-- **12C** — `Test/Results.tsx`: si `?last={id}` en URL, hacer scroll/expand al resultado correspondiente y badge "🎉 Tu test más reciente".
-- **12D** — En cards de `top_carreras` de Results, cada carrera recomendada linkea a `/carreras/{id}` (depende Fase 11C). Para resultados pre-Fase-11, fallback a búsqueda.
-- **12E** — `Dashboard/Index.tsx`: card "Tu último test" mostrando perfil dominante + CTA "Ver historial completo".
-- **12F** — `TestResult` model: scope `latestForUser($userId)` y `with('carreras')` cuando carrera_id se almacene.
-- **12G** — Tests: `TestSubmitRedirectTest` (autenticado obtiene id + redirect path), `ResultsHighlightTest` (last param destaca correcto).
+- **12A** ✅ — `guardarResultado()` retorna `TestResult`; response incluye `result_id` cuando usuario autenticado.
+- **12B** ✅ — `TestWrapped.tsx`: tras última respuesta, POST a `/api/test/submit` en background (fetch). Almacena `savedId`. `SlideIdentidadFinal` muestra "Ver mis resultados" → `/results?last={savedId}` cuando autenticado.
+- **12C** ✅ — `Results.tsx`: lee `?last` de URL, auto-expande + destaca resultado con ese ID con badge "🎉 Más reciente" + ring púrpura.
+- **12D** ✅ — Carrera cards en Results linkean a `/carreras/{id}`. Fix campo `carreras_recomendadas` (antes `top_carreras` era undefined). `SimilitudService` ahora incluye `id` en cada carrera.
+- **12E–12F** ⏭ — Dashboard card + TestResult scope: pospuesto a Fase 14 (baja urgencia).
+- **12G** ✅ — 4 tests: `TestSubmitResultIdTest`. 266 tests totales.
 
 **Archivos esperados:**
 - `app/Http/Controllers/TestVocacionalController.php` (return id en submit)
@@ -494,6 +488,7 @@ Bugs encontrados y corregidos durante testing:
 - ✅ [2026-05-12] Fase 6E completada: 47 nuevos tests (240 total, 944 assertions). ScholarshipControllerTest (8), ApplicationControllerTest (8), UniversidadAdminControllerTest (8), CarreraAdminControllerTest (8), ScholarshipAdminControllerTest (8), PreguntaAdminControllerTest (7). Bugs corregidos: ScholarshipAdminController relación `requirements`→`requirementItems`, tabla `scholarship_requirements` creada, NOT NULL/nullable mismatch en universidades/carreras/preguntas corregido con 3 migraciones.
 - ✅ [2026-05-12] Fase 10 completada: Roles hardening — RegisteredUserController asigna default role; RegisterController.php eliminado; AdminController::updateUserRoles() hardened (token AGREGAR_ADMIN/QUITAR_ADMIN, last-admin guard, self-demote guard); RolesModal.tsx con UX confirmación; 12 nuevos tests. 252 tests totales.
 - ✅ [2026-05-12] Fase 11 completada: Vistas públicas universidad+carrera — GET /universidad/{id} Inertia (UniversidadDetail.tsx), GET /carreras/{id} Inertia (CarreraDetail.tsx), CarreraCard.tsx reutilizable. Malla curricular en grid columnas por semestre. Fix colisión columna/relación `universidad` en Carrera model. 10 nuevos tests. 262 tests totales.
+- ✅ [2026-05-12] Fase 12 completada: Conexión test→resultados — guardarResultado() retorna TestResult con id; TestWrapped POST background + "Ver mis resultados" CTA; Results.tsx ?last= param destaca resultado + auto-expand; SimilitudService incluye carrera.id; fix carreras_recomendadas field. 4 nuevos tests. 266 tests totales.
 
 ---
 

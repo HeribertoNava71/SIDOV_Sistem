@@ -55,7 +55,8 @@ class TestVocacionalController extends Controller
         ];
 
         if (auth()->check()) {
-            $this->guardarResultado(auth()->id(), $respuestas, $response);
+            $saved = $this->guardarResultado(auth()->id(), $respuestas, $response);
+            $response['result_id'] = $saved->id;
 
             $user = auth()->user();
             TestCompleted::dispatch(
@@ -121,11 +122,11 @@ class TestVocacionalController extends Controller
             ->toArray();
     }
 
-    private function guardarResultado(int $userId, array $respuestas, array $resultado): void
+    private function guardarResultado(int $userId, array $respuestas, array $resultado): TestResult
     {
         $topCarreras = $resultado['top_carreras'] ?? [];
 
-        TestResult::create([
+        return TestResult::create([
             'user_id' => $userId,
             'vector_raw' => $resultado['vector'],
             'vector_normalizado' => $resultado['vector_normalizado'],

@@ -1041,7 +1041,17 @@ function SlideCarreras({ resultado, onContinue }: { resultado: ResultadoFinal; o
 }
 
 // Slide: Identidad Final
-function SlideIdentidadFinal({ resultado, onReiniciar }: { resultado: ResultadoFinal; onReiniciar: () => void }) {
+function SlideIdentidadFinal({
+    resultado,
+    onReiniciar,
+    savedId,
+    isAuthenticated,
+}: {
+    resultado: ResultadoFinal;
+    onReiniciar: () => void;
+    savedId?: number | null;
+    isAuthenticated?: boolean;
+}) {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -1100,6 +1110,14 @@ function SlideIdentidadFinal({ resultado, onReiniciar }: { resultado: ResultadoF
                 transition={{ delay: 1.2 }}
                 className="flex flex-col sm:flex-row gap-4"
             >
+                {isAuthenticated && savedId && (
+                    <a
+                        href={`/results?last=${savedId}`}
+                        className="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-white/90 transition-colors text-center"
+                    >
+                        Ver mis resultados
+                    </a>
+                )}
                 <a
                     href="/universidades-tamaulipas"
                     className="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-white/90 transition-colors text-center"
@@ -1138,6 +1156,26 @@ export default function TestWrapped({ auth }: PageProps) {
     const [preguntaActual, setPreguntaActual] = useState(0);
     const [respuestas, setRespuestas] = useState<number[]>([]);
     const [resultado, setResultado] = useState<ResultadoFinal | null>(null);
+    const [savedId, setSavedId] = useState<number | null>(null);
+
+    const guardarEnBackend = async (answers: number[]) => {
+        if (!auth?.user) return;
+        try {
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+            const res = await fetch('/api/test/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                credentials: 'include',
+                body: JSON.stringify({ respuestas: answers }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.result_id) setSavedId(data.result_id);
+            }
+        } catch {
+            // silently fail — result already shown locally
+        }
+    };
 
     const responderPregunta = (opcionIndex: number) => {
         const nuevasRespuestas = [...respuestas, opcionIndex];
@@ -1146,10 +1184,10 @@ export default function TestWrapped({ auth }: PageProps) {
         if (preguntaActual < preguntasOptimizadas.length - 1) {
             setPreguntaActual(preguntaActual + 1);
         } else {
-            // Calcular resultados
             const resultadoCalculado = calcularResultados(nuevasRespuestas);
             setResultado(resultadoCalculado);
             setFase('calculando');
+            guardarEnBackend(nuevasRespuestas);
         }
     };
 
@@ -1158,6 +1196,7 @@ export default function TestWrapped({ auth }: PageProps) {
         setPreguntaActual(0);
         setRespuestas([]);
         setResultado(null);
+        setSavedId(null);
     };
 
     return (
@@ -1223,6 +1262,8 @@ export default function TestWrapped({ auth }: PageProps) {
                         key="final"
                         resultado={resultado}
                         onReiniciar={reiniciar}
+                        savedId={savedId}
+                        isAuthenticated={!!auth?.user}
                     />
                 )}
             </AnimatePresence>
