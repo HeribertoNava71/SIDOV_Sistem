@@ -14,10 +14,30 @@ export default {
         extend: {
             fontFamily: {
                 display: ['Playfair Display', 'Georgia', 'serif'],
-                sans: ['DM Sans', ...defaultTheme.fontFamily.sans],
+                sans: ['Plus Jakarta Sans', 'DM Sans', ...defaultTheme.fontFamily.sans],
+                admin: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
                 mono: ['Space Grotesk', ...defaultTheme.fontFamily.mono],
             },
             colors: {
+                // Semantic Design Tokens
+                primary: {
+                    DEFAULT: 'var(--color-primary)',
+                    dark: 'var(--color-primary-dark)',
+                    light: 'var(--color-primary-light)',
+                    foreground: 'var(--color-on-primary)',
+                },
+                accent: {
+                    DEFAULT: 'var(--color-accent)',
+                    foreground: 'var(--color-on-accent)',
+                },
+                background: 'var(--color-bg)',
+                foreground: 'var(--color-fg)',
+                muted: {
+                    DEFAULT: 'var(--color-muted)',
+                    foreground: 'var(--color-muted-fg)',
+                },
+                border: 'var(--color-border)',
+                destructive: 'var(--color-destructive)',
                 // Kahoot Primary Colors
                 kahoot: {
                     purple: {

@@ -4,7 +4,7 @@
  * Estilo: Cartier elegance + Kahoot vibrancy
  */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -34,8 +34,26 @@
     
     /* Tipografía */
     --font-display: 'Playfair Display', serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+    --font-admin: 'Plus Jakarta Sans', sans-serif;
     --font-mono: 'Space Grotesk', monospace;
+
+    /* Design Tokens Semánticos */
+    --color-primary: #46178F;
+    --color-primary-dark: #2D0F5C;
+    --color-primary-light: #7C3AED;
+    --color-on-primary: #ffffff;
+    --color-accent: #EB670F;
+    --color-on-accent: #ffffff;
+    --color-bg: #F8FAFC;
+    --color-fg: #1E293B;
+    --color-muted: #E9EFF8;
+    --color-muted-fg: #64748B;
+    --color-border: #E2E8F0;
+    --color-destructive: #E21B3C;
+    --color-success: #26890C;
+    --color-warning: #D89E00;
+    --color-info: #1368CE;
 }
 
 /* ============================================

@@ -1,6 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
+import { Compass } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import DimensionIcon from '@/Components/Icons/DimensionIcon';
 import { PageProps } from '@/types';
 
 interface TopCarrera {
@@ -46,14 +48,6 @@ const DIMENSION_COLORS: Record<string, string> = {
     organizacion: 'bg-cyan-500',
 };
 
-const DIMENSION_EMOJI: Record<string, string> = {
-    tecnologia: '💻',
-    creatividad: '🎨',
-    analisis: '📊',
-    liderazgo: '🎯',
-    investigacion: '🔬',
-    organizacion: '📋',
-};
 
 function parseArray<T>(value: unknown): T[] {
     if (Array.isArray(value)) return value as T[];
@@ -140,8 +134,9 @@ export default function Results({ auth }: PageProps) {
 
             <section className="bg-gradient-to-br from-[#46178F]/10 via-white to-[#1368CE]/10 py-16">
                 <div className="max-w-4xl mx-auto px-6 text-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#46178F]/10 text-[#46178F] mb-4">
-                        📊 Historial
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#46178F]/10 text-[#46178F] mb-4">
+                        <DimensionIcon dimension="analisis" className="w-3.5 h-3.5" />
+                        Historial
                     </span>
                     <h1 className="text-4xl font-bold text-slate-900 mb-4">
                         Mis Resultados <span className="bg-gradient-to-r from-[#46178F] to-[#1368CE] bg-clip-text text-transparent">Vocacionales</span>
@@ -168,8 +163,8 @@ export default function Results({ auth }: PageProps) {
                         </div>
                     ) : historial.length === 0 ? (
                         <div className="text-center py-20">
-                            <div className="w-24 h-24 rounded-full bg-[#46178F]/10 flex items-center justify-center mx-auto mb-6">
-                                <span className="text-5xl">🧭</span>
+                            <div className="w-24 h-24 rounded-full bg-[#46178F]/10 flex items-center justify-center mx-auto mb-6 text-[#46178F]">
+                                <Compass className="w-12 h-12" aria-hidden="true" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-3">Aún no tienes resultados</h2>
                             <p className="text-slate-600 mb-8 max-w-md mx-auto">
@@ -222,10 +217,8 @@ export default function Results({ auth }: PageProps) {
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center flex-shrink-0">
-                                                        <span className="text-2xl">
-                                                            {DIMENSION_EMOJI[result.dimension_dominante] ?? '🧩'}
-                                                        </span>
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center flex-shrink-0 text-white">
+                                                        <DimensionIcon dimension={result.dimension_dominante} className="w-6 h-6" />
                                                     </div>
                                                     <div>
                                                         <h3 className="text-lg font-semibold text-slate-900">
