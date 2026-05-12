@@ -416,8 +416,12 @@ middleware('admin')         /admin/public → auth (session) + admin
    - 3E ✅ Paginación en vistas admin (Users: paginate(25) + controles React)
    - 3F ✅ CRUD de Materias inline en Carreras (`MateriaAdminController` + panel expandible)
 
-4. **Fase 4 – Datos** → Estado: ✅ PARCIAL COMPLETA (51/51 carreras con materias)
-   - MallaCurricularSeeder: 2976 materias en 51 carreras, 0 filas omitidas
+4. **Fase 4 – Datos** → Estado: ✅ COMPLETA
+   - 4A: MallaCurricularSeeder: 2976 materias en 51 carreras, 0 filas omitidas
+   - 4B: CourseSeeder — 22 cursos reales con categorías, niveles, precios e instructores
+   - 4C: TutorSeeder — 12 tutores con especialidades, bios y tarifas
+   - 4D: ScholarshipSeeder — 15 becas reales de México (SEP, CONACYT, Tamaulipas, Google, Microsoft, Fulbright, OEA, DAAD, etc.)
+   - 4E: Endpoint GET /api/carreras/{id}/materias agrupado por semestre
 
 5. **Fase 5 – Frontend UX** → Estado: ⚠️ PARCIAL
    - Dependencias: Fases 1, 3, 4
@@ -441,6 +445,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase 3 (parcial) completada: Panel Admin — 3A: Carreras+Preguntas en menú AdminLayout; 3B: rutas web /admin/carreras y /admin/questions; 3C: UserAdminController (store/update/destroy con hash password + AdminLog), rutas /api/admin/users, fix DELETE URL en Users/Index.tsx, form con campo password. MallaCurricularSeeder reescrito: 2976 materias en 51 carreras (100% CSV). SoftDeletes 4 migrations aplicadas.
 - ✅ [2026-05-11] Fase 4A completada: MallaCurricularSeeder — CSV Mallas_Curriculares_UT_Tamaulipas.csv procesado con 2976 materias en 51 carreras, 0 filas omitidas. Fix alias "Lic. En Admón." → "LIC. EN ADMINISTRACIÓN". Base de datos ahora tiene malla curricular completa para todas las universidades tecnológicas de Tamaulipas.
 - ✅ [2026-05-11] Fase 3 completada: 3E paginación Users (paginate(25) + controles Inertia router), 3F MateriaAdminController (index/store/update/destroy + AdminLog), rutas /api/admin/entities/materias, Carrers/Index.tsx con panel expandible de materias (lazy load, add/edit/delete inline, CSRF).
+- ✅ [2026-05-12] Fase 4 completada: CourseSeeder (22 cursos), TutorSeeder (12 tutores), ScholarshipSeeder (15 becas reales de México — SEP, CONACYT, Tamaulipas, Microsoft, Google, Fulbright, OEA, DAAD, etc.), migración requirements→TEXT en scholarships, endpoint GET /api/carreras/{id}/materias agrupado por semestre. 161 tests pasan.
 
 ---
 
@@ -455,9 +460,9 @@ middleware('admin')         /admin/public → auth (session) + admin
 | carreras | 51 | Tamaulipas activas |
 | materias | 2976 | 51/51 carreras — completo |
 | preguntas | 32 | Test vocacional |
-| courses | 0 | Sin datos |
-| tutors | 0 | Sin datos |
-| scholarships | 0 | Sin datos |
+| courses | 22 | Programación, Web, IA, Diseño, Negocios, Idiomas |
+| tutors | 12 | Especialidades: Dev Web, Data Science, Diseño, Idiomas |
+| scholarships | 15 | SEP, CONACYT, Tamaulipas, Google, Microsoft, Fulbright, OEA, DAAD |
 | two_factor_authentications | 0 | Dinámico |
 | personal_access_tokens | Acumula | Bug 1E sin fix |
 
@@ -498,5 +503,5 @@ middleware('admin')         /admin/public → auth (session) + admin
 
 ---
 
-**Última actualización:** 2026-05-11  
+**Última actualización:** 2026-05-12  
 **Versión del documento:** 2.0 (Auditoría Técnica Completa)

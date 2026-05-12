@@ -15,6 +15,11 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             TamaulipasDataSeeder::class,
             MallaCurricularSeeder::class,
+            CourseCategorySeeder::class,
+            TutorSpecialtySeeder::class,
+            CourseSeeder::class,
+            TutorSeeder::class,
+            ScholarshipSeeder::class,
         ]);
 
         User::factory()->create([

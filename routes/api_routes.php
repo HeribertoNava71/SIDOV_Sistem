@@ -339,6 +339,28 @@ Route::prefix('carreras')->group(function () {
     Route::get('/{id}', [CarreraController::class, 'show'])->where('id', '[0-9]+');
     Route::get('/universidad/{universidadId}', [CarreraController::class, 'byUniversidad'])->where('universidadId', '[0-9]+');
 
+    // Fase 4E — Materias por carrera
+    Route::get('/{id}/materias', function (int $id) {
+        $carrera = \App\Models\Carrera::findOrFail($id);
+
+        $materias = \App\Models\Materia::where('carrera_id', $id)
+            ->orderBy('semestre')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'semestre', 'tipo', 'creditos']);
+
+        $byBimester = $materias->groupBy('semestre')->map(fn($items, $sem) => [
+            'semestre' => (int) $sem,
+            'materias' => $items->values(),
+        ])->values();
+
+        return response()->json([
+            'carrera_id' => $carrera->id,
+            'carrera_nombre' => $carrera->nombre,
+            'total_materias' => $materias->count(),
+            'semestres' => $byBimester,
+        ]);
+    })->where('id', '[0-9]+');
+
 });
 
 /*
