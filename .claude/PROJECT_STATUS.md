@@ -251,16 +251,44 @@ Bugs encontrados y corregidos durante testing:
 
 ---
 
+> ✅ **8C COMPLETADA (2026-05-12):** web.php mapeo camelCase + MapaTamaulipas.tsx hooks al tope.
+
+### Fase 9 — Mapa Tamaulipas en `/universities` ❌ NO INICIADA
+
+**Objetivo:** Mostrar el mapa SVG interactivo de Tamaulipas (actualmente en `/universidades-tamaulipas`) también en la página `/universities`, con toggle Mapa/Lista.
+
+**Análisis:**
+- `Universities/Index.tsx` usa snake_case (`nombre_corto`, `color_primario`)
+- `UniversidadDrawer` y mapa usan camelCase (`nombreCorto`, `colorPrimario`)
+- Ruta `/universities` no incluye `latitud`, `longitud`, `direccion`, `telefono`, `email`, `carreras_count` — campos necesarios para el mapa
+
+**Fix 9 — 2 archivos:**
+
+**9A — `routes/web.php` (ruta `/universities`):**
+- Cambiar `select([...])` por `withCount('carreras')->get()` incluyendo todos los campos: añadir `latitud`, `longitud`, `direccion`, `telefono`, `email`
+- Pasar resultado completo como props
+
+**9B — `Universities/Index.tsx`:**
+1. Añadir campos al interface `University`: `latitud`, `longitud`, `direccion`, `telefono`, `email`, `carreras_count`
+2. Añadir función adaptadora `toDrawerUniversidad(u: University)` que convierte snake_case → camelCase para `UniversidadDrawer`
+3. Añadir `useState<'mapa' | 'lista'>('lista')` para toggle de vista
+4. Añadir imports: `TamaulipasMapShape` (TAMAULIPAS_VIEWBOX, TamaulipasShapePath, TamaulipasMapDefs, projectLatLon), `UniversidadDrawer`, `AnimatePresence`, `useMemo`
+5. Añadir toggle Mapa/Lista en la barra de filtros
+6. Añadir sección `MapaSVGTamaulipas` inline (igual a MapaTamaulipas.tsx pero adaptada a snake_case): marcadores por `color_primario`, label por `nombre_corto`, click abre `UniversidadDrawer`
+7. Vista `lista` = grid existente, vista `mapa` = SVG + lista lateral (layout 2/3 + 1/3)
+
+---
+
 ## PARTE 4 — PRÓXIMOS PASOS INMEDIATOS
 
 **Lo que sigue (ordenado por impacto/urgencia):**
 
-1. **Fase 8C — Fix MapaTamaulipas** (30 min) ❌ NO INICIADA
-   - Solo 2 archivos: web.php (mapeo camelCase) + MapaTamaulipas.tsx (hooks al tope)
+1. **Fase 9 — Mapa en /universities** ❌ NO INICIADA
+   - 2 archivos: web.php + Universities/Index.tsx
 
 2. **Fase 7 — Producción**
    - Estado: ❌ NO INICIADA
-   - Dependencias: Fase 8 completada
+   - Dependencias: Fase 9 completada
 
 ---
 

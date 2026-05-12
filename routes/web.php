@@ -38,11 +38,9 @@ Route::get('/universidad/{id}', function ($id) {
 })->name('universidad.detalle');
 
 Route::get('/universities', function () {
-    $universidades = Universidad::select([
-        'id', 'nombre', 'nombre_corto', 'tipo', 'calificacion',
-        'num_estudiantes', 'num_programas', 'ranking',
-        'ciudad', 'color_primario', 'sitio_web', 'descripcion',
-    ])->orderByDesc('calificacion')->get();
+    $universidades = Universidad::withCount('carreras')
+        ->orderByDesc('calificacion')
+        ->get();
 
     return Inertia::render('Universities/Index', [
         'universities' => $universidades,
