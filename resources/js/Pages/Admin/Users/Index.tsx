@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
 import RolesModal from './RolesModal';
@@ -63,10 +64,39 @@ export default function UsersIndex() {
         router.get('/admin/users', { page }, { preserveScroll: true, preserveState: true });
     };
 
+    const [sortField, setSortField] = useState<'name' | 'email' | 'created_at' | null>(null);
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+    const handleSort = (field: 'name' | 'email' | 'created_at') => {
+        if (sortField === field) {
+            setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDir('asc');
+        }
+    };
+
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
         u.email.toLowerCase().includes(search.toLowerCase())
     );
+
+    const sortedUsers = sortField
+        ? [...filteredUsers].sort((a, b) => {
+            const aVal = sortField === 'created_at' ? new Date(a.created_at).getTime() : a[sortField].toLowerCase();
+            const bVal = sortField === 'created_at' ? new Date(b.created_at).getTime() : b[sortField].toLowerCase();
+            if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+        })
+        : filteredUsers;
+
+    const SortIcon = ({ field }: { field: 'name' | 'email' | 'created_at' }) => {
+        if (sortField !== field) return <ChevronsUpDown className="w-3.5 h-3.5 opacity-40" aria-hidden="true" />;
+        return sortDir === 'asc'
+            ? <ChevronUp className="w-3.5 h-3.5 text-[#46178F]" aria-hidden="true" />
+            : <ChevronDown className="w-3.5 h-3.5 text-[#46178F]" aria-hidden="true" />;
+    };
 
     return (
         <AdminLayout>
@@ -86,16 +116,22 @@ export default function UsersIndex() {
                 <table className="w-full">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
-                            <th className="text-left px-6 py-4 text-sm font-semibold">Usuario</th>
-                            <th className="text-left px-6 py-4 text-sm font-semibold">Email</th>
+                            <th aria-sort={sortField === 'name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-6 py-4 text-sm font-semibold">
+                                <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-[#46178F] transition-colors">Usuario <SortIcon field="name" /></button>
+                            </th>
+                            <th aria-sort={sortField === 'email' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-6 py-4 text-sm font-semibold">
+                                <button onClick={() => handleSort('email')} className="flex items-center gap-1 hover:text-[#46178F] transition-colors">Email <SortIcon field="email" /></button>
+                            </th>
                             <th className="text-left px-6 py-4 text-sm font-semibold">Roles</th>
-                            <th className="text-left px-6 py-4 text-sm font-semibold">Registro</th>
+                            <th aria-sort={sortField === 'created_at' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-6 py-4 text-sm font-semibold">
+                                <button onClick={() => handleSort('created_at')} className="flex items-center gap-1 hover:text-[#46178F] transition-colors">Registro <SortIcon field="created_at" /></button>
+                            </th>
                             <th className="text-right px-6 py-4 text-sm font-semibold">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                        {filteredUsers.map(user => (
-                            <tr key={user.id} className="hover:bg-slate-50">
+                        {sortedUsers.map(user => (
+                            <tr key={user.id} className="even:bg-slate-50/60 hover:bg-violet-50/30 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center text-white font-semibold">
