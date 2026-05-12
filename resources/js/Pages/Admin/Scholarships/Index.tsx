@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Scholarship {
     id?: number; name: string; description: string; provider: string;
@@ -20,19 +21,23 @@ export default function ScholarshipsIndex() {
     const [scholarships, setScholarships] = useState(initialScholarships);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Scholarship | null>(null);
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta beca?')) return;
         try {
-            await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', credentials: 'include' });
+            const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const res = await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf }, credentials: 'include' });
+            if (!res.ok) throw new Error();
             setScholarships(scholarships.filter(s => s.id !== id));
-        } catch (error) { console.error('Error:', error); }
+            showToast('Beca eliminada correctamente');
+        } catch { showToast('Error al eliminar la beca', 'error'); }
     };
 
     const openEdit = (item: Scholarship) => { setEditingItem(item); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { window.location.reload(); };
+    const handleSuccess = () => { showToast('Cambios guardados'); router.reload(); };
 
     return (
         <AdminLayout>
@@ -78,6 +83,7 @@ export default function ScholarshipsIndex() {
                 </table>
             </div>
             {showForm && <Form scholarship={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />}
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }

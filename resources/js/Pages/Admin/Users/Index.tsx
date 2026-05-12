@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface User {
     id: number; name: string; email: string; email_verified_at: string | null;
@@ -27,20 +28,23 @@ export default function UsersIndex() {
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<User | null>(null);
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este usuario?')) return;
         try {
             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
-            await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }, credentials: 'include' });
+            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }, credentials: 'include' });
+            if (!res.ok) throw new Error();
             setUsers(users.filter(u => u.id !== id));
-        } catch (error) { console.error('Error:', error); }
+            showToast('Usuario eliminado correctamente');
+        } catch { showToast('Error al eliminar el usuario', 'error'); }
     };
 
     const openEdit = (user: User) => { setEditingItem(user); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { router.reload(); };
+    const handleSuccess = () => { showToast('Usuario guardado correctamente'); router.reload(); };
 
     const goToPage = (page: number) => {
         router.get('/admin/users', { page }, { preserveScroll: true, preserveState: true });
@@ -140,6 +144,7 @@ export default function UsersIndex() {
             )}
 
             {showForm && <Form user={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />}
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }

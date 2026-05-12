@@ -311,25 +311,26 @@ middleware('admin')         /admin/public → auth (session) + admin
 
 **Objetivo:** Las páginas se comportan como lo espera el usuario, sin estados vacíos ni errores de renderizado.
 
-**5A** — Crear o corregir `Profile/Index`  
-- Opción A: crear `resources/js/Pages/Profile/Index.tsx` como hub del perfil (edit + progress + 2FA settings)
-- Opción B: simplemente actualizar web.php para renderizar `Profile/Edit` en esa ruta
+**5A** — Crear o corregir `Profile/Index` *(omitida — Profile/Edit cubre el caso de uso)*
 
-**5B** — Completar páginas Learn e Aspire con datos reales  
-- Conectar `Learn/Index.tsx` al API de cursos usando `useEffect` + fetch
-- Conectar `Aspire/Index.tsx` al API de becas
+**5B** ✅ — Aspire/Index.tsx con datos reales  
+- Fix Scholarship model: renombrado `requirements()` → `requirementItems()` (conflicto columna/relación)
+- Fix ScholarshipService: `with('requirementItems')` en todos los queries
+- Fix Aspire/Index.tsx: detección Nacional/Internacional por palabras clave en provider, requirements como string
 
-**5C** — Implementar vista de resultados del test  
-- `Test/Results.tsx` actualmente renderiza vacío si no hay historial
-- Conectar con `GET /api/test/historial` y mostrar resultados previos
+**5C** ✅ — Test/Results.tsx implementado  
+- Página completa con historial de resultados del test vocacional
+- Barras de dimensiones (tech, creativity, analysis, leadership, research, organization)
+- Top carreras con porcentaje de match, fortalezas chips, estado vacío con CTA
 
-**5D** — Implementar pantalla de Recovery Codes post-2FA  
-- Tras habilitar 2FA, mostrar los recovery codes de forma clara con opción de descarga
-- Actualmente se pasan por session flash pero no hay UI dedicada
+**5D** ✅ — TwoFactorSetup + RecoveryCodes  
+- TwoFactorSetup.tsx reescrito con Inertia `useForm` + `post('/two-factor/enable')` (sin Bearer)
+- TwoFactorRecoveryCodes.tsx nuevo con copy + download
+- Ruta `/two-factor/recovery-codes` agregada a web.php
 
-**5E** — Mejorar manejo de errores en admin  
-- Reemplazar `console.error()` por estados de error visibles en UI
-- Agregar toasts/notificaciones para operaciones exitosas en CRUD
+**5E** ✅ — Toast component + admin CRUD mejorado  
+- `Toast.tsx` + `useToast()` hook con auto-dismiss a 3.5s
+- Todos los admin CRUD (Roles, Scholarships, Questions, Users, Carrers): toasts, `router.reload()`, formError states visibles
 
 ---
 
@@ -423,8 +424,11 @@ middleware('admin')         /admin/public → auth (session) + admin
    - 4D: ScholarshipSeeder — 15 becas reales de México (SEP, CONACYT, Tamaulipas, Google, Microsoft, Fulbright, OEA, DAAD, etc.)
    - 4E: Endpoint GET /api/carreras/{id}/materias agrupado por semestre
 
-5. **Fase 5 – Frontend UX** → Estado: ⚠️ PARCIAL
-   - Dependencias: Fases 1, 3, 4
+5. **Fase 5 – Frontend UX** → Estado: ✅ COMPLETADA (2026-05-12)
+   - 5B: Fix Scholarship model (requirementItems), ScholarshipService, Aspire/Index.tsx (detección Nacional/Internacional, requirements como string)
+   - 5C: Test/Results.tsx creado — historial con barras de dimensiones, top carreras, fortalezas
+   - 5D: TwoFactorSetup.tsx reescrito con Inertia (sin Bearer), TwoFactorRecoveryCodes.tsx creado, ruta /two-factor/recovery-codes
+   - 5E: Toast component creado, todos los admin CRUD (Roles, Scholarships, Questions, Users, Carrers) con toasts + router.reload() + formError states
 
 6. **Fase 6 – Testing** → Estado: ⚠️ PARCIAL (161 tests, faltan flujos clave)
    - Dependencias: Fases 1-5
@@ -446,6 +450,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase 4A completada: MallaCurricularSeeder — CSV Mallas_Curriculares_UT_Tamaulipas.csv procesado con 2976 materias en 51 carreras, 0 filas omitidas. Fix alias "Lic. En Admón." → "LIC. EN ADMINISTRACIÓN". Base de datos ahora tiene malla curricular completa para todas las universidades tecnológicas de Tamaulipas.
 - ✅ [2026-05-11] Fase 3 completada: 3E paginación Users (paginate(25) + controles Inertia router), 3F MateriaAdminController (index/store/update/destroy + AdminLog), rutas /api/admin/entities/materias, Carrers/Index.tsx con panel expandible de materias (lazy load, add/edit/delete inline, CSRF).
 - ✅ [2026-05-12] Fase 4 completada: CourseSeeder (22 cursos), TutorSeeder (12 tutores), ScholarshipSeeder (15 becas reales de México — SEP, CONACYT, Tamaulipas, Microsoft, Google, Fulbright, OEA, DAAD, etc.), migración requirements→TEXT en scholarships, endpoint GET /api/carreras/{id}/materias agrupado por semestre. 161 tests pasan.
+- ✅ [2026-05-12] Fase 5 completada: 5B Fix Scholarship model (requirementItems) + Aspire/Index.tsx (detección Nacional/Internacional); 5C Test/Results.tsx con historial de resultados; 5D TwoFactorSetup.tsx reescrito con Inertia + TwoFactorRecoveryCodes.tsx nuevo; 5E Toast component + fix admin CRUD (Roles/Scholarships/Questions/Users/Carrers) con toasts, router.reload(), formError states. 161 tests pasan.
 
 ---
 

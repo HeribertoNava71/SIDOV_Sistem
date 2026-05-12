@@ -5,11 +5,6 @@ import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
 import { PageProps } from '@/types';
 
-interface ScholarshipRequirement {
-    id: number;
-    requirement: string;
-}
-
 interface Scholarship {
     id: number;
     name: string;
@@ -18,11 +13,11 @@ interface Scholarship {
     amount: number;
     currency: string;
     coverage: string;
-    level: string;
+    level: string | null;
     application_start: string;
     application_end: string;
-    requirements: ScholarshipRequirement[];
-    document_url: string;
+    requirements: string | null;
+    document_url: string | null;
     is_active: boolean;
     is_featured: boolean;
 }
@@ -50,12 +45,12 @@ export default function Aspire({ auth }: PageProps) {
             });
     }, []);
 
+    const INTERNATIONAL_KEYWORDS = ['oea', 'daad', 'fulbright', 'comexus', 'internacional', 'foreign', 'europeo', 'alemán', 'americana'];
     const getScholarshipType = (scholarship: Scholarship): 'Nacional' | 'Internacional' => {
-        return scholarship.coverage?.toLowerCase().includes('internacional') || 
-               scholarship.provider?.toLowerCase().includes('foreign') ||
-               scholarship.provider?.toLowerCase().includes('international')
-            ? 'Internacional' 
-            : 'Nacional';
+        const providerLower = scholarship.provider?.toLowerCase() || '';
+        const isInternational = INTERNATIONAL_KEYWORDS.some(k => providerLower.includes(k))
+            || ['USD', 'EUR', 'GBP'].includes(scholarship.currency);
+        return isInternational ? 'Internacional' : 'Nacional';
     };
 
     const filteredScholarships = scholarships.filter(s => {
@@ -80,11 +75,12 @@ export default function Aspire({ auth }: PageProps) {
     };
 
     const formatAmount = (scholarship: Scholarship) => {
-        if (scholarship.amount) {
-            const currency = scholarship.currency === 'USD' ? '$' : '$';
-            return `${currency}${scholarship.amount.toLocaleString()}`;
+        if (scholarship.amount && scholarship.amount > 0) {
+            const symbol = scholarship.currency === 'MXN' ? '$' : scholarship.currency;
+            return `${symbol} ${Number(scholarship.amount).toLocaleString()} ${scholarship.currency}`;
         }
-        return scholarship.coverage || 'Por definir';
+        if (scholarship.coverage === 'total') return 'Beca completa';
+        return 'Ver convocatoria';
     };
 
     const nacionalCount = scholarships.filter(s => s.is_active && getScholarshipType(s) === 'Nacional').length;
@@ -259,13 +255,15 @@ export default function Aspire({ auth }: PageProps) {
                                                         {scholarship.description}
                                                     </p>
 
-                                                    <div className="flex flex-wrap gap-2 mb-4">
-                                                        {scholarship.requirements?.map((req, j) => (
-                                                            <span key={j} className="text-xs px-2 py-1 bg-slate-100 rounded-lg text-slate-600">
-                                                                ✓ {req.requirement}
-                                                            </span>
-                                                        ))}
-                                                    </div>
+                                                    {scholarship.requirements && (
+                                                        <div className="flex flex-wrap gap-2 mb-4">
+                                                            {scholarship.requirements.split(',').map((req, j) => (
+                                                                <span key={j} className="text-xs px-2 py-1 bg-slate-100 rounded-lg text-slate-600">
+                                                                    ✓ {req.trim()}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="lg:w-64 flex-shrink-0">

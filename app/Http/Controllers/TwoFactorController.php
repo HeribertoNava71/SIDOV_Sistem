@@ -58,10 +58,7 @@ class TwoFactorController extends Controller
 
             $request->session()->put('2fa_recovery_codes', $recoveryCodes);
 
-            return redirect()->route('dashboard')->with([
-                'status' => 'Autenticación de dos factores habilitada.',
-                'recovery_codes' => $recoveryCodes,
-            ]);
+            return redirect()->route('two-factor.recovery-codes');
         }
 
         return back()->withErrors(['code' => 'Código inválido.']);

@@ -63,6 +63,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/setup', [App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('setup');
         Route::post('/enable', [App\Http\Controllers\TwoFactorController::class, 'enable'])->name('enable');
         Route::post('/disable', [App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
+        Route::get('/recovery-codes', function (\Illuminate\Http\Request $request) {
+            $codes = $request->session()->pull('2fa_recovery_codes', []);
+            return \Inertia\Inertia::render('Auth/TwoFactorRecoveryCodes', ['codes' => $codes]);
+        })->name('recovery-codes');
         Route::get('/challenge', [App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
         Route::post('/challenge', [App\Http\Controllers\TwoFactorController::class, 'challenge'])
             ->name('challenge.verify')

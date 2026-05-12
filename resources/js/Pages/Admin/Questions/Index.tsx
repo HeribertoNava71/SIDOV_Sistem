@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Opcion {
     texto: string;
@@ -24,19 +25,23 @@ export default function QuestionsIndex() {
     const [preguntas, setPreguntas] = useState(initialPreguntas);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Pregunta | null>(null);
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta pregunta?')) return;
         try {
-            await fetch(`/api/admin/entities/preguntas/${id}`, { method: 'DELETE', credentials: 'include' });
+            const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const res = await fetch(`/api/admin/entities/preguntas/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf }, credentials: 'include' });
+            if (!res.ok) throw new Error();
             setPreguntas(preguntas.filter(p => p.id !== id));
-        } catch (error) { console.error('Error:', error); }
+            showToast('Pregunta eliminada correctamente');
+        } catch { showToast('Error al eliminar la pregunta', 'error'); }
     };
 
     const openEdit = (preg: Pregunta) => { setEditingItem(preg); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { window.location.reload(); };
+    const handleSuccess = () => { showToast('Cambios guardados'); router.reload(); };
 
     return (
         <AdminLayout>
@@ -70,6 +75,7 @@ export default function QuestionsIndex() {
             </div>
 
             {showForm && <Form pregunta={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />}
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }

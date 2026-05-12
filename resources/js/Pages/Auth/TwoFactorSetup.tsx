@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, Head, usePage } from '@inertiajs/react';
+import { useForm, Head } from '@inertiajs/react';
 
 interface Props {
     qrCodeUrl: string;
@@ -7,44 +7,17 @@ interface Props {
 }
 
 export default function TwoFactorSetup({ qrCodeUrl, secret }: Props) {
-    const { post } = useForm({});
-    const [code, setCode] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const { data, setData, post, processing, errors } = useForm({ code: '' });
+    const [showManual, setShowManual] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/two-factor/enable', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-                body: JSON.stringify({ code }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                window.location.href = '/dashboard?2fa=enabled';
-            } else {
-                setError(data.errors?.code?.[0] || data.error || 'Código inválido.');
-            }
-        } catch (err) {
-            setError('Error de conexión.');
-        } finally {
-            setLoading(false);
-        }
+        post('/two-factor/enable');
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center p-4">
+            <Head title="Configurar 2FA" />
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-[#46178F]/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -56,41 +29,54 @@ export default function TwoFactorSetup({ qrCodeUrl, secret }: Props) {
                     <p className="text-slate-600 mt-2">Escanea el código QR con tu app de autenticación</p>
                 </div>
 
-                <div className="flex justify-center mb-6">
-                    <img src={qrCodeUrl} alt="QR Code" className="rounded-xl border border-slate-200" />
+                <div className="flex justify-center mb-4">
+                    <img src={qrCodeUrl} alt="QR Code 2FA" className="rounded-xl border border-slate-200 w-48 h-48" />
                 </div>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-6">
-                    <p className="text-sm text-slate-600 mb-2">Código manual:</p>
-                    <code className="text-xs font-mono bg-white px-3 py-2 rounded border border-slate-200 break-all">{secret}</code>
-                </div>
+                <button
+                    type="button"
+                    onClick={() => setShowManual(!showManual)}
+                    className="w-full text-center text-sm text-slate-500 hover:text-slate-700 mb-4"
+                >
+                    {showManual ? 'Ocultar código manual' : '¿No puedes escanear? Ver código manual'}
+                </button>
+
+                {showManual && (
+                    <div className="bg-slate-50 rounded-xl p-4 mb-6">
+                        <p className="text-xs text-slate-500 mb-2">Introduce este código manualmente en tu app:</p>
+                        <code className="text-xs font-mono bg-white px-3 py-2 rounded border border-slate-200 break-all block text-center select-all">
+                            {secret}
+                        </code>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Código de verificación</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Código de verificación (6 dígitos)
+                        </label>
                         <input
                             type="text"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
+                            inputMode="numeric"
+                            value={data.code}
+                            onChange={(e) => setData('code', e.target.value.replace(/\D/g, '').slice(0, 6))}
                             placeholder="000000"
                             maxLength={6}
+                            autoComplete="one-time-code"
                             className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#46178F] focus:border-transparent text-center text-2xl tracking-widest"
                             required
                         />
+                        {errors.code && (
+                            <p className="text-red-500 text-sm mt-1">{errors.code}</p>
+                        )}
                     </div>
-
-                    {error && (
-                        <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm">
-                            {error}
-                        </div>
-                    )}
 
                     <button
                         type="submit"
-                        disabled={loading || code.length !== 6}
+                        disabled={processing || data.code.length !== 6}
                         className="w-full py-3 bg-[#46178F] text-white rounded-xl font-semibold hover:bg-[#3a156f] transition-colors disabled:opacity-50"
                     >
-                        {loading ? 'Verificando...' : 'Habilitar 2FA'}
+                        {processing ? 'Verificando...' : 'Habilitar 2FA'}
                     </button>
                 </form>
 

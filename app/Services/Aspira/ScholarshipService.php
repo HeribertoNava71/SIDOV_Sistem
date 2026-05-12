@@ -9,7 +9,7 @@ class ScholarshipService
 {
     public function getAll(array $filters = []): Collection
     {
-        $query = Scholarship::query()->with('requirements');
+        $query = Scholarship::query()->with('requirementItems');
 
         if (isset($filters['level'])) {
             $query->byLevel($filters['level']);
@@ -33,7 +33,7 @@ class ScholarshipService
     public function getOpen(): Collection
     {
         return Scholarship::openForApplications()
-            ->with('requirements')
+            ->with('requirementItems')
             ->orderBy('application_end', 'asc')
             ->get();
     }
@@ -42,14 +42,14 @@ class ScholarshipService
     {
         return Scholarship::active()
             ->featured()
-            ->with('requirements')
+            ->with('requirementItems')
             ->limit($limit)
             ->get();
     }
 
     public function getById(int $id): ?Scholarship
     {
-        return Scholarship::with('requirements')->find($id);
+        return Scholarship::with('requirementItems')->find($id);
     }
 
     public function getOpenCount(): int

@@ -48,7 +48,7 @@ class Scholarship extends Model
         return $this->hasMany(Application::class);
     }
 
-    public function requirements(): HasMany
+    public function requirementItems(): HasMany
     {
         return $this->hasMany(ScholarshipRequirement::class);
     }

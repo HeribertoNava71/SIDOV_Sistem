@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import CarrerForm from './Form';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Universidad {
     id: number;
@@ -226,26 +227,28 @@ export default function CarrersIndex() {
     const [editingCarrera, setEditingCarrera] = useState<Carrera | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [search, setSearch] = useState('');
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta carrera?')) return;
         const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
         try {
-            await fetch(`/api/admin/entities/carreras/${id}`, {
+            const res = await fetch(`/api/admin/entities/carreras/${id}`, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrf },
                 credentials: 'include',
             });
+            if (!res.ok) throw new Error();
             setCarreras(carreras.filter(c => c.id !== id));
-        } catch (error) {
-            console.error('Error:', error);
-        }
+            showToast('Carrera eliminada correctamente');
+        } catch { showToast('Error al eliminar la carrera', 'error'); }
     };
 
     const handleSuccess = () => {
         setShowForm(false);
         setEditingCarrera(null);
-        window.location.reload();
+        showToast('Carrera guardada correctamente');
+        router.reload();
     };
 
     const filtered = carreras.filter(c =>
@@ -342,6 +345,7 @@ export default function CarrersIndex() {
                     </table>
                 </div>
             )}
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }
