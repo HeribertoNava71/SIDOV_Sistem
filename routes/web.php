@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/challenge', [App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
         Route::post('/challenge', [App\Http\Controllers\TwoFactorController::class, 'challenge'])
             ->name('challenge.verify')
-            ->withoutMiddleware('auth')
+            ->withoutMiddleware(['auth', 'verified'])
             ->middleware('throttle:5,1');
     });
 });

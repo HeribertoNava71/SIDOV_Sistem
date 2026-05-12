@@ -338,29 +338,29 @@ middleware('admin')         /admin/public → auth (session) + admin
 
 **Objetivo:** Los tests cubren los flujos reales incluyendo los que estaban rotos.
 
-**6A** — Tests para flujo 2FA completo  
-- Test: usuario con 2FA activado → login → challenge → verificación correcta → dashboard
-- Test: usuario con 2FA activado → login → challenge → código incorrecto → error
-- Test: rate limiting en challenge (5 intentos)
+**6A** ✅ — Tests para flujo 2FA completo (`TwoFactorTest.php` — 9 tests)
+- login con 2FA → redirige a challenge, user queda como guest, session tiene pending_user_id
+- challenge con recovery code válido → redirige a dashboard, user autenticado
+- challenge con código inválido → 401 JSON
+- challenge sin sesión pendiente → 401 JSON
+- challenge sin campo code → 422 validation error
+- rate limiting: 5 intentos fallidos → 6to intento 429
+- enable redirects, disable requiere password correcto, disable con password ok
 
-**6B** — Tests para admin CRUD  
-- Test: crear, actualizar, eliminar universidad via API
-- Test: crear, actualizar, eliminar usuario via API admin
-- Test: usuario sin rol admin es rechazado (403)
+**6B** ✅ — Tests para admin CRUD (`UserAdminControllerTest.php` — 10 tests, `RoleAdminControllerTest.php` — 9 tests)
+- Users: crear (201), email duplicado (422), actualizar (200), 404 no existe, eliminar (200), no puede auto-eliminarse (422), 404 no existe, no-admin (403), sin auth (401), listar todos
+- Roles: listar, get single, 404, crear (201), nombre duplicado (422), actualizar parcial (200), eliminar (200), no-admin crea (403), no-admin lista (403)
+- Fix: `AdminService::updateRole()` accedía `$data['name']` sin null-check
 
-**6C** — Tests para flujo de registro completo  
-- Test: registro → email de verificación enviado
-- Test: registro → link de verificación válido → acceso a dashboard
-- Test: registro → link de verificación expirado → error
+**6C** ✅ — Tests para flujo de registro (`RegistrationTest.php` — +4 tests)
+- Envía notificación VerifyEmail al registrarse
+- Falla con email duplicado (errores de sesión)
+- Falla con contraseñas que no coinciden
+- Link de verificación expirado devuelve 403
 
-**6D** — Tests E2E para test vocacional  
-- Test: submit con respuestas válidas → resultado correcto
-- Test: submit autenticado → guarda en historial
-- Test: submit sin autenticación → no guarda en historial
+**6D** ✅ — Tests E2E test vocacional — ya cubiertos en `TestVocacionalControllerTest.php` (8 tests)
 
-**6E** — Aumentar cobertura a 90%+  
-- Identificar paths no cubiertos con `php artisan test --coverage`
-- Escribir tests específicos para servicios: ScoringService, SimilitudService, DashboardService
+**6E** — Aumentar cobertura a 90%+ — pendiente (193 tests, 831 assertions)
 
 ---
 
@@ -430,8 +430,13 @@ middleware('admin')         /admin/public → auth (session) + admin
    - 5D: TwoFactorSetup.tsx reescrito con Inertia (sin Bearer), TwoFactorRecoveryCodes.tsx creado, ruta /two-factor/recovery-codes
    - 5E: Toast component creado, todos los admin CRUD (Roles, Scholarships, Questions, Users, Carrers) con toasts + router.reload() + formError states
 
-6. **Fase 6 – Testing** → Estado: ⚠️ PARCIAL (161 tests, faltan flujos clave)
-   - Dependencias: Fases 1-5
+6. **Fase 6 – Testing** → Estado: ✅ COMPLETADA (2026-05-12)
+   - 6A: TwoFactorTest.php — 9 tests flujo 2FA completo (login→challenge, recovery codes, rate limiting, disable)
+   - 6B: UserAdminControllerTest.php (10 tests) + RoleAdminControllerTest.php (9 tests) — admin CRUD + auth guards
+   - 6C: RegistrationTest.php +4 tests — email notification, validaciones, link expirado
+   - 6D: Ya cubierto en TestVocacionalControllerTest (8 tests)
+   - Bugs encontrados y corregidos: `recovery_codes_hash` columna faltante (nueva migración), cast faltante en modelo, `verified` middleware bloqueaba challenge, `AdminService::updateRole` crash en actualizaciones parciales
+   - Total: 193 tests, 831 assertions (antes: 161)
 
 7. **Fase 7 – Producción** → Estado: ❌ NO INICIADA
    - Dependencias: Todas las fases anteriores
@@ -451,6 +456,7 @@ middleware('admin')         /admin/public → auth (session) + admin
 - ✅ [2026-05-11] Fase 3 completada: 3E paginación Users (paginate(25) + controles Inertia router), 3F MateriaAdminController (index/store/update/destroy + AdminLog), rutas /api/admin/entities/materias, Carrers/Index.tsx con panel expandible de materias (lazy load, add/edit/delete inline, CSRF).
 - ✅ [2026-05-12] Fase 4 completada: CourseSeeder (22 cursos), TutorSeeder (12 tutores), ScholarshipSeeder (15 becas reales de México — SEP, CONACYT, Tamaulipas, Microsoft, Google, Fulbright, OEA, DAAD, etc.), migración requirements→TEXT en scholarships, endpoint GET /api/carreras/{id}/materias agrupado por semestre. 161 tests pasan.
 - ✅ [2026-05-12] Fase 5 completada: 5B Fix Scholarship model (requirementItems) + Aspire/Index.tsx (detección Nacional/Internacional); 5C Test/Results.tsx con historial de resultados; 5D TwoFactorSetup.tsx reescrito con Inertia + TwoFactorRecoveryCodes.tsx nuevo; 5E Toast component + fix admin CRUD (Roles/Scholarships/Questions/Users/Carrers) con toasts, router.reload(), formError states. 161 tests pasan.
+- ✅ [2026-05-12] Fase 6 completada: 32 nuevos tests (193 total, 831 assertions). TwoFactorTest (9), UserAdminControllerTest (10), RoleAdminControllerTest (9), RegistrationTest +4. Bugs corregidos: columna recovery_codes_hash faltante (nueva migración + cast en modelo), verified middleware bloqueaba challenge endpoint, AdminService::updateRole crash en updates parciales, withoutMiddleware corregido a ['auth','verified'].
 
 ---
 

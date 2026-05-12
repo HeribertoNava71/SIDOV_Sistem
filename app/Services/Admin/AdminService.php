@@ -96,7 +96,7 @@ class AdminService
         $oldData = $role->toArray();
 
         $role->update([
-            'name' => $data['name'],
+            'name' => $data['name'] ?? $role->name,
             'description' => $data['description'] ?? $role->description,
             'color' => $data['color'] ?? $role->color,
             'is_default' => $data['is_default'] ?? $role->is_default,
