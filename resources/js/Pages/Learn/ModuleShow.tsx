@@ -66,7 +66,7 @@ export default function ModuleShow({ course, module: mod, siblings }: ModuleShow
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Form para completar
-    const { post, processing } = useForm({
+const { post, setData, processing } = useForm({
         time_spent_seconds: 0,
         exercise_attempts: 0,
         exercise_successes: 0,
@@ -75,17 +75,16 @@ export default function ModuleShow({ course, module: mod, siblings }: ModuleShow
     });
 
     const handleComplete = () => {
-        const seconds = Math.round((Date.now() - startTime) / 1000);
-        post(`/learn/modulo/${mod.id}/completar`, {
-            data: {
-                time_spent_seconds: seconds,
-                exercise_attempts: mod.exercises.length,
-                exercise_successes: mod.exercises.length,
-                exercise_failures: 0,
-                exercise_results: null,
-            },
-        });
-    };
+    const seconds = Math.round((Date.now() - startTime) / 1000);
+    setData({
+        time_spent_seconds: seconds,
+        exercise_attempts: mod.exercises.length,
+        exercise_successes: mod.exercises.length,
+        exercise_failures: 0,
+        exercise_results: null,
+    });
+    post(`/learn/modulo/${mod.id}/completar`);
+};
 
     // Navegación entre módulos
     const currentIdx = siblings.findIndex((s) => s.slug === mod.slug);

@@ -1,21 +1,26 @@
 /**
  * UniversidadPanelContent: contenido compartido que se muestra dentro del
- * drawer emergente del mapa. Incluye hero con color, tarjetas de contacto,
- * pestañas de carreras con píldora animada (layoutId) y la malla curricular
- * de la carrera seleccionada.
+ * drawer emergente del mapa. Muestra información básica de la universidad.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import {
-    Universidad,
-    getCarrerasByUniversidadId,
-} from '@/Data/universidadesData';
-import MallaCurricular from './MallaCurricular';
+import { motion } from 'framer-motion';
 
 interface UniversidadPanelContentProps {
-    universidad: Universidad;
-    /** Cuando está dentro del drawer, reducimos padding y altura del hero. */
+    universidad: {
+        id: number;
+        nombre: string;
+        nombreCorto: string;
+        ciudad: string;
+        latitud: number;
+        longitud: number;
+        colorPrimario: string;
+        sitioWeb: string;
+        direccion: string;
+        telefono: string;
+        email: string;
+        descripcion: string;
+        carrerasCount?: number;
+    };
     compact?: boolean;
 }
 
@@ -23,20 +28,7 @@ export default function UniversidadPanelContent({
     universidad,
     compact = false,
 }: UniversidadPanelContentProps) {
-    const carreras = useMemo(
-        () => getCarrerasByUniversidadId(universidad.id),
-        [universidad.id],
-    );
-    const [carreraActivaId, setCarreraActivaId] = useState<number | null>(
-        carreras[0]?.id ?? null,
-    );
-
-    // Al cambiar de universidad, resetear la carrera activa al primer elemento
-    useEffect(() => {
-        setCarreraActivaId(carreras[0]?.id ?? null);
-    }, [universidad.id, carreras]);
-
-    const carreraActiva = carreras.find((c) => c.id === carreraActivaId) || carreras[0];
+    const carrerasCount = universidad.carrerasCount || 0;
 
     return (
         <div>
@@ -62,8 +54,8 @@ export default function UniversidadPanelContent({
                 >
                     <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur rounded-full text-white/90 text-xs font-semibold mb-3">
                         {universidad.nombreCorto.startsWith('UP')
-                            ? '🏛️ Universidad Politécnica'
-                            : '🛠️ Universidad Tecnológica'}
+                            ? 'Universidad Politécnica'
+                            : 'Universidad Tecnológica'}
                     </span>
                     <h2
                         className={`font-bold text-white mb-2 ${
@@ -89,154 +81,85 @@ export default function UniversidadPanelContent({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.45 }}
                 >
-                    {[
-                        { icon: '📍', label: 'Dirección', valor: universidad.direccion },
-                        { icon: '📞', label: 'Teléfono', valor: universidad.telefono },
-                        { icon: '✉️', label: 'Email', valor: universidad.email },
-                    ].map((item, idx) => (
-                        <div
-                            key={idx}
-                            className="bg-white rounded-2xl shadow-md p-4 border border-slate-100"
-                        >
-                            <span className="text-xl mb-1 block">{item.icon}</span>
-                            <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">
-                                {item.label}
-                            </p>
-                            <p className="text-sm font-medium text-slate-900 break-words">
-                                {item.valor}
-                            </p>
+                    <a
+                        href={universidad.sitioWeb}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-slate-100"
+                    >
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                            </svg>
                         </div>
-                    ))}
+                        <div className="min-w-0">
+                            <p className="text-xs text-slate-500">Sitio Web</p>
+                            <p className="text-sm font-semibold text-slate-900 truncate">Visitar sitio</p>
+                        </div>
+                    </a>
+
+                    <a
+                        href={`tel:${universidad.telefono}`}
+                        className="flex items-center gap-2 bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-slate-100"
+                    >
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs text-slate-500">Teléfono</p>
+                            <p className="text-sm font-semibold text-slate-900 truncate">{universidad.telefono}</p>
+                        </div>
+                    </a>
+
+                    <a
+                        href={`mailto:${universidad.email}`}
+                        className="flex items-center gap-2 bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-slate-100"
+                    >
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs text-slate-500">Email</p>
+                            <p className="text-sm font-semibold text-slate-900 truncate">{universidad.email}</p>
+                        </div>
+                    </a>
                 </motion.div>
             </section>
 
-            {/* Pestañas de carreras */}
-            <section className="px-6 pt-8">
-                <div className="flex items-end justify-between flex-wrap gap-2 mb-4">
-                    <h3 className="text-xl font-bold text-slate-900">
-                        Oferta educativa
-                        <span className="ml-2 text-sm font-normal text-slate-500">
-                            ({carreras.length} carreras)
-                        </span>
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                        Selecciona una para ver su malla curricular
+            {/* Información de Carreras */}
+            <section className="px-6 py-8">
+                <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-900 mb-3">Carreras disponibles</h3>
+                    <p className="text-slate-600 mb-4">
+                        Esta universidad ofrece <span className="font-bold text-blue-600">{carrerasCount} carreras</span> en diferentes áreas del conocimiento.
                     </p>
+                    <a
+                        href={universidad.sitioWeb}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                        Ver oferta educativa
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
                 </div>
-
-                <LayoutGroup id={`pills-${universidad.id}`}>
-                    <div className="flex flex-wrap gap-2 mb-6">
-                        {carreras.map((c) => {
-                            const activa = carreraActiva?.id === c.id;
-                            return (
-                                <button
-                                    key={c.id}
-                                    onClick={() => setCarreraActivaId(c.id)}
-                                    className={`relative px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                                        activa
-                                            ? 'text-white'
-                                            : 'text-slate-700 hover:bg-slate-100 bg-white border border-slate-200'
-                                    }`}
-                                >
-                                    {activa && (
-                                        <motion.span
-                                            layoutId={`pill-${universidad.id}`}
-                                            className="absolute inset-0 rounded-xl shadow-md"
-                                            style={{ backgroundColor: universidad.colorPrimario }}
-                                            transition={{
-                                                type: 'spring',
-                                                stiffness: 420,
-                                                damping: 32,
-                                            }}
-                                        />
-                                    )}
-                                    <span className="relative">{c.nombre}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </LayoutGroup>
-
-                {/* Carrera seleccionada */}
-                <AnimatePresence mode="wait">
-                    {carreraActiva && (
-                        <motion.div
-                            key={carreraActiva.id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <div className="bg-slate-50 rounded-2xl p-5 mb-5 border border-slate-100">
-                                <p className="text-slate-700 text-sm mb-3 leading-relaxed">
-                                    {carreraActiva.descripcion}
-                                </p>
-                                <div className="flex flex-wrap gap-1.5 text-[11px] mb-3">
-                                    {carreraActiva.tituloTSU && (
-                                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
-                                            🎓 TSU: {carreraActiva.tituloTSU}
-                                        </span>
-                                    )}
-                                    {carreraActiva.tituloIng && (
-                                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">
-                                            🎯 {carreraActiva.tituloIng}
-                                        </span>
-                                    )}
-                                    <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-full font-medium">
-                                        ⏱️ {carreraActiva.duracion}
-                                    </span>
-                                </div>
-                                {carreraActiva.campoLaboral && (
-                                    <div className="pt-3 border-t border-slate-200">
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                            Campo laboral
-                                        </p>
-                                        <p className="text-xs text-slate-600 leading-relaxed">
-                                            {carreraActiva.campoLaboral}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Malla curricular */}
-                            <div className="bg-white rounded-2xl shadow-md p-5 border border-slate-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-base font-bold text-slate-900">
-                                        Malla curricular
-                                    </h4>
-                                    <span className="text-[11px] text-slate-500">
-                                        {carreraActiva.cuatrimestres.length} cuatrimestres
-                                    </span>
-                                </div>
-                                <MallaCurricular
-                                    carrera={carreraActiva}
-                                    color={universidad.colorPrimario}
-                                />
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </section>
 
-            {/* CTA al sitio oficial */}
-            <section className="px-6 py-8">
-                <a
-                    href={universidad.sitioWeb}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl text-white font-semibold text-sm transition-all hover:shadow-lg"
-                    style={{ backgroundColor: universidad.colorPrimario }}
-                >
-                    Visitar sitio oficial de {universidad.nombreCorto}
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                    </svg>
-                </a>
+            {/* Dirección */}
+            <section className="px-6 pb-8">
+                <div className="bg-white rounded-3xl p-6 border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-900 mb-3">Dirección</h3>
+                    <p className="text-slate-600">{universidad.direccion}</p>
+                    <div className="mt-4 h-48 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <span className="text-slate-400">Mapa de ubicación</span>
+                    </div>
+                </div>
             </section>
         </div>
     );

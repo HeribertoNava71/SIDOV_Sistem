@@ -1,89 +1,94 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
 import { PageProps } from '@/types';
 
-interface Scholarship {
+interface ScholarshipRequirement {
     id: number;
-    title: string;
-    organization: string;
-    type: 'Nacional' | 'Internacional';
-    country?: string;
-    amount: string;
-    deadline: string;
-    description: string;
-    requirements: string[];
-    link: string;
-    level: string[];
+    requirement: string;
 }
 
-const scholarships: Scholarship[] = [
-    {
-        id: 1, title: 'Beca CONACYT para Posgrado', organization: 'CONACYT', type: 'Nacional',
-        amount: 'Hasta $15,000 MXN mensuales', deadline: '2024-03-15',
-        description: 'Becas para estudios de maestría y doctorado en programas de posgrado registrados en el PNPC.',
-        requirements: ['Ser mexicano', 'Título de licenciatura', 'Promedio mínimo 8.0'],
-        link: '#', level: ['Maestría', 'Doctorado']
-    },
-    {
-        id: 2, title: 'Fulbright-García Robles', organization: 'COMEXUS', type: 'Internacional', country: 'Estados Unidos',
-        amount: 'Cobertura total', deadline: '2024-04-30',
-        description: 'Programa de intercambio académico para estudios de posgrado en universidades de EE.UU.',
-        requirements: ['Título universitario', 'Experiencia profesional', 'TOEFL'],
-        link: '#', level: ['Maestría', 'Doctorado']
-    },
-    {
-        id: 3, title: 'Beca Santander Universidades', organization: 'Santander', type: 'Nacional',
-        amount: '$20,000 MXN', deadline: '2024-05-01',
-        description: 'Apoyo económico para estudiantes de licenciatura con buen desempeño académico.',
-        requirements: ['Estudiante activo', 'Promedio mínimo 8.5', 'Situación económica'],
-        link: '#', level: ['Licenciatura']
-    },
-    {
-        id: 4, title: 'Chevening Scholarships', organization: 'Gobierno de Reino Unido', type: 'Internacional', country: 'Reino Unido',
-        amount: 'Cobertura total', deadline: '2024-11-02',
-        description: 'Becas del gobierno británico para futuros líderes de todo el mundo.',
-        requirements: ['2 años de experiencia laboral', 'Título universitario', 'IELTS 6.5'],
-        link: '#', level: ['Maestría']
-    },
-    {
-        id: 5, title: 'Beca Benito Juárez', organization: 'SEP', type: 'Nacional',
-        amount: '$1,600 MXN bimestrales', deadline: '2024-02-28',
-        description: 'Apoyo para estudiantes de educación media superior de familias de bajos recursos.',
-        requirements: ['Inscrito en institución pública', 'Menores de 18 años', 'SISBEN'],
-        link: '#', level: ['Preparatoria']
-    },
-    {
-        id: 6, title: 'DAAD - Estudios en Alemania', organization: 'DAAD', type: 'Internacional', country: 'Alemania',
-        amount: '850-1,200 EUR mensuales', deadline: '2024-10-15',
-        description: 'Becas para estudios de posgrado e investigación en universidades alemanas.',
-        requirements: ['Título universitario', 'Alemán o Inglés', 'Plan de estudios'],
-        link: '#', level: ['Maestría', 'Doctorado']
-    },
-];
+interface Scholarship {
+    id: number;
+    name: string;
+    description: string;
+    provider: string;
+    amount: number;
+    currency: string;
+    coverage: string;
+    level: string;
+    application_start: string;
+    application_end: string;
+    requirements: ScholarshipRequirement[];
+    document_url: string;
+    is_active: boolean;
+    is_featured: boolean;
+}
 
 export default function Aspire({ auth }: PageProps) {
+    const [scholarships, setScholarships] = useState<Scholarship[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'Nacional' | 'Internacional'>('all');
     const [levelFilter, setLevelFilter] = useState<string>('all');
 
+    useEffect(() => {
+        fetch('/api/scholarships')
+            .then(res => {
+                if (!res.ok) throw new Error('Error al cargar becas');
+                return res.json();
+            })
+            .then(data => {
+                setScholarships(data.scholarships || []);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
+    }, []);
+
+    const getScholarshipType = (scholarship: Scholarship): 'Nacional' | 'Internacional' => {
+        return scholarship.coverage?.toLowerCase().includes('internacional') || 
+               scholarship.provider?.toLowerCase().includes('foreign') ||
+               scholarship.provider?.toLowerCase().includes('international')
+            ? 'Internacional' 
+            : 'Nacional';
+    };
+
     const filteredScholarships = scholarships.filter(s => {
-        const typeMatch = filter === 'all' || s.type === filter;
-        const levelMatch = levelFilter === 'all' || s.level.includes(levelFilter);
+        if (!s.is_active) return false;
+        
+        const typeMatch = filter === 'all' || getScholarshipType(s) === filter;
+        const levelMatch = levelFilter === 'all' || s.level === levelFilter;
         return typeMatch && levelMatch;
     });
 
     const formatDate = (dateString: string) => {
+        if (!dateString) return 'No especificada';
         return new Date(dateString).toLocaleDateString('es-MX', { 
             day: 'numeric', month: 'long', year: 'numeric' 
         });
     };
 
     const daysUntilDeadline = (dateString: string) => {
+        if (!dateString) return 999;
         const diff = new Date(dateString).getTime() - new Date().getTime();
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     };
+
+    const formatAmount = (scholarship: Scholarship) => {
+        if (scholarship.amount) {
+            const currency = scholarship.currency === 'USD' ? '$' : '$';
+            return `${currency}${scholarship.amount.toLocaleString()}`;
+        }
+        return scholarship.coverage || 'Por definir';
+    };
+
+    const nacionalCount = scholarships.filter(s => s.is_active && getScholarshipType(s) === 'Nacional').length;
+    const internacionalCount = scholarships.filter(s => s.is_active && getScholarshipType(s) === 'Internacional').length;
 
     return (
         <>
@@ -114,28 +119,36 @@ export default function Aspire({ auth }: PageProps) {
                 {/* Stats */}
                 <section className="bg-white border-b border-slate-200 py-8">
                     <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-kahoot-purple">{scholarships.length}</p>
-                                <p className="text-sm text-slate-600">Becas activas</p>
+                        {loading ? (
+                            <div className="text-center py-4">
+                                <p className="text-slate-500">Cargando estadísticas...</p>
                             </div>
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-kahoot-green">
-                                    {scholarships.filter(s => s.type === 'Nacional').length}
-                                </p>
-                                <p className="text-sm text-slate-600">Nacionales</p>
+                        ) : error ? (
+                            <div className="text-center py-4">
+                                <p className="text-red-500">{error}</p>
                             </div>
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-kahoot-blue">
-                                    {scholarships.filter(s => s.type === 'Internacional').length}
-                                </p>
-                                <p className="text-sm text-slate-600">Internacionales</p>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div className="text-center">
+                                    <p className="text-3xl font-bold text-kahoot-purple">{scholarships.filter(s => s.is_active).length}</p>
+                                    <p className="text-sm text-slate-600">Becas activas</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-3xl font-bold text-kahoot-green">{nacionalCount}</p>
+                                    <p className="text-sm text-slate-600">Nacionales</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-3xl font-bold text-kahoot-blue">{internacionalCount}</p>
+                                    <p className="text-sm text-slate-600">Internacionales</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-3xl font-bold text-kahoot-yellow">
+                                        {new Set(scholarships.map(s => s.provider)).size}
+                                    </p>
+                                    <p className="text-sm text-slate-600">Organizaciones</p>
+                                </div>
                             </div>
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-kahoot-yellow">12</p>
-                                <p className="text-sm text-slate-600">Países</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </section>
 
@@ -168,7 +181,7 @@ export default function Aspire({ auth }: PageProps) {
                                 className="input-field w-auto py-2"
                             >
                                 <option value="all">Todos los niveles</option>
-                                <option value="Preparatoria">Preparatoria</option>
+                                <option value="Bachillerato">Preparatoria</option>
                                 <option value="Licenciatura">Licenciatura</option>
                                 <option value="Maestría">Maestría</option>
                                 <option value="Doctorado">Doctorado</option>
@@ -180,96 +193,121 @@ export default function Aspire({ auth }: PageProps) {
                 {/* Scholarships List */}
                 <section className="py-12">
                     <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="space-y-6">
-                            {filteredScholarships.map((scholarship, i) => {
-                                const days = daysUntilDeadline(scholarship.deadline);
-                                const isUrgent = days <= 30;
-
-                                return (
-                                    <motion.div
-                                        key={scholarship.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        className={`scholarship-card ${scholarship.type === 'Nacional' ? 'national' : 'international'}`}
-                                    >
-                                        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-                                            <div className="flex-1">
-                                                <div className="flex flex-wrap items-center gap-3 mb-3">
-                                                    <span className={`badge ${scholarship.type === 'Nacional' ? 'badge-green' : 'badge-blue'}`}>
-                                                        {scholarship.type === 'Nacional' ? '🇲🇽' : '🌎'} {scholarship.type}
-                                                    </span>
-                                                    {scholarship.country && (
-                                                        <span className="badge bg-slate-100 text-slate-700">
-                                                            {scholarship.country}
-                                                        </span>
-                                                    )}
-                                                    {scholarship.level.map(l => (
-                                                        <span key={l} className="badge badge-purple">{l}</span>
-                                                    ))}
-                                                </div>
-
-                                                <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                                                    {scholarship.title}
-                                                </h3>
-                                                <p className="text-sm text-kahoot-purple font-medium mb-3">
-                                                    {scholarship.organization}
-                                                </p>
-                                                <p className="text-slate-600 mb-4">
-                                                    {scholarship.description}
-                                                </p>
-
-                                                <div className="flex flex-wrap gap-2 mb-4">
-                                                    {scholarship.requirements.map((req, j) => (
-                                                        <span key={j} className="text-xs px-2 py-1 bg-slate-100 rounded-lg text-slate-600">
-                                                            ✓ {req}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="lg:w-64 flex-shrink-0">
-                                                <div className="bg-slate-50 rounded-xl p-4">
-                                                    <div className="mb-4">
-                                                        <p className="text-xs text-slate-500 mb-1">Monto</p>
-                                                        <p className="font-semibold text-slate-900">{scholarship.amount}</p>
-                                                    </div>
-                                                    <div className="mb-4">
-                                                        <p className="text-xs text-slate-500 mb-1">Fecha límite</p>
-                                                        <p className={`font-semibold ${isUrgent ? 'text-kahoot-red' : 'text-slate-900'}`}>
-                                                            {formatDate(scholarship.deadline)}
-                                                        </p>
-                                                        {isUrgent && (
-                                                            <p className="text-xs text-kahoot-red mt-1">
-                                                                ⚠️ {days} días restantes
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <a
-                                                        href={scholarship.link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="btn-primary w-full justify-center"
-                                                    >
-                                                        Ver convocatoria
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
-                        {filteredScholarships.length === 0 && (
+                        {loading ? (
+                            <div className="text-center py-16">
+                                <div className="animate-spin w-8 h-8 border-4 border-kahoot-purple border-t-transparent rounded-full mx-auto mb-4"></div>
+                                <p className="text-slate-600">Cargando becas...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-16">
+                                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-3xl">❌</span>
+                                </div>
+                                <p className="text-slate-600">{error}</p>
+                            </div>
+                        ) : filteredScholarships.length === 0 ? (
                             <div className="text-center py-16">
                                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                                     <span className="text-3xl">🔍</span>
                                 </div>
                                 <p className="text-slate-600">No se encontraron becas con los filtros seleccionados.</p>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    Puedes agregar becas desde el panel de administración.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {filteredScholarships.map((scholarship, i) => {
+                                    const type = getScholarshipType(scholarship);
+                                    const days = daysUntilDeadline(scholarship.application_end);
+                                    const isUrgent = days <= 30 && days > 0;
+                                    const isOpen = scholarship.is_active && 
+                                        new Date(scholarship.application_start) <= new Date() && 
+                                        new Date(scholarship.application_end) >= new Date();
+
+                                    return (
+                                        <motion.div
+                                            key={scholarship.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            className={`scholarship-card ${type === 'Nacional' ? 'national' : 'international'}`}
+                                        >
+                                            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                                                <div className="flex-1">
+                                                    <div className="flex flex-wrap items-center gap-3 mb-3">
+                                                        <span className={`badge ${type === 'Nacional' ? 'badge-green' : 'badge-blue'}`}>
+                                                            {type === 'Nacional' ? '🇲🇽' : '🌎'} {type}
+                                                        </span>
+                                                        {scholarship.level && (
+                                                            <span className="badge badge-purple">{scholarship.level}</span>
+                                                        )}
+                                                        {isOpen ? (
+                                                            <span className="badge badge-green">Abierta</span>
+                                                        ) : (
+                                                            <span className="badge bg-slate-200 text-slate-600">Cerrada</span>
+                                                        )}
+                                                    </div>
+
+                                                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                                                        {scholarship.name}
+                                                    </h3>
+                                                    <p className="text-sm text-kahoot-purple font-medium mb-3">
+                                                        {scholarship.provider}
+                                                    </p>
+                                                    <p className="text-slate-600 mb-4">
+                                                        {scholarship.description}
+                                                    </p>
+
+                                                    <div className="flex flex-wrap gap-2 mb-4">
+                                                        {scholarship.requirements?.map((req, j) => (
+                                                            <span key={j} className="text-xs px-2 py-1 bg-slate-100 rounded-lg text-slate-600">
+                                                                ✓ {req.requirement}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="lg:w-64 flex-shrink-0">
+                                                    <div className="bg-slate-50 rounded-xl p-4">
+                                                        <div className="mb-4">
+                                                            <p className="text-xs text-slate-500 mb-1">Monto</p>
+                                                            <p className="font-semibold text-slate-900">{formatAmount(scholarship)}</p>
+                                                        </div>
+                                                        <div className="mb-4">
+                                                            <p className="text-xs text-slate-500 mb-1">Fecha límite</p>
+                                                            <p className={`font-semibold ${isUrgent ? 'text-kahoot-red' : 'text-slate-900'}`}>
+                                                                {formatDate(scholarship.application_end)}
+                                                            </p>
+                                                            {isUrgent && isOpen && (
+                                                                <p className="text-xs text-kahoot-red mt-1">
+                                                                    ⚠️ {days} días restantes
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {scholarship.document_url ? (
+                                                            <a
+                                                                href={scholarship.document_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="btn-primary w-full justify-center"
+                                                            >
+                                                                Ver convocatoria
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                </svg>
+                                                            </a>
+                                                        ) : (
+                                                            <button disabled className="btn-secondary w-full justify-center opacity-50 cursor-not-allowed">
+                                                                Sin enlace
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

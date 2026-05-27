@@ -10,12 +10,25 @@
 import { Dialog } from '@headlessui/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment } from 'react';
-import { Universidad } from '@/Data/universidadesData';
 import UniversidadPanelContent from './UniversidadPanelContent';
 
 interface UniversidadDrawerProps {
     open: boolean;
-    universidad: Universidad | null;
+    universidad: {
+        id: number;
+        nombre: string;
+        nombreCorto: string;
+        ciudad: string;
+        latitud: number;
+        longitud: number;
+        colorPrimario: string;
+        sitioWeb: string;
+        direccion: string;
+        telefono: string;
+        email: string;
+        descripcion: string;
+        carrerasCount?: number;
+    } | null;
     onClose: () => void;
 }
 
