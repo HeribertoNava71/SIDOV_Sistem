@@ -530,17 +530,46 @@ function calcularResultados(respuestas: number[]): ResultadoFinal {
 
 // Slide 0: Intro
 function SlideIntro({ onContinue }: { onContinue: () => void }) {
+    const particles = Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        x: [8, 85, 15, 75, 45, 92][i],
+        y: [15, 25, 70, 80, 45, 60][i],
+        size: [8, 6, 10, 7, 9, 6][i],
+        duration: [4, 3.5, 5, 3, 4.5, 3.8][i],
+        delay: [0, 0.8, 1.5, 0.4, 1.2, 0.2][i],
+    }));
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
+            className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
+            style={{ background: 'radial-gradient(ellipse at top, #4c1d95, #0f172a)' }}
         >
+            {particles.map(p => (
+                <motion.div
+                    key={p.id}
+                    className="absolute rounded-full bg-violet-400/30"
+                    style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+                    animate={{ y: [0, -20, 0] }}
+                    transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
+                />
+            ))}
+
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mb-6 px-4 py-1.5 bg-white/10 rounded-full border border-white/20 text-white/70 text-sm"
+            >
+                16 preguntas · ~5 min
+            </motion.div>
+
             <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", duration: 1.5 }}
+                transition={{ type: 'spring', duration: 1.5 }}
                 className="w-32 h-32 mb-8 relative"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-3xl animate-pulse" />
@@ -554,7 +583,6 @@ function SlideIntro({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="text-4xl md:text-6xl font-black text-white text-center mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
                 Tu Wrapped<br />
                 <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
@@ -578,21 +606,16 @@ function SlideIntro({ onContinue }: { onContinue: () => void }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onContinue}
-                className="px-12 py-5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-xl font-bold rounded-2xl shadow-2xl shadow-violet-500/30"
+                className="relative overflow-hidden px-14 py-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-2xl font-bold rounded-2xl shadow-2xl shadow-violet-500/30"
             >
-                Comenzar
+                <span className="relative z-10">Comenzar</span>
+                <motion.div
+                    className="absolute inset-0 bg-white/20"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '100%' }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
+                />
             </motion.button>
-
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="absolute bottom-8 flex gap-2"
-            >
-                {[...Array(5)].map((_, i) => (
-                    <div key={i} className="w-2 h-2 rounded-full bg-white/20" />
-                ))}
-            </motion.div>
         </motion.div>
     );
 }
