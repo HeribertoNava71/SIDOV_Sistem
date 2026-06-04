@@ -772,21 +772,21 @@ function SlideCalculando({ onComplete }: { onComplete: () => void }) {
 // Slide: Dimensión Dominante
 function SlideDimensionDominante({ resultado, onContinue }: { resultado: ResultadoFinal; onContinue: () => void }) {
     const dimensionNombres: Record<Dimension, string> = {
-        tecnologia: "Tecnología",
-        creatividad: "Creatividad", 
-        analisis: "Análisis",
-        liderazgo: "Liderazgo",
-        investigacion: "Investigación",
-        organizacion: "Organización"
+        tecnologia: 'Tecnología',
+        creatividad: 'Creatividad',
+        analisis: 'Análisis',
+        liderazgo: 'Liderazgo',
+        investigacion: 'Investigación',
+        organizacion: 'Organización',
     };
 
     const dimensionIconos: Record<Dimension, string> = {
-        tecnologia: "💻",
-        creatividad: "🎨",
-        analisis: "📊",
-        liderazgo: "👔",
-        investigacion: "🔬",
-        organizacion: "📋"
+        tecnologia: '💻',
+        creatividad: '🎨',
+        analisis: '📊',
+        liderazgo: '👔',
+        investigacion: '🔬',
+        organizacion: '📋',
     };
 
     return (
@@ -800,7 +800,7 @@ function SlideDimensionDominante({ resultado, onContinue }: { resultado: Resulta
             <motion.p
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-white/70 text-lg mb-4"
+                className="text-white/70 text-lg mb-6"
             >
                 Tu dimensión dominante es
             </motion.p>
@@ -808,10 +808,10 @@ function SlideDimensionDominante({ resultado, onContinue }: { resultado: Resulta
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.3 }}
-                className="text-8xl mb-6"
+                transition={{ type: 'spring', delay: 0.3 }}
+                className="w-32 h-32 rounded-3xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center mb-6"
             >
-                {dimensionIconos[resultado.dimensionDominante]}
+                <span className="text-6xl">{dimensionIconos[resultado.dimensionDominante]}</span>
             </motion.div>
 
             <motion.h1
@@ -846,21 +846,21 @@ function SlideDimensionDominante({ resultado, onContinue }: { resultado: Resulta
 
 // Slide: Gráfico Radar
 function SlideRadar({ resultado, onContinue }: { resultado: ResultadoFinal; onContinue: () => void }) {
-    const dimensiones: { key: Dimension; label: string }[] = [
-        { key: 'tecnologia', label: 'Tech' },
-        { key: 'creatividad', label: 'Creative' },
-        { key: 'analisis', label: 'Analysis' },
-        { key: 'liderazgo', label: 'Lead' },
-        { key: 'investigacion', label: 'Research' },
-        { key: 'organizacion', label: 'Org' }
+    const dimensionesConIcono: { key: Dimension; label: string; Icon: LucideIcon }[] = [
+        { key: 'tecnologia', label: 'Tech', Icon: Monitor },
+        { key: 'creatividad', label: 'Creative', Icon: Palette },
+        { key: 'analisis', label: 'Analysis', Icon: BarChart2 },
+        { key: 'liderazgo', label: 'Lead', Icon: Users },
+        { key: 'investigacion', label: 'Research', Icon: FlaskConical },
+        { key: 'organizacion', label: 'Org', Icon: ClipboardList },
     ];
 
-    const puntos = dimensiones.map((dim, i) => {
-        const angle = (Math.PI * 2 * i) / dimensiones.length - Math.PI / 2;
+    const puntos = dimensionesConIcono.map((dim, i) => {
+        const angle = (Math.PI * 2 * i) / dimensionesConIcono.length - Math.PI / 2;
         const value = resultado.vectorNormalizado[dim.key] / 100;
         const x = 50 + Math.cos(angle) * 40 * value;
         const y = 50 + Math.sin(angle) * 40 * value;
-        return { x, y, value: resultado.vectorNormalizado[dim.key], label: dim.label };
+        return { x, y, value: resultado.vectorNormalizado[dim.key], label: dim.label, Icon: dim.Icon };
     });
 
     const pathD = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
@@ -883,38 +883,21 @@ function SlideRadar({ resultado, onContinue }: { resultado: ResultadoFinal; onCo
 
             <div className="relative w-72 h-72 md:w-96 md:h-96">
                 <svg viewBox="0 0 100 100" className="w-full h-full">
-                    {/* Grid circles */}
                     {[20, 40, 60, 80, 100].map((r, i) => (
-                        <circle
-                            key={i}
-                            cx="50"
-                            cy="50"
-                            r={r * 0.4}
-                            fill="none"
-                            stroke="rgba(255,255,255,0.1)"
-                            strokeWidth="0.5"
-                        />
+                        <circle key={i} cx="50" cy="50" r={r * 0.4} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
                     ))}
-                    
-                    {/* Lines to vertices */}
-                    {dimensiones.map((_, i) => {
-                        const angle = (Math.PI * 2 * i) / dimensiones.length - Math.PI / 2;
+                    {dimensionesConIcono.map((_, i) => {
+                        const angle = (Math.PI * 2 * i) / dimensionesConIcono.length - Math.PI / 2;
                         const x = 50 + Math.cos(angle) * 40;
                         const y = 50 + Math.sin(angle) * 40;
-                        return (
-                            <line
-                                key={i}
-                                x1="50"
-                                y1="50"
-                                x2={x}
-                                y2={y}
-                                stroke="rgba(255,255,255,0.1)"
-                                strokeWidth="0.5"
-                            />
-                        );
+                        return <line key={i} x1="50" y1="50" x2={x} y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />;
                     })}
-
-                    {/* Data polygon */}
+                    <defs>
+                        <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(139, 92, 246, 0.4)" />
+                            <stop offset="100%" stopColor="rgba(236, 72, 153, 0.4)" />
+                        </linearGradient>
+                    </defs>
                     <motion.path
                         d={pathD}
                         fill="url(#radarGradient)"
@@ -925,50 +908,28 @@ function SlideRadar({ resultado, onContinue }: { resultado: ResultadoFinal; onCo
                         transition={{ delay: 0.5, duration: 1 }}
                         style={{ transformOrigin: '50% 50%' }}
                     />
-
-                    {/* Gradient definition */}
-                    <defs>
-                        <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="rgba(139, 92, 246, 0.4)" />
-                            <stop offset="100%" stopColor="rgba(236, 72, 153, 0.4)" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* Data points */}
                     {puntos.map((p, i) => (
-                        <motion.circle
-                            key={i}
-                            cx={p.x}
-                            cy={p.y}
-                            r="2"
-                            fill="#8B5CF6"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.8 + i * 0.1 }}
-                        />
+                        <motion.circle key={i} cx={p.x} cy={p.y} r="2" fill="#8B5CF6" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.1 }} />
                     ))}
                 </svg>
 
-                {/* Labels */}
-                {puntos.map((p, i) => {
-                    const angle = (Math.PI * 2 * i) / dimensiones.length - Math.PI / 2;
-                    const labelX = 50 + Math.cos(angle) * 52;
-                    const labelY = 50 + Math.sin(angle) * 52;
+                {dimensionesConIcono.map((dim, i) => {
+                    const angle = (Math.PI * 2 * i) / dimensionesConIcono.length - Math.PI / 2;
+                    const labelX = 50 + Math.cos(angle) * 54;
+                    const labelY = 50 + Math.sin(angle) * 54;
+                    const { Icon } = dim;
                     return (
                         <motion.div
                             key={i}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 1 + i * 0.1 }}
-                            className="absolute text-xs text-white/70 font-medium"
-                            style={{
-                                left: `${labelX}%`,
-                                top: `${labelY}%`,
-                                transform: 'translate(-50%, -50%)'
-                            }}
+                            className="absolute flex flex-col items-center gap-0.5"
+                            style={{ left: `${labelX}%`, top: `${labelY}%`, transform: 'translate(-50%, -50%)' }}
                         >
-                            {p.label}
-                            <span className="block text-violet-400">{p.value}%</span>
+                            <Icon size={10} className="text-violet-400" />
+                            <span className="text-xs text-white/70 font-medium">{dim.label}</span>
+                            <span className="text-xs text-violet-400">{resultado.vectorNormalizado[dim.key]}%</span>
                         </motion.div>
                     );
                 })}
@@ -987,6 +948,8 @@ function SlideRadar({ resultado, onContinue }: { resultado: ResultadoFinal; onCo
 }
 
 // Slide: Fortalezas
+const fortalezaIconos: LucideIcon[] = [Zap, Target, Lightbulb, Flame];
+
 function SlideFortalezas({ resultado, onContinue }: { resultado: ResultadoFinal; onContinue: () => void }) {
     return (
         <motion.div
@@ -1005,20 +968,23 @@ function SlideFortalezas({ resultado, onContinue }: { resultado: ResultadoFinal;
             </motion.p>
 
             <div className="grid gap-4 max-w-md w-full">
-                {resultado.fortalezas.map((fortaleza, i) => (
-                    <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + i * 0.2 }}
-                        className="flex items-center gap-4 p-5 bg-white/5 backdrop-blur rounded-2xl border border-white/10"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl">
-                            {['⚡', '🎯', '💡', '🔥'][i]}
-                        </div>
-                        <span className="text-white text-lg font-medium">{fortaleza}</span>
-                    </motion.div>
-                ))}
+                {resultado.fortalezas.map((fortaleza, i) => {
+                    const Icon = fortalezaIconos[i] ?? Zap;
+                    return (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + i * 0.2 }}
+                            className="flex items-center gap-4 p-5 bg-white/5 backdrop-blur rounded-2xl border border-white/10"
+                        >
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
+                                <Icon size={24} className="text-white" />
+                            </div>
+                            <span className="text-white text-lg font-medium">{fortaleza}</span>
+                        </motion.div>
+                    );
+                })}
             </div>
 
             <motion.p
@@ -1034,6 +1000,12 @@ function SlideFortalezas({ resultado, onContinue }: { resultado: ResultadoFinal;
 }
 
 // Slide: Top Carreras
+const posicionConfig = [
+    { badge: 'bg-gradient-to-br from-amber-400 to-yellow-500', ring: 'ring-2 ring-amber-500/50', num: '#1', cardBg: 'bg-gradient-to-r from-amber-500/20 to-orange-500/20' },
+    { badge: 'bg-gradient-to-br from-slate-300 to-slate-400', ring: 'ring-1 ring-slate-400/40', num: '#2', cardBg: 'bg-white/5' },
+    { badge: 'bg-gradient-to-br from-orange-400 to-amber-600', ring: 'ring-1 ring-orange-400/40', num: '#3', cardBg: 'bg-white/5' },
+] as const;
+
 function SlideCarreras({ resultado, onContinue }: { resultado: ResultadoFinal; onContinue: () => void }) {
     return (
         <motion.div
@@ -1066,23 +1038,15 @@ function SlideCarreras({ resultado, onContinue }: { resultado: ResultadoFinal; o
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 + i * 0.2 }}
-                        className={`relative overflow-hidden p-6 rounded-2xl ${
-                            i === 0 
-                                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/50' 
-                                : 'bg-white/5 border border-white/10'
-                        }`}
+                        className={`relative overflow-hidden p-6 rounded-2xl border ${posicionConfig[i].cardBg} ${i === 0 ? 'border-amber-500/50' : 'border-white/10'}`}
                     >
                         <div className="flex items-start gap-4">
-                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl ${
-                                i === 0 ? 'bg-amber-500' : 'bg-slate-700'
-                            }`}>
-                                {item.carrera.icono}
+                            <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${posicionConfig[i].badge} ${posicionConfig[i].ring}`}>
+                                <span className="text-white font-black text-sm leading-none">{posicionConfig[i].num}</span>
+                                <span className="text-xl leading-none mt-0.5">{item.carrera.icono}</span>
                             </div>
                             <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    {i === 0 && <span className="text-amber-400">🏆</span>}
-                                    <h3 className="text-lg font-bold text-white">{item.carrera.nombre}</h3>
-                                </div>
+                                <h3 className="text-lg font-bold text-white mb-1">{item.carrera.nombre}</h3>
                                 <p className="text-sm text-slate-400 mb-2">{item.carrera.universidad}</p>
                                 <div className="flex items-center gap-2">
                                     <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -1090,11 +1054,7 @@ function SlideCarreras({ resultado, onContinue }: { resultado: ResultadoFinal; o
                                             initial={{ width: 0 }}
                                             animate={{ width: `${item.afinidad}%` }}
                                             transition={{ delay: 0.8 + i * 0.2, duration: 0.8 }}
-                                            className={`h-full rounded-full ${
-                                                i === 0 
-                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
-                                                    : 'bg-gradient-to-r from-violet-500 to-fuchsia-500'
-                                            }`}
+                                            className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-violet-500 to-fuchsia-500'}`}
                                         />
                                     </div>
                                     <span className={`text-sm font-bold ${i === 0 ? 'text-amber-400' : 'text-violet-400'}`}>
