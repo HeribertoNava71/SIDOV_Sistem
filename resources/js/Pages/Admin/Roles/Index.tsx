@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Role {
     id: number; name: string; description: string; color: string;
@@ -12,41 +14,35 @@ interface Permission {
     id: number; name: string; description: string; module: string;
 }
 
+interface PageProps {
+    roles: Role[];
+    permissions: Permission[];
+    [key: string]: any;
+}
+
 export default function RolesIndex() {
-    const [roles, setRoles] = useState<Role[]>([]);
-    const [permissions, setPermissions] = useState<Permission[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { roles: initialRoles, permissions: initialPermissions } = usePage<PageProps>().props;
+    const [roles] = useState(initialRoles);
+    const [permissions] = useState(initialPermissions);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Role | null>(null);
-
-    useEffect(() => { fetchData(); }, []);
-
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const [rolesRes, permsRes] = await Promise.all([
-                fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${token}` } }),
-                fetch('/api/admin/permissions', { headers: { Authorization: `Bearer ${token}` } }),
-            ]);
-            if (rolesRes.ok) { const data = await rolesRes.json(); setRoles(data.data || []); }
-            if (permsRes.ok) { const data = await permsRes.json(); setPermissions(data.data || []); }
-        } catch (error) { console.error('Error:', error); }
-        finally { setLoading(false); }
-    };
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar este rol?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
-            await fetch(`/api/admin/entities/roles/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-            setRoles(roles.filter(r => r.id !== id));
-        } catch (error) { console.error('Error:', error); }
+            const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const res = await fetch(`/api/admin/entities/roles/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf }, credentials: 'include' });
+            if (!res.ok) throw new Error();
+            showToast('Rol eliminado correctamente');
+            router.reload();
+        } catch { showToast('Error al eliminar el rol', 'error'); }
     };
 
     const openEdit = (role: Role) => { setEditingItem(role); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { fetchData(); closeForm(); };
+    const handleSuccess = () => { showToast('Cambios guardados'); router.reload(); };
 
     return (
         <AdminLayout>
@@ -107,7 +103,10 @@ export default function RolesIndex() {
                 </div>
             </div>
 
-            {showForm && <Form role={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />}
+            <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Rol' : 'Nuevo Rol'}>
+                <Form role={editingItem as any} onClose={closeForm} onSuccess={handleSuccess} />
+            </AdminCrudDrawer>
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }

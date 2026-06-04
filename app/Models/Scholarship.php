@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Scholarship extends Model
 {
     /** @use HasFactory<\Database\Factories\ScholarshipFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -47,7 +48,7 @@ class Scholarship extends Model
         return $this->hasMany(Application::class);
     }
 
-    public function requirements(): HasMany
+    public function requirementItems(): HasMany
     {
         return $this->hasMany(ScholarshipRequirement::class);
     }

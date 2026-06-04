@@ -3,67 +3,135 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\TestVocacionalController;
+use App\Models\Universidad;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// Página de bienvenida (pública)
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('welcome');
 
-// =============================================
-// RUTAS PÚBLICAS (sin autenticación)
-// =============================================
-
-// Mapa interactivo de universidades de Tamaulipas
 Route::get('/universidades-tamaulipas', function () {
-    return Inertia::render('Universities/MapaTamaulipas');
+    $universidades = \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get()
+        ->map(fn ($u) => [
+            'id'            => $u->id,
+            'nombre'        => $u->nombre,
+            'nombreCorto'   => $u->nombre_corto,
+            'ciudad'        => $u->ciudad,
+            'latitud'       => $u->latitud,
+            'longitud'      => $u->longitud,
+            'colorPrimario' => $u->color_primario,
+            'sitioWeb'      => $u->sitio_web,
+            'direccion'     => $u->direccion,
+            'telefono'      => $u->telefono,
+            'email'         => $u->email,
+            'descripcion'   => $u->descripcion,
+            'carrerasCount' => $u->carreras_count,
+        ]);
+    return Inertia::render('Universities/MapaTamaulipas', [
+        'universidades' => $universidades,
+    ]);
 })->name('universidades.mapa');
 
-// Detalles de cada universidad — redirige al mapa con el drawer abierto
 Route::get('/universidad/{id}', function ($id) {
-    return redirect('/universidades-tamaulipas?uni='.(int) $id);
+    $universidad = \App\Models\Universidad::withCount('carreras')
+        ->findOrFail((int) $id);
+    $carreras = \App\Models\Carrera::where('universidad_id', $id)
+        ->where('activa', true)
+        ->withCount('materias')
+        ->orderBy('nombre')
+        ->get()
+        ->map(fn ($c) => [
+            'id'          => $c->id,
+            'nombre'      => $c->nombre,
+            'descripcion' => $c->descripcion,
+            'icono'       => $c->icono,
+            'materias_count' => $c->materias_count,
+        ]);
+    return Inertia::render('Universities/UniversidadDetail', [
+        'universidad' => [
+            'id'             => $universidad->id,
+            'nombre'         => $universidad->nombre,
+            'nombreCorto'    => $universidad->nombre_corto,
+            'tipo'           => $universidad->tipo,
+            'calificacion'   => $universidad->calificacion,
+            'numEstudiantes' => $universidad->num_estudiantes,
+            'numProgramas'   => $universidad->num_programas,
+            'ciudad'         => $universidad->ciudad,
+            'latitud'        => $universidad->latitud,
+            'longitud'       => $universidad->longitud,
+            'colorPrimario'  => $universidad->color_primario,
+            'sitioWeb'       => $universidad->sitio_web,
+            'direccion'      => $universidad->direccion,
+            'telefono'       => $universidad->telefono,
+            'email'          => $universidad->email,
+            'descripcion'    => $universidad->descripcion,
+            'carrerasCount'  => $universidad->carreras_count,
+        ],
+        'carreras' => $carreras,
+    ]);
 })->name('universidad.detalle');
 
-// Página de universidades general
+Route::get('/carreras/{id}', function ($id) {
+    $carrera = \App\Models\Carrera::with('materias')
+        ->where('activa', true)
+        ->findOrFail((int) $id);
+    $uni = $carrera->universidad_id
+        ? \App\Models\Universidad::find($carrera->universidad_id, ['id', 'nombre', 'nombre_corto', 'color_primario'])
+        : null;
+    $materiasPorSemestre = $carrera->materias
+        ->groupBy('semestre')
+        ->map(fn ($ms) => $ms->map(fn ($m) => [
+            'id'     => $m->id,
+            'nombre' => $m->nombre,
+            'tipo'   => $m->tipo,
+        ])->values())
+        ->toArray();
+    ksort($materiasPorSemestre);
+    return Inertia::render('Universities/CarreraDetail', [
+        'carrera' => [
+            'id'          => $carrera->id,
+            'nombre'      => $carrera->nombre,
+            'descripcion' => $carrera->descripcion,
+            'icono'       => $carrera->icono,
+        ],
+        'universidad' => $uni ? [
+            'id'           => $uni->id,
+            'nombre'       => $uni->nombre,
+            'nombreCorto'  => $uni->nombre_corto,
+            'colorPrimario' => $uni->color_primario,
+        ] : null,
+        'materiasPorSemestre' => $materiasPorSemestre,
+    ]);
+})->name('carrera.detalle');
+
 Route::get('/universities', function () {
-    return Inertia::render('Universities/Index');
+    $universidades = Universidad::withCount('carreras')
+        ->orderByDesc('calificacion')
+        ->get();
+
+    return Inertia::render('Universities/Index', [
+        'universities' => $universidades,
+    ]);
 })->name('universities.index');
 
-// Página de contacto
 Route::get('/contact', function () {
     return Inertia::render('Contact');
 })->name('contact');
 
-// Test CHASIDE tradicional (98 preguntas - público)
 Route::get('/test', function () {
     return Inertia::render('Test/TestCHASIDE');
 })->name('test.chaside');
 
-// Test Wrapped (experiencia tipo Spotify Wrapped - 16 preguntas - público)
 Route::get('/test-wrapped', function () {
     return Inertia::render('Test/TestWrapped');
 })->name('test.wrapped');
-
-// =============================================
-// RUTAS API DEL TEST (públicas para que funcione sin login)
-// =============================================
 
 Route::prefix('api/test')->group(function () {
     Route::post('/submit', [TestVocacionalController::class, 'submit'])->name('api.test.submit');
     Route::get('/carreras', [TestVocacionalController::class, 'carreras'])->name('api.test.carreras');
     Route::post('/match', [TestVocacionalController::class, 'match'])->name('api.test.match');
 });
-
-// =============================================
-// RUTAS PROTEGIDAS (requieren autenticación)
-// =============================================
 
 Route::middleware(['auth', 'verified'])->group(function () {
     
@@ -78,106 +146,178 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{course:slug}/modulo/{module:slug}', [LearnController::class, 'module'])->name('module.show');
         Route::post('/modulo/{module}/completar', [LearnController::class, 'complete'])->name('module.complete');
     });
-
-    // Módulo Aspira (becas)
     Route::get('/aspire', function () {
         return Inertia::render('Aspire/Index');
     })->name('aspire.index');
-
-    // Perfil de usuario
-    Route::get('/profile', function () {
-        return Inertia::render('Profile/Index');
-    })->name('profile.index');
-
-    // Progreso del usuario
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.index');
     Route::get('/progress', function () {
         return Inertia::render('Profile/Progress');
     })->name('profile.progress');
-
-    // Resultados del test (protegido)
     Route::get('/results', function () {
         return Inertia::render('Test/Results');
     })->name('test.results');
-
-    // Historial de tests del usuario
-    Route::get('/api/test/historial', [TestVocacionalController::class, 'historial'])
-        ->name('api.test.historial');
-
-    // Two-Factor Authentication
+    Route::get('/api/test/historial', [TestVocacionalController::class, 'historial'])->name('api.test.historial');
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
-        Route::get('/setup', function () {
-            $user = auth()->user();
-            $twoFactor = $user->twoFactorAuthentication ?? new \App\Models\TwoFactorAuthentication(['user_id' => $user->id]);
-
-            if ($twoFactor->isEnabled()) {
-                return redirect()->route('dashboard')->with('status', '2FA ya esta habilitado.');
-            }
-
-            if (!$twoFactor->secret) {
-                $secret = $twoFactor->generateSecret();
-                $twoFactor->secret = $secret;
-                $twoFactor->save();
-            }
-
-            return Inertia::render('Auth/TwoFactorSetup', [
-                'qrCodeUrl' => $twoFactor->getQRCodeUrl($user->email),
-                'secret' => $twoFactor->secret,
-            ]);
-        })->name('setup');
-
-        Route::post('/enable', [App\Http\Controllers\TwoFactorController::class, 'enable'])
-            ->name('enable');
-
-        Route::post('/disable', [App\Http\Controllers\TwoFactorController::class, 'disable'])
-            ->name('disable');
-
-        Route::get('/challenge', function () {
-            return Inertia::render('Auth/TwoFactorChallenge');
-        })->name('challenge');
-
+        Route::get('/prompt', [App\Http\Controllers\TwoFactorController::class, 'showPrompt'])->name('prompt');
+        Route::post('/skip', [App\Http\Controllers\TwoFactorController::class, 'skip'])->name('skip');
+        Route::get('/setup', [App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('setup');
+        Route::post('/enable', [App\Http\Controllers\TwoFactorController::class, 'enable'])->name('enable');
+        Route::post('/disable', [App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
+        Route::get('/recovery-codes', function (\Illuminate\Http\Request $request) {
+            $codes = $request->session()->pull('2fa_recovery_codes', []);
+            return \Inertia\Inertia::render('Auth/TwoFactorRecoveryCodes', ['codes' => $codes]);
+        })->name('recovery-codes');
+        Route::get('/challenge', [App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
         Route::post('/challenge', [App\Http\Controllers\TwoFactorController::class, 'challenge'])
-            ->name('challenge.verify');
+            ->name('challenge.verify')
+            ->withoutMiddleware(['auth', 'verified'])
+            ->middleware('throttle:5,1');
     });
-
 });
-
-// =============================================
-// PANEL DE ADMINISTRACIÓN (requiere rol admin)
-// =============================================
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Admin/Dashboard');
+        $stats = [
+            'total_users' => \App\Models\User::count(),
+            'total_roles' => \App\Models\Role::count(),
+            'total_permissions' => \App\Models\Permission::count(),
+            'total_universidades' => \App\Models\Universidad::count(),
+            'total_carreras' => \App\Models\Carrera::count(),
+            'total_materias' => \App\Models\Materia::count(),
+        ];
+        $recentLogs = \App\Models\AdminLog::with('user:id,name')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => $stats,
+            'recentLogs' => $recentLogs,
+        ]);
     })->name('dashboard');
 
     Route::get('/universities', function () {
-        return Inertia::render('Admin/Universities/Index');
+        $universidades = \App\Models\Universidad::with('carreras.materias')->orderBy('nombre')->get()->map(function ($uni) {
+            return [
+                'id' => $uni->id,
+                'nombre' => $uni->nombre,
+                'nombre_corto' => $uni->nombre_corto,
+                'ciudad' => $uni->ciudad,
+                'latitud' => $uni->latitud,
+                'longitud' => $uni->longitud,
+                'color_primario' => $uni->color_primario,
+                'sitio_web' => $uni->sitio_web,
+                'direccion' => $uni->direccion,
+                'telefono' => $uni->telefono,
+                'email' => $uni->email,
+                'descripcion' => $uni->descripcion,
+                'carreras' => $uni->carreras->map(function ($c) {
+                    return [
+                        'id' => $c->id,
+                        'nombre' => $c->nombre,
+                        'descripcion' => $c->descripcion,
+                        'icono' => $c->icono,
+                        'activa' => $c->activa,
+                        'materias' => $c->materias->map(function ($m) {
+                            return [
+                                'id' => $m->id,
+                                'nombre' => $m->nombre,
+                                'semestre' => $m->semestre,
+                                'tipo' => $m->tipo,
+                            ];
+                        })->sortBy('semestre')->values(),
+                    ];
+                }),
+            ];
+        });
+        return Inertia::render('Admin/Universities/Index', [
+            'universidades' => $universidades,
+        ]);
     })->name('universities');
 
-    Route::get('/carrers', function () {
-        return Inertia::render('Admin/Carrers/Index');
-    })->name('carrers');
-
     Route::get('/scholarships', function () {
-        return Inertia::render('Admin/Scholarships/Index');
+        $scholarships = \App\Models\Scholarship::orderBy('name')->get();
+        return Inertia::render('Admin/Scholarships/Index', [
+            'scholarships' => $scholarships,
+        ]);
     })->name('scholarships');
 
-    Route::get('/questions', function () {
-        return Inertia::render('Admin/Questions/Index');
-    })->name('questions');
-
-    Route::get('/users', function () {
-        return Inertia::render('Admin/Users/Index');
+    Route::get('/users', function (\Illuminate\Http\Request $request) {
+        $paginator = \App\Models\User::with('roles:id,name')
+            ->orderBy('name')
+            ->paginate(25);
+        $users = collect($paginator->items())->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'email_verified_at' => $u->email_verified_at,
+                'created_at' => $u->created_at->toISOString(),
+                'roles' => $u->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name]),
+                'two_factor_status' => $u->twoFactorStatus(),
+                'two_factor_prompted_at' => $u->two_factor_prompted_at?->toISOString(),
+            ];
+        });
+        $allRoles = \App\Models\Role::orderBy('name')->get(['id', 'name', 'description', 'color']);
+        return Inertia::render('Admin/Users/Index', [
+            'users' => $users,
+            'allRoles' => $allRoles,
+            'currentUserId' => auth()->id(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+            ],
+        ]);
     })->name('users');
 
     Route::get('/roles', function () {
-        return Inertia::render('Admin/Roles/Index');
+        $roles = \App\Models\Role::with('permissions:id,name,description,module')->orderBy('name')->get();
+        $permissions = \App\Models\Permission::orderBy('module')->orderBy('name')->get();
+        return Inertia::render('Admin/Roles/Index', [
+            'roles' => $roles,
+            'permissions' => $permissions,
+        ]);
     })->name('roles');
 
+    Route::get('/carreras', function () {
+        $carreras = \App\Models\Carrera::with('universidad:id,nombre')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'nombre' => $c->nombre,
+                'universidad' => $c->universidad?->nombre ?? '',
+                'universidad_id' => $c->universidad_id,
+                'descripcion' => $c->descripcion,
+                'icono' => $c->icono,
+                'activa' => $c->activa,
+            ]);
+        $universidades = \App\Models\Universidad::orderBy('nombre')->get(['id', 'nombre']);
+        return Inertia::render('Admin/Carrers/Index', [
+            'carreras' => $carreras,
+            'universidades' => $universidades,
+        ]);
+    })->name('carreras');
+
+    Route::get('/questions', function () {
+        $preguntas = \App\Models\Pregunta::orderBy('orden')->get();
+        return Inertia::render('Admin/Questions/Index', [
+            'preguntas' => $preguntas,
+        ]);
+    })->name('questions');
+
     Route::get('/logs', function () {
-        return Inertia::render('Admin/Logs');
+        $logs = \App\Models\AdminLog::with('user:id,name')->orderByDesc('created_at')->paginate(20);
+        return Inertia::render('Admin/Logs', [
+            'logs' => $logs->items(),
+            'pagination' => [
+                'current_page' => $logs->currentPage(),
+                'last_page' => $logs->lastPage(),
+                'total' => $logs->total(),
+            ],
+        ]);
     })->name('logs');
 });
 
-// Incluir rutas de autenticación
 require __DIR__.'/auth.php';

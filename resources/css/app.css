@@ -4,7 +4,7 @@
  * Estilo: Cartier elegance + Kahoot vibrancy
  */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -34,8 +34,26 @@
     
     /* Tipografía */
     --font-display: 'Playfair Display', serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+    --font-admin: 'Plus Jakarta Sans', sans-serif;
     --font-mono: 'Space Grotesk', monospace;
+
+    /* Design Tokens Semánticos */
+    --color-primary: #46178F;
+    --color-primary-dark: #2D0F5C;
+    --color-primary-light: #7C3AED;
+    --color-on-primary: #ffffff;
+    --color-accent: #EB670F;
+    --color-on-accent: #ffffff;
+    --color-bg: #F8FAFC;
+    --color-fg: #1E293B;
+    --color-muted: #E9EFF8;
+    --color-muted-fg: #64748B;
+    --color-border: #E2E8F0;
+    --color-destructive: #E21B3C;
+    --color-success: #26890C;
+    --color-warning: #D89E00;
+    --color-info: #1368CE;
 }
 
 /* ============================================
@@ -67,6 +85,17 @@ h1, h2, h3, h4, h5, h6 {
 /* ============================================
    ANIMACIONES
    ============================================ */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -132,11 +161,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================
-   FOCUS STATES ACCESIBLES
+   FOCUS STATES ACCESIBLES (WCAG AA)
    ============================================ */
 :focus-visible {
-    outline: 2px solid var(--kahoot-purple);
+    outline: 2px solid var(--color-primary-light);
     outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* ============================================

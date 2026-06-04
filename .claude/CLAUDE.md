@@ -6,6 +6,16 @@ Este documento contiene reglas, estándares y procedimientos para modificar **Or
 
 ---
 
+## 0. DOCUMENTOS DE REFERENCIA OBLIGATORIA
+
+Antes de iniciar cualquier tarea, leer en este orden:
+1. `PROJECT_STATUS.md` — estado actual del sistema. Tiene precedencia sobre cualquier otro documento.
+2. `architecture.md` — referencia arquitectónica. Puede estar desactualizado respecto al estado real.
+
+**Regla de precedencia:** Si `PROJECT_STATUS.md` y `architecture.md` se contradicen, `PROJECT_STATUS.md` es la fuente de verdad.
+
+---
+
 ## 1. REGLAS FUNDAMENTALES
 
 ### 1.1 No Violar Estas Reglas
@@ -17,7 +27,7 @@ Este documento contiene reglas, estándares y procedimientos para modificar **Or
 - [ ] **NUNCA** modificar migraciones ya ejecutadas
 - [ ] **NUNCA** cambiar las interfaces de ServiceServiceVocacional
 - [ ] **NUNCA** agregar dependencias sin documentar
-- [ ] **NUNCA** dejar comentarios en español en código (docstrings en español OK)
+- [ ] **NUNCA** dejar comentarios inline en español dentro del código (ej: `// esto hace X`). Los bloques de documentación `/** */` en PHP y JSDoc en TypeScript sí pueden estar en español.
 - [ ] **NUNCA** hacer commit de `.env` o secrets
 
 ### 1.2 DEBE Hacer Siempre
@@ -31,7 +41,7 @@ Este documento contiene reglas, estándares y procedimientos para modificar **Or
 - [ ] Crear interfaces para contratos
 - [ ] Registrar logging de eventos importantes
 - [ ] Revisar security implications
-- [ ] **ACTUALIZAR PROJECT_STATUS.md al completar cada fase/subfase** (ver sección 15)
+- [ ] **ACTUALIZAR PROJECT_STATUS.md al completar cada fase/subfase** (ver sección 16)
 
 ---
 
@@ -1168,11 +1178,11 @@ Usa este formato en Issues:
 
 ## 16. ACTUALIZACIÓN DE PROGRESO EN PROJECT_STATUS.md
 
-### 15.1 Regla Obligatoria
+### 16.1 Regla Obligatoria
 
 **Cada vez que se complete una tarea (subfase) listed en PROJECT_STATUS.md, DEBE actualizarse el archivo antes de terminar la sesión de trabajo.**
 
-### 15.2 Cómo Actualizar
+### 16.2 Cómo Actualizar
 
 Cuando completes una subfase (ej: 2C, 2E, 3B):
 
@@ -1186,7 +1196,7 @@ Cuando completes una subfase (ej: 2C, 2E, 3B):
 5. **Actualizar fecha** "Última actualización" al final del archivo
 6. **Actualizar estadísticas** si hay cambios significativos
 
-### 15.3 Ejemplo de Actualización
+### 16.3 Ejemplo de Actualización
 
 **ANTES:**
 ```markdown
@@ -1201,7 +1211,7 @@ Cuando completes una subfase (ej: 2C, 2E, 3B):
   - test_results factory
 ```
 
-### 15.4 Checklist de Actualización
+### 16.4 Checklist de Actualización
 
 Al final de cada tarea completada, verificar:
 
@@ -1212,7 +1222,7 @@ Al final de cada tarea completada, verificar:
 - [ ] Actualizar fecha "Última actualización"
 - [ ] Verificar que el proyecto aún compila y tests pasan
 
-### 15.5 Sección de Próximos Pasos
+### 16.5 Sección de Próximos Pasos
 
 **AL COMPLETAR CUALQUIER FASE, debe agregarse una sección de "PRÓXIMOS PASOS" al inicio de PROJECT_STATUS.md** (justo después del "RESUMEN EJECUTIVO", antes de "PLAN DE TRABAJO ESTRUCTURADO").
 
@@ -1248,7 +1258,7 @@ La sección debe seguir este formato:
 3. Actualiza la fecha de última actualización
 4. Asegúrate de que el porcentaje de completitud refleje el progreso real
 
-### 15.5 No Olvidar
+### 16.6 No Olvidar
 
 ❌ **NO** esperar al final del sprint para actualizar
 ❌ **NO** dejar tareas "a medias" sin marcar el progreso real
@@ -1260,12 +1270,31 @@ La sección debe seguir este formato:
 
 ---
 
+## 17. REGISTRO DE AVANCE POR FASE
+
+### Regla Obligatoria de Registro
+
+**Cada vez que una fase del PROJECT_STATUS.md sea completada, debe resumirse en 1 o 2 renglones dentro del mismo archivo como registro de avance técnico.**
+
+El registro debe agregarse en la sección `## HISTORIAL DE FASES COMPLETADAS` de PROJECT_STATUS.md usando el formato:
+
+```
+- ✅ [YYYY-MM-DD] Fase X completada: <resumen en 1-2 líneas de qué se implementó y qué archivos cambiaron>
+```
+
+Ejemplo:
+```
+- ✅ [2026-05-11] Fase 1 completada: Corregidos 6 bugs críticos (2FA, ActivityLog, Pregunta::with, perfil, token acumulación, route conflict). Archivos: LoginController, api_routes, web.php.
+```
+
+---
+
 ## REGLA DE ORO
 
 **Cuando dudes, consulta el código existente. Si aún no está claro, pregunta primero antes de hacer cambios importantes.**
 
 ---
 
-**Última actualización:** 2026-05-09  
-**Versión:** 1.0  
+**Última actualización:** 2026-05-11
+**Versión:** 1.2
 **Mantenedor:** Team Orienta.me

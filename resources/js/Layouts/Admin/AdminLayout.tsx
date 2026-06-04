@@ -1,42 +1,56 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { User } from '@/types';
+import SkipLink from '@/Components/UI/SkipLink';
 
 interface AdminLayoutProps {
     children: ReactNode;
+    title?: string;
 }
 
-const menuItems = [
-    { name: 'Dashboard', href: '/admin', icon: 'chart', exact: true },
-    { name: 'Universidades', href: '/admin/universities', icon: 'university' },
-    { name: 'Carreras', href: '/admin/carrers', icon: 'careers' },
-    { name: 'Becas', href: '/admin/scholarships', icon: 'scholarship' },
-    { name: 'Preguntas', href: '/admin/questions', icon: 'question' },
-    { name: 'Usuarios', href: '/admin/users', icon: 'users' },
-    { name: 'Roles', href: '/admin/roles', icon: 'roles' },
-    { name: 'Logs', href: '/admin/logs', icon: 'logs' },
+interface MenuItem {
+    name: string;
+    href: string;
+    icon: keyof typeof ICONS;
+    exact?: boolean;
+}
+
+const NAV_GROUPS: { label: string; items: MenuItem[] }[] = [
+    {
+        label: 'Contenido',
+        items: [
+            { name: 'Dashboard',     href: '/admin',              icon: 'dashboard',  exact: true },
+            { name: 'Universidades', href: '/admin/universities', icon: 'university' },
+            { name: 'Carreras',      href: '/admin/carreras',     icon: 'careers' },
+            { name: 'Preguntas',     href: '/admin/questions',    icon: 'question' },
+            { name: 'Becas',         href: '/admin/scholarships', icon: 'scholarship' },
+        ],
+    },
+    {
+        label: 'Sistema',
+        items: [
+            { name: 'Usuarios', href: '/admin/users',  icon: 'users' },
+            { name: 'Roles',    href: '/admin/roles',  icon: 'roles' },
+            { name: 'Logs',     href: '/admin/logs',   icon: 'logs' },
+        ],
+    },
 ];
 
-const iconMap: Record<string, JSX.Element> = {
-    chart: (
+const ICONS = {
+    dashboard: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
         </svg>
     ),
     university: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
         </svg>
     ),
     careers: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-    ),
-    scholarship: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
     ),
     question: (
@@ -44,9 +58,14 @@ const iconMap: Record<string, JSX.Element> = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
     ),
+    scholarship: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
     users: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
     ),
     roles: (
@@ -56,152 +75,266 @@ const iconMap: Record<string, JSX.Element> = {
     ),
     logs: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+    ),
+    home: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+    ),
+    logout: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
     ),
 };
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function isActive(href: string, currentPath: string, exact = false): boolean {
+    if (exact) return currentPath === href;
+    return currentPath.startsWith(href);
+}
+
+function getCurrentPageName(path: string): string {
+    const all = NAV_GROUPS.flatMap(g => g.items);
+    const found = all.find(i => i.exact ? path === i.href : path.startsWith(i.href));
+    return found?.name ?? 'Admin';
+}
+
+export default function AdminLayout({ children, title }: AdminLayoutProps) {
     const { auth } = usePage<{ auth: { user: User | null } }>().props;
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [expanded, setExpanded] = useState(true);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/admin';
 
-    const handleLogout = () => {
-        router.post('/logout');
-    };
+    useEffect(() => {
+        setMobileOpen(false);
+        setProfileOpen(false);
+    }, [currentPath]);
 
-    return (
-        <div className="min-h-screen bg-slate-100">
-            {/* Sidebar */}
-            <aside
-                className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white transition-all duration-300 ${
-                    sidebarOpen ? 'w-64' : 'w-20'
-                }`}
-            >
-                {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700">
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">O</span>
+    const pageTitle = title ?? getCurrentPageName(currentPath);
+
+    const NavContent = () => (
+        <>
+            <div className={`h-16 flex items-center border-b border-white/10 px-4 flex-shrink-0 ${expanded ? 'justify-between' : 'justify-center'}`}>
+                {expanded ? (
+                    <Link href="/" className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30">
+                            <span className="text-white font-black text-base">O</span>
                         </div>
-                        {sidebarOpen && (
-                            <span className="text-xl font-bold">
-                                Orienta<span className="text-[#1368CE]">.me</span>
-                            </span>
-                        )}
+                        <div className="min-w-0">
+                            <p className="text-white font-bold text-base leading-tight truncate">
+                                Orienta<span className="text-violet-300">.me</span>
+                            </p>
+                            <p className="text-slate-500 text-[10px] font-medium tracking-widest uppercase">Admin</p>
+                        </div>
                     </Link>
+                ) : (
+                    <Link href="/">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                            <span className="text-white font-black text-base">O</span>
+                        </div>
+                    </Link>
+                )}
+                {expanded && (
                     <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                        onClick={() => setExpanded(false)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/10 transition-colors"
                     >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? 'M11 19l-7-7 7-7' : 'M13 5l7 7-7 7'} />
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7" />
                         </svg>
                     </button>
-                </div>
+                )}
+            </div>
 
-                {/* Navigation */}
-                <nav className="p-4 space-y-1">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
-                                window.location.pathname === item.href
-                                    ? 'bg-[#46178F] text-white'
-                                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                            }`}
-                        >
-                            {iconMap[item.icon]}
-                            {sidebarOpen && <span className="font-medium">{item.name}</span>}
-                        </Link>
-                    ))}
-                </nav>
+            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+                {NAV_GROUPS.map(group => (
+                    <div key={group.label}>
+                        {expanded && (
+                            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-1.5">
+                                {group.label}
+                            </p>
+                        )}
+                        <div className="space-y-0.5">
+                            {group.items.map(item => {
+                                const active = isActive(item.href, currentPath, item.exact);
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        title={!expanded ? item.name : undefined}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group ${
+                                            active
+                                                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/25'
+                                                : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
+                                        } ${!expanded ? 'justify-center' : ''}`}
+                                    >
+                                        <span className="flex-shrink-0 transition-transform group-hover:scale-105">
+                                            {ICONS[item.icon]}
+                                        </span>
+                                        {expanded && (
+                                            <span className="font-medium text-sm">{item.name}</span>
+                                        )}
+                                        {active && expanded && (
+                                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-300 flex-shrink-0" />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+            </nav>
 
-                {/* User section */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
-                    <Link
-                        href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white transition-all"
+            <div className={`p-3 border-t border-white/10 flex-shrink-0 ${!expanded ? 'flex flex-col items-center gap-0.5' : 'space-y-0.5'}`}>
+                {!expanded && (
+                    <button
+                        onClick={() => setExpanded(true)}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-all mb-1"
+                        title="Expandir sidebar"
                     >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7" />
                         </svg>
-                        {sidebarOpen && <span className="font-medium">Volver al sitio</span>}
-                    </Link>
-                </div>
+                    </button>
+                )}
+                <Link
+                    href="/dashboard"
+                    title={!expanded ? 'Sitio principal' : undefined}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all text-sm font-medium ${!expanded ? 'justify-center w-full' : ''}`}
+                >
+                    {ICONS.home}
+                    {expanded && 'Volver al sitio'}
+                </Link>
+                <button
+                    onClick={() => router.post('/logout')}
+                    title={!expanded ? 'Cerrar sesión' : undefined}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all text-sm font-medium w-full ${!expanded ? 'justify-center' : ''}`}
+                >
+                    {ICONS.logout}
+                    {expanded && 'Cerrar sesión'}
+                </button>
+
+                {expanded && auth.user && (
+                    <div className="mt-2 pt-2 border-t border-white/10 flex items-center gap-2.5 px-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
+                            {auth.user.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-white text-xs font-semibold truncate">{auth.user.name}</p>
+                            <p className="text-slate-500 text-[10px] truncate">{auth.user.email}</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex">
+            <SkipLink />
+            {/* Desktop sidebar */}
+            <aside
+                className={`hidden lg:flex flex-col fixed inset-y-0 left-0 bg-slate-900 transition-all duration-300 z-40 ${
+                    expanded ? 'w-60' : 'w-[72px]'
+                }`}
+            >
+                <NavContent />
             </aside>
 
-            {/* Main content */}
-            <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-                {/* Header */}
-                <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200">
-                    <div className="h-full px-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-900">Panel de Administración</h1>
-                            <p className="text-sm text-slate-500">Gestiona el contenido de Orienta.me</p>
-                        </div>
+            {/* Mobile overlay */}
+            {mobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setMobileOpen(false)}
+                />
+            )}
 
-                        <div className="flex items-center gap-4">
-                            {/* Admin badge */}
-                            <span className="px-3 py-1 text-xs font-semibold bg-[#46178F]/10 text-[#46178F] rounded-full">
-                                Admin
-                            </span>
+            {/* Mobile sidebar */}
+            <aside
+                className={`fixed inset-y-0 left-0 w-60 bg-slate-900 flex flex-col z-50 lg:hidden transition-transform duration-300 ${
+                    mobileOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            >
+                <NavContent />
+            </aside>
 
-                            {/* Profile dropdown */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 transition-colors"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#46178F] to-[#1368CE] flex items-center justify-center">
-                                        <span className="text-white text-sm font-semibold">
-                                            {auth.user?.name?.charAt(0).toUpperCase() || 'A'}
-                                        </span>
-                                    </div>
-                                    <div className="hidden md:block text-left">
-                                        <p className="text-sm font-medium text-slate-900">{auth.user?.name}</p>
-                                        <p className="text-xs text-slate-500">{auth.user?.email}</p>
-                                    </div>
-                                    <svg className={`w-4 h-4 text-slate-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
+            {/* Main */}
+            <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${expanded ? 'lg:pl-60' : 'lg:pl-[72px]'}`}>
+                <header className="sticky top-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:px-6 gap-3">
+                    <button
+                        className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                        onClick={() => setMobileOpen(true)}
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
 
-                                {isProfileOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                                        <div className="p-4 border-b border-slate-100">
-                                            <p className="font-medium text-slate-900">{auth.user?.name}</p>
-                                            <p className="text-sm text-slate-500">{auth.user?.email}</p>
+                    <h1 className="flex-1 text-base font-semibold text-slate-900 truncate">{pageTitle}</h1>
+
+                    <div className="flex items-center gap-2.5 flex-shrink-0">
+                        <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                            Admin
+                        </span>
+
+                        <div className="relative">
+                            <button
+                                onClick={() => setProfileOpen(!profileOpen)}
+                                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                    {auth.user?.name?.charAt(0).toUpperCase() || 'A'}
+                                </div>
+                                <span className="hidden md:block text-sm font-medium text-slate-700 max-w-[100px] truncate">
+                                    {auth.user?.name}
+                                </span>
+                                <svg className={`w-4 h-4 text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {profileOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
+                                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-20">
+                                        <div className="px-4 py-3 border-b border-slate-100">
+                                            <p className="text-sm font-semibold text-slate-900 truncate">{auth.user?.name}</p>
+                                            <p className="text-xs text-slate-400 truncate">{auth.user?.email}</p>
                                         </div>
                                         <div className="p-2">
-                                            <Link href="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <Link
+                                                href="/profile"
+                                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                                                onClick={() => setProfileOpen(false)}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                 </svg>
-                                                Mi Perfil
+                                                Mi perfil
                                             </Link>
                                         </div>
                                         <div className="p-2 border-t border-slate-100">
                                             <button
-                                                onClick={handleLogout}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50"
+                                                onClick={() => router.post('/logout')}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
                                             >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                                 </svg>
-                                                Cerrar Sesión
+                                                Cerrar sesión
                                             </button>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>
 
-                {/* Page content */}
-                <main className="p-6">
+                <main id="main-content" className="flex-1 p-5 lg:p-6">
                     {children}
                 </main>
             </div>

@@ -13,6 +13,7 @@ const DIMENSIONES = ['tech', 'creativity', 'analysis', 'leadership', 'research',
 
 export default function Form({ pregunta, onClose, onSuccess }: Props) {
     const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState('');
     const opcionesIniciales = pregunta?.opciones?.length ? pregunta.opciones : Array(4).fill(null).map(() => ({ texto: '', puntaje: {} }));
     const [opciones, setOpciones] = useState<{ texto: string; puntaje: Record<string, number> }[]>(opcionesIniciales);
     const [form, setForm] = useState({
@@ -39,15 +40,16 @@ export default function Form({ pregunta, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
             const url = pregunta?.id ? `/api/admin/entities/preguntas/${pregunta.id}` : '/api/admin/entities/preguntas';
             const res = await fetch(url, {
                 method: pregunta?.id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ ...form, opciones }),
             });
             if (res.ok) { onSuccess(); onClose(); }
-        } catch (error) { console.error('Error:', error); }
+            else { setFormError('Error al guardar. Verifica los datos e intenta de nuevo.'); }
+        } catch { setFormError('Error de conexión. Por favor intenta de nuevo.'); }
         finally { setSaving(false); }
     };
 
@@ -95,6 +97,7 @@ export default function Form({ pregunta, onClose, onSuccess }: Props) {
                     <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.activa} onChange={e => setForm({ ...form, activa: e.target.checked })} className="w-4 h-4 accent-[#46178F]" /><span className="text-sm">Activa</span></label>
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50">Cancelar</button>
+                        {formError && <p className="flex-1 text-sm text-red-500">{formError}</p>}
                         <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 bg-[#46178F] text-white rounded-xl font-medium hover:bg-[#3a156f] disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
                     </div>
                 </form>

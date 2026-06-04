@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -40,10 +40,10 @@ Route::middleware('guest')->group(function () {
     // REGISTER
     // GET  /register → Muestra formulario de registro
     // POST /register → Procesa el registro
-    Route::get('/register', [RegisterController::class, 'create'])
+    Route::get('/register', [RegisteredUserController::class, 'create'])
         ->name('register');
     
-    Route::post('/register', [RegisterController::class, 'store'])
+    Route::post('/register', [RegisteredUserController::class, 'store'])
         ->name('register.store');
     
     // FORGOT PASSWORD

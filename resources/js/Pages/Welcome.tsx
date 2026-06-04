@@ -1,178 +1,216 @@
 import { Head, Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Target, Map, BarChart3, ArrowRight, BookOpen, Award } from 'lucide-react';
 import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
+import SkipLink from '@/Components/UI/SkipLink';
 import { PageProps } from '@/types';
 
-const fadeInUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
-};
+const CHASIDE = [
+    { letter: 'C', name: 'Ciencias Exactas', color: '#E21B3C' },
+    { letter: 'H', name: 'Humanísticas',     color: '#EB670F' },
+    { letter: 'A', name: 'Artísticas',       color: '#46178F' },
+    { letter: 'S', name: 'Salud',            color: '#26890C' },
+    { letter: 'I', name: 'Investigativas',   color: '#1368CE' },
+    { letter: 'D', name: 'Defensa',          color: '#FF3355' },
+    { letter: 'E', name: 'Empresariales',    color: '#D89E00' },
+];
 
-const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
+const BENEFITS = [
+    {
+        icon: Target,
+        title: 'Test CHASIDE de 16 preguntas',
+        desc: 'Algoritmo de similitud vectorial que calcula tu perfil vocacional con precisión.',
+    },
+    {
+        icon: Map,
+        title: 'Universidades de Tamaulipas',
+        desc: '7 universidades, 51+ carreras y malla curricular completa por semestre.',
+    },
+    {
+        icon: BarChart3,
+        title: 'Perfil con carreras recomendadas',
+        desc: 'Resultados detallados con afinidad porcentual y acceso directo a cada programa.',
+    },
+];
+
+const FEATURES = [
+    { icon: BookOpen, label: 'Cursos',    href: '/learn',        color: 'text-red-500',    bg: 'bg-red-50' },
+    { icon: Award,    label: 'Becas',     href: '/aspire',       color: 'text-blue-500',   bg: 'bg-blue-50' },
+    { icon: Map,      label: 'Mapa',      href: '/universities', color: 'text-green-500',  bg: 'bg-green-50' },
+    { icon: Target,   label: 'Dashboard', href: '/dashboard',    color: 'text-violet-500', bg: 'bg-violet-50' },
+];
 
 export default function Welcome({ auth }: PageProps) {
+    const shouldReduceMotion = useReducedMotion();
+
+    const fadeUp = shouldReduceMotion
+        ? {}
+        : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
+
+    const ctaHref = auth.user ? '/test-wrapped' : '/register';
+
     return (
         <>
-            <Head title="Descubre tu vocación ideal" />
+            <SkipLink />
+            <Head title="Descubre tu vocación ideal — Orienta.me" />
             <Navbar />
 
-            <main className="min-h-screen">
-                {/* Hero Section */}
-                <section className="hero-gradient pt-32 pb-20 lg:pt-40 lg:pb-32">
-                    <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="grid lg:grid-cols-2 gap-12 items-center">
-                            <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-                                <motion.div variants={fadeInUp} className="mb-6">
-                                    <span className="badge badge-purple">✨ Plataforma de Orientación Vocacional</span>
-                                </motion.div>
-                                
-                                <motion.h1 variants={fadeInUp} className="text-5xl lg:text-6xl font-display font-bold text-slate-900 leading-tight mb-6">
-                                    Descubre tu <span className="text-gradient">camino</span> profesional ideal
-                                </motion.h1>
-                                
-                                <motion.p variants={fadeInUp} className="text-xl text-slate-600 leading-relaxed mb-8 max-w-xl">
-                                    Test CHASIDE con inteligencia artificial para encontrar las carreras que mejor se adaptan a ti.
-                                </motion.p>
-                                
-                                <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
-                                    <Link href={auth.user ? "/test" : "/register"} className="btn-primary text-base px-8 py-4">
-                                        Iniciar Test Gratis
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
-                                    </Link>
-                                    <a href="#features" className="btn-secondary text-base px-8 py-4">Conocer más</a>
-                                </motion.div>
+            <main id="main-content" className="min-h-screen">
 
-                                <motion.div variants={fadeInUp} className="mt-12 flex gap-8 pt-8 border-t border-slate-200">
-                                    <div><p className="text-3xl font-bold text-slate-900">50K+</p><p className="text-sm text-slate-500">Estudiantes</p></div>
-                                    <div><p className="text-3xl font-bold text-slate-900">98%</p><p className="text-sm text-slate-500">Satisfacción</p></div>
-                                    <div><p className="text-3xl font-bold text-slate-900">200+</p><p className="text-sm text-slate-500">Universidades</p></div>
-                                </motion.div>
-                            </motion.div>
+                {/* Hero — single column, centered */}
+                <section className="pt-28 pb-20 lg:pt-36 lg:pb-28 bg-gradient-to-b from-violet-50/60 via-white to-white">
+                    <div className="max-w-3xl mx-auto px-6 text-center">
+                        <motion.div {...fadeUp} transition={{ duration: 0.5 }}>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 mb-6">
+                                <Target className="w-3.5 h-3.5" aria-hidden="true" />
+                                Test de Orientación Vocacional CHASIDE
+                            </span>
+                        </motion.div>
 
-                            {/* Quiz Preview Card */}
-                            <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.3 }} className="relative">
-                                <div className="bg-white rounded-3xl shadow-2xl p-8 overflow-hidden">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-8 h-8 rounded-full bg-kahoot-purple/10 flex items-center justify-center">
-                                            <span className="text-kahoot-purple font-bold text-sm">1</span>
-                                        </div>
-                                        <span className="text-sm text-slate-500">Pregunta de ejemplo</span>
+                        <motion.h1
+                            {...fadeUp}
+                            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.1 }}
+                            className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight mb-6 tracking-tight"
+                        >
+                            Descubre tu{' '}
+                            <span className="bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent">
+                                camino
+                            </span>{' '}
+                            profesional
+                        </motion.h1>
+
+                        <motion.p
+                            {...fadeUp}
+                            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.2 }}
+                            className="text-xl text-slate-600 leading-relaxed mb-10 max-w-xl mx-auto"
+                        >
+                            Responde 16 preguntas y obtén un perfil vocacional personalizado con las carreras que mejor se adaptan a ti.
+                        </motion.p>
+
+                        <motion.div
+                            {...fadeUp}
+                            transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.3 }}
+                            className="flex flex-col sm:flex-row gap-4 justify-center"
+                        >
+                            <Link
+                                href={ctaHref}
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-violet-600 text-white rounded-2xl font-semibold text-lg hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                            >
+                                Tomar test vocacional
+                                <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                            </Link>
+                            <Link
+                                href="/universities"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-700 rounded-2xl font-semibold text-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+                            >
+                                Ver universidades
+                            </Link>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* Benefits — 3 bullets */}
+                <section className="py-20 bg-white" aria-labelledby="benefits-heading">
+                    <div className="max-w-5xl mx-auto px-6">
+                        <motion.h2
+                            {...fadeUp}
+                            id="benefits-heading"
+                            className="text-3xl font-bold text-slate-900 text-center mb-12"
+                        >
+                            Todo lo que necesitas en un solo lugar
+                        </motion.h2>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {BENEFITS.map(({ icon: Icon, title, desc }, i) => (
+                                <motion.div
+                                    key={i}
+                                    {...fadeUp}
+                                    transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : i * 0.1 }}
+                                    className="flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 hover:border-violet-100 hover:shadow-md transition-all"
+                                >
+                                    <div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-4 text-violet-600">
+                                        <Icon className="w-7 h-7" aria-hidden="true" />
                                     </div>
-                                    
-                                    <h3 className="text-xl font-semibold text-slate-900 mb-6">
-                                        ¿Te gustaría diseñar soluciones tecnológicas innovadoras?
-                                    </h3>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[
-                                            { color: 'bg-kahoot-red', text: 'Sí, mucho', icon: '△' },
-                                            { color: 'bg-kahoot-blue', text: 'Quizás', icon: '◇' },
-                                            { color: 'bg-kahoot-yellow text-slate-900', text: 'Poco', icon: '○' },
-                                            { color: 'bg-kahoot-green', text: 'No', icon: '□' },
-                                        ].map((btn, i) => (
-                                            <motion.button key={i} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                                className={`quiz-option ${btn.color} text-white py-6 font-semibold flex flex-col items-center`}>
-                                                <span className="text-2xl mb-1">{btn.icon}</span>
-                                                <span>{btn.text}</span>
-                                            </motion.button>
-                                        ))}
-                                    </div>
-
-                                    <div className="mt-6">
-                                        <div className="flex justify-between text-sm text-slate-500 mb-2">
-                                            <span>Progreso</span><span>1 de 98</span>
-                                        </div>
-                                        <div className="progress-bar"><div className="progress-fill" style={{ width: '1%' }} /></div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
+                                    <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
                 </section>
 
-                {/* Features Section */}
-                <section id="features" className="py-24 bg-white">
-                    <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="section-header">
-                            <h2 className="section-title">Todo lo que necesitas para tu futuro</h2>
-                            <p className="section-subtitle">Una plataforma completa de orientación vocacional con herramientas inteligentes</p>
+                {/* CHASIDE Dimensions */}
+                <section className="py-20 bg-slate-50" aria-labelledby="chaside-heading">
+                    <div className="max-w-5xl mx-auto px-6">
+                        <motion.div {...fadeUp} className="text-center mb-12">
+                            <h2 id="chaside-heading" className="text-3xl font-bold text-slate-900 mb-3">
+                                Las 7 áreas del test CHASIDE
+                            </h2>
+                            <p className="text-slate-500 max-w-xl mx-auto">
+                                Tu perfil vocacional se distribuye entre 7 dimensiones profesionales. El test identifica cuáles dominan en ti.
+                            </p>
+                        </motion.div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                            {CHASIDE.map((cat, i) => (
+                                <motion.div
+                                    key={cat.letter}
+                                    {...fadeUp}
+                                    transition={{ duration: 0.4, delay: shouldReduceMotion ? 0 : i * 0.05 }}
+                                    className="flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200 hover:shadow-md transition-all"
+                                    style={{ borderTop: `3px solid ${cat.color}` }}
+                                >
+                                    <div
+                                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-2"
+                                        style={{ backgroundColor: `${cat.color}18` }}
+                                        aria-hidden="true"
+                                    >
+                                        <span className="text-xl font-bold" style={{ color: cat.color }}>{cat.letter}</span>
+                                    </div>
+                                    <p className="text-xs font-medium text-slate-600 text-center leading-tight">{cat.name}</p>
+                                </motion.div>
+                            ))}
                         </div>
+                    </div>
+                </section>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[
-                                { title: 'Aprende', desc: 'Cursos y tutores para mejorar tu trayectoria académica', color: 'kahoot-red', icon: '📚', href: '/learn' },
-                                { title: 'Aspira', desc: 'Becas nacionales e internacionales para tu educación', color: 'kahoot-blue', icon: '🎯', href: '/aspire' },
-                                { title: 'Universidades', desc: 'Mapa interactivo de universidades públicas y privadas', color: 'kahoot-green', icon: '🗺️', href: '/universities' },
-                                { title: 'Dashboard', desc: 'Panel personalizado con recomendaciones inteligentes', color: 'kahoot-purple', icon: '📊', href: '/dashboard' },
-                            ].map((feature, i) => (
-                                <Link key={i} href={feature.href}>
-                                    <motion.div whileHover={{ y: -8 }} className="card-featured p-6 h-full cursor-pointer">
-                                        <div className={`w-14 h-14 rounded-2xl bg-${feature.color}/10 flex items-center justify-center mb-4`}>
-                                            <span className="text-2xl">{feature.icon}</span>
-                                        </div>
-                                        <h3 className="text-xl font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                                        <p className="text-slate-600">{feature.desc}</p>
-                                    </motion.div>
+                {/* Quick feature links */}
+                <section className="py-16 bg-white" aria-label="Secciones del sistema">
+                    <div className="max-w-5xl mx-auto px-6">
+                        <div className="flex flex-wrap justify-center gap-4">
+                            {FEATURES.map(({ icon: Icon, label, href, color, bg }) => (
+                                <Link
+                                    key={href}
+                                    href={href}
+                                    className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl ${bg} ${color} font-medium text-sm hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-current`}
+                                >
+                                    <Icon className="w-5 h-5" aria-hidden="true" />
+                                    {label}
                                 </Link>
                             ))}
                         </div>
                     </div>
                 </section>
 
-                {/* CHASIDE Categories */}
-                <section className="py-24 bg-mesh">
-                    <div className="max-w-[1400px] mx-auto px-6">
-                        <div className="section-header">
-                            <h2 className="section-title">Las 7 Áreas del Test CHASIDE</h2>
-                            <p className="section-subtitle">Descubre tus intereses en 7 categorías profesionales</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                            {[
-                                { letter: 'C', name: 'Ciencias Exactas', color: '#E21B3C' },
-                                { letter: 'H', name: 'Humanísticas', color: '#EB670F' },
-                                { letter: 'A', name: 'Artísticas', color: '#46178F' },
-                                { letter: 'S', name: 'Salud', color: '#26890C' },
-                                { letter: 'I', name: 'Investigativas', color: '#1368CE' },
-                                { letter: 'D', name: 'Defensa', color: '#FF3355' },
-                                { letter: 'E', name: 'Empresariales', color: '#D89E00' },
-                            ].map((cat, i) => (
-                                <motion.div key={i} whileHover={{ scale: 1.05 }} 
-                                    className="card p-6 text-center cursor-pointer"
-                                    style={{ borderTop: `4px solid ${cat.color}` }}>
-                                    <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                                        style={{ backgroundColor: `${cat.color}15` }}>
-                                        <span className="text-3xl font-bold" style={{ color: cat.color }}>{cat.letter}</span>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-700">{cat.name}</p>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* CTA Section */}
-                <section className="py-24" style={{ background: 'linear-gradient(135deg, #46178F 0%, #1368CE 100%)' }}>
-                    <div className="max-w-4xl mx-auto px-6 text-center">
-                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
+                {/* CTA bottom */}
+                <section
+                    className="py-24"
+                    style={{ background: 'linear-gradient(135deg, #46178F 0%, #1368CE 100%)' }}
+                    aria-labelledby="cta-heading"
+                >
+                    <div className="max-w-3xl mx-auto px-6 text-center">
+                        <motion.div {...fadeUp}>
+                            <h2 id="cta-heading" className="text-4xl font-bold text-white mb-4">
                                 ¿Listo para descubrir tu vocación?
                             </h2>
-                            <p className="text-xl text-white/80 mb-10">
-                                El test toma aproximadamente 15-20 minutos. Responde con honestidad.
+                            <p className="text-white/80 text-xl mb-10">
+                                El test toma aproximadamente 10 minutos. Responde con honestidad.
                             </p>
-                            <Link href={auth.user ? "/test" : "/register"} 
-                                className="inline-flex items-center gap-3 px-10 py-5 bg-white text-kahoot-purple font-semibold rounded-2xl hover:bg-slate-50 transition-all text-lg shadow-xl">
-                                Comenzar Ahora
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
+                            <Link
+                                href={ctaHref}
+                                className="inline-flex items-center gap-3 px-10 py-5 bg-white text-violet-700 font-semibold rounded-2xl hover:bg-violet-50 transition-colors text-lg shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50"
+                            >
+                                Comenzar ahora
+                                <ArrowRight className="w-6 h-6" aria-hidden="true" />
                             </Link>
                         </motion.div>
                     </div>

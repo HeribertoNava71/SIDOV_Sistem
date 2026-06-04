@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, usePage, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import Form from './Form';
+import AdminCrudDrawer from '@/Components/Admin/AdminCrudDrawer';
+import { Toast, useToast } from '@/Components/UI/Toast';
 
 interface Scholarship {
     id?: number; name: string; description: string; provider: string;
@@ -10,36 +12,33 @@ interface Scholarship {
     is_active: boolean; is_featured: boolean; university_id: string;
 }
 
+interface PageProps {
+    scholarships: Scholarship[];
+    [key: string]: any;
+}
+
 export default function ScholarshipsIndex() {
-    const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { scholarships: initialScholarships } = usePage<PageProps>().props;
+    const [scholarships, setScholarships] = useState(initialScholarships);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState<Scholarship | null>(null);
-
-    useEffect(() => { fetchData(); }, []);
-
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/admin/entities/scholarships', { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) { const data = await res.json(); setScholarships(data.data || []); }
-        } catch (error) { console.error('Error:', error); }
-        finally { setLoading(false); }
-    };
+    const { toast, showToast } = useToast();
 
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta beca?')) return;
         try {
-            const token = localStorage.getItem('auth_token');
-            await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+            const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const res = await fetch(`/api/admin/entities/scholarships/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf }, credentials: 'include' });
+            if (!res.ok) throw new Error();
             setScholarships(scholarships.filter(s => s.id !== id));
-        } catch (error) { console.error('Error:', error); }
+            showToast('Beca eliminada correctamente');
+        } catch { showToast('Error al eliminar la beca', 'error'); }
     };
 
     const openEdit = (item: Scholarship) => { setEditingItem(item); setShowForm(true); };
     const openNew = () => { setEditingItem(null); setShowForm(true); };
     const closeForm = () => { setShowForm(false); setEditingItem(null); };
-    const handleSuccess = () => { fetchData(); closeForm(); };
+    const handleSuccess = () => { showToast('Cambios guardados'); router.reload(); };
 
     return (
         <AdminLayout>
@@ -64,7 +63,7 @@ export default function ScholarshipsIndex() {
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                         {scholarships.map(s => (
-                            <tr key={s.id} className="hover:bg-slate-50">
+                            <tr key={s.id} className="even:bg-slate-50/60 hover:bg-violet-50/30 transition-colors">
                                 <td className="px-6 py-4 font-medium">{s.name}</td>
                                 <td className="px-6 py-4 text-slate-600">{s.provider || '-'}</td>
                                 <td className="px-6 py-4 text-center">{s.amount || '-'}</td>
@@ -84,7 +83,10 @@ export default function ScholarshipsIndex() {
                     </tbody>
                 </table>
             </div>
-            {showForm && <Form scholarship={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />}
+            <AdminCrudDrawer open={showForm} onClose={closeForm} title={editingItem ? 'Editar Beca' : 'Nueva Beca'}>
+                <Form scholarship={editingItem ?? undefined} onClose={closeForm} onSuccess={handleSuccess} />
+            </AdminCrudDrawer>
+            <Toast toast={toast} />
         </AdminLayout>
     );
 }

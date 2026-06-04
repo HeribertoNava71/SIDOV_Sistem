@@ -11,6 +11,7 @@ const PERMISOS_DISPONIBLES = ['users.view', 'users.create', 'users.edit', 'users
 
 export default function Form({ role, onClose, onSuccess }: Props) {
     const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState('');
     const [form, setForm] = useState({ name: role?.name || '', description: role?.description || '', permissions: role?.permissions || [] });
 
     const togglePermission = (perm: string) => {
@@ -22,11 +23,12 @@ export default function Form({ role, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const url = role?.id ? `/api/admin/entities/roles/${role.id}` : '/api/admin/entities/roles';
-            const res = await fetch(url, { method: role?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const url = role?.id ? `/api/admin/roles/${role.id}` : '/api/admin/roles';
+            const res = await fetch(url, { method: role?.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, credentials: 'include', body: JSON.stringify(form) });
             if (res.ok) { onSuccess(); onClose(); }
-        } catch (error) { console.error('Error:', error); }
+            else { setFormError('Error al guardar el rol.'); }
+        } catch { setFormError('Error de conexión. Por favor intenta de nuevo.'); }
         finally { setSaving(false); }
     };
 

@@ -13,6 +13,7 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string;
+    is_admin: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -47,6 +48,7 @@ export interface DashboardStats {
 }
 
 export interface DashboardProps extends PageProps {
+    auth: { user: User | null };
     stats: DashboardStats;
     recentActivity: Activity[];
     recommendations: {

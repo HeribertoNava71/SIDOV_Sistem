@@ -12,6 +12,7 @@ interface Props { scholarship?: Scholarship; onClose: () => void; onSuccess: () 
 
 export default function Form({ scholarship, onClose, onSuccess }: Props) {
     const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState('');
     const { data, setData } = useForm<Scholarship>({
         name: scholarship?.name || '',
         description: scholarship?.description || '',
@@ -32,16 +33,17 @@ export default function Form({ scholarship, onClose, onSuccess }: Props) {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('auth_token');
             const url = scholarship?.id ? `/api/admin/entities/scholarships/${scholarship.id}` : '/api/admin/entities/scholarships';
             const method = scholarship?.id ? 'PUT' : 'POST';
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(data),
             });
             if (res.ok) { onSuccess(); onClose(); }
-        } catch (error) { console.error('Error:', error); }
+            else { setFormError('Error al guardar la beca. Verifica los datos.'); }
+        } catch { setFormError('Error de conexión. Por favor intenta de nuevo.'); }
         finally { setSaving(false); }
     };
 
@@ -86,6 +88,7 @@ export default function Form({ scholarship, onClose, onSuccess }: Props) {
                     </div>
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50">Cancelar</button>
+                        {formError && <p className="text-sm text-red-500">{formError}</p>}
                         <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 bg-[#46178F] text-white rounded-xl font-medium hover:bg-[#3a156f] disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
                     </div>
                 </form>

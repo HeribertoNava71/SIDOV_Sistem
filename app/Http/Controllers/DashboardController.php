@@ -15,7 +15,7 @@ class DashboardController extends Controller
         private ActivityService $activityService,
     ) {}
 
-    public function index(Request $request): Response
+public function index(Request $request): Response
     {
         $user = $request->user();
 
@@ -24,6 +24,9 @@ class DashboardController extends Controller
         $recentActivity = $this->activityService->getRecentActivities($user, 10);
 
         return Inertia::render('Dashboard/Index', [
+            'auth' => [
+                'user' => $user,
+            ],
             'stats' => $stats->toArray(),
             'recentActivity' => $recentActivity->map(fn($a) => $a->toArray())->toArray(),
             'recommendations' => [

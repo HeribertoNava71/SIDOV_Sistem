@@ -8,13 +8,12 @@
  * navegar fuera de esta página. Soporta deep-link con ?uni={id}.
  */
 
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/Components/Layout/Navbar';
 import Footer from '@/Components/Layout/Footer';
 import { PageProps } from '@/types';
-import { useUniversidades } from '@/hooks/useUniversidades';
 import {
     TAMAULIPAS_VIEWBOX,
     TamaulipasShapePath,
@@ -202,63 +201,17 @@ function TarjetaInfo({ universidad }: { universidad: Universidad }) {
 }
 
 // ===== PÁGINA PRINCIPAL =====
-export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
-    const { universidades, loading, error, getUniversidadById } = useUniversidades();
+export default function MapaUniversidadesTamaulipas() {
+    const { universidades: initialUniversidades } = usePage<PageProps & { universidades: Universidad[] }>().props;
+    const [universidades] = useState(initialUniversidades || []);
 
-    if (loading) {
-        return (
-            <>
-                <Head title="Universidades de Tamaulipas" />
-                <Navbar />
-                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-slate-600">Cargando universidades...</p>
-                    </div>
-                </main>
-                <Footer />
-            </>
-        );
-    }
-
-    if (error) {
-        return (
-            <>
-                <Head title="Universidades de Tamaulipas" />
-                <Navbar />
-                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
-                    <div className="text-center">
-                        <p className="text-red-600 mb-4">{error}</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                        >
-                            Reintentar
-                        </button>
-                    </div>
-                </main>
-                <Footer />
-            </>
-        );
-    }
-
-    if (universidades.length === 0) {
-        return (
-            <>
-                <Head title="Universidades de Tamaulipas" />
-                <Navbar />
-                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
-                    <div className="text-center">
-                        <p className="text-slate-600">No hay universidades disponibles.</p>
-                    </div>
-                </main>
-                <Footer />
-            </>
-        );
-    }
     const [ciudadHover, setCiudadHover] = useState<number | null>(null);
     const [universidadAbierta, setUniversidadAbierta] = useState<Universidad | null>(null);
     const [filtro, setFiltro] = useState<'todas' | 'UT' | 'UP'>('todas');
+
+    const getUniversidadById = (id: number): Universidad | undefined => {
+        return universidades.find(u => u.id === id);
+    };
 
     const universidadEnHover =
         (ciudadHover ? universidades.find((u) => u.id === ciudadHover) : null) || null;
@@ -270,7 +223,6 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
         );
     }, [universidades, filtro]);
 
-    // ===== Deep-link: ?uni={id} abre el drawer al montar
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const idStr = params.get('uni');
@@ -289,7 +241,22 @@ export default function MapaUniversidadesTamaulipas({ auth }: PageProps) {
         };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
-    }, [universidades, getUniversidadById]);
+    }, [universidades]);
+
+    if (universidades.length === 0) {
+        return (
+            <>
+                <Head title="Universidades de Tamaulipas" />
+                <Navbar />
+                <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 pt-24 flex items-center justify-center">
+                    <div className="text-center">
+                        <p className="text-slate-600">No hay universidades disponibles.</p>
+                    </div>
+                </main>
+                <Footer />
+            </>
+        );
+    }
 
     // Sincronizar URL cuando el drawer abre/cierra
     const abrirDrawer = (uni: Universidad) => {

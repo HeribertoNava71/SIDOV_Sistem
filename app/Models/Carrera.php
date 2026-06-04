@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Carrera extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'nombre',
@@ -42,5 +44,10 @@ class Carrera extends Model
     public function universidad(): BelongsTo
     {
         return $this->belongsTo(Universidad::class);
+    }
+
+    public function materias(): HasMany
+    {
+        return $this->hasMany(Materia::class);
     }
 }

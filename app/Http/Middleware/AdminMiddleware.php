@@ -11,14 +11,14 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!$request->user()) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['error' => 'No autenticado'], 401);
             }
             return redirect()->route('login');
         }
 
         if (!$request->user()->hasRole('admin')) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['error' => 'No autorizado. Se requiere rol de administrador.'], 403);
             }
             abort(403, 'No tienes permiso para acceder a esta sección.');

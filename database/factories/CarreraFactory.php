@@ -16,8 +16,16 @@ class CarreraFactory extends Factory
      */
     public function definition(): array
     {
+        $dimensiones = ['tecnologia', 'creatividad', 'analisis', 'liderazgo', 'investigacion', 'organizacion'];
+
         return [
-            //
+            'nombre' => fake()->unique()->jobTitle() . ' ' . fake()->word(),
+            'universidad' => fake()->company(),
+            'universidad_id' => null,
+            'descripcion' => fake()->sentence(),
+            'icono' => '🎓',
+            'vector' => array_combine($dimensiones, array_map(fn () => fake()->numberBetween(0, 100), $dimensiones)),
+            'activa' => true,
         ];
     }
 }

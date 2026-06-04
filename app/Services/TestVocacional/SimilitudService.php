@@ -52,10 +52,11 @@ class SimilitudService
             
             $resultados[] = [
                 'carrera' => [
-                    'nombre' => $carrera['nombre'],
+                    'id'          => $carrera['id'],
+                    'nombre'      => $carrera['nombre'],
                     'universidad' => $carrera['universidad'],
                     'descripcion' => $carrera['descripcion'],
-                    'icono' => $carrera['icono'] ?? '🎓'
+                    'icono'       => $carrera['icono'] ?? '🎓',
                 ],
                 'afinidad' => (int) round($afinidad)
             ];

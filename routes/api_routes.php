@@ -13,16 +13,82 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UniversidadAdminController;
 use App\Http\Controllers\Admin\CarreraAdminController;
 use App\Http\Controllers\Admin\ScholarshipAdminController;
+use App\Http\Controllers\Admin\MateriaAdminController;
 use App\Http\Controllers\Admin\PreguntaAdminController;
+use App\Http\Controllers\Admin\UserAdminController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| ENDPOINTS ADMIN - PROTECCIÓN
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'admin', 'throttle:60,1'])->prefix('admin/public')->group(function () {
+    Route::get('/stats', function () {
+        return response()->json([
+            'total_users' => \App\Models\User::count(),
+            'total_roles' => \App\Models\Role::count(),
+            'total_permissions' => \App\Models\Permission::count(),
+            'recent_logs' => \App\Models\AdminLog::count(),
+            'total_universidades' => \App\Models\Universidad::count(),
+            'total_carreras' => \App\Models\Carrera::count(),
+        ]);
+    });
+
+    Route::get('/universidades', function () {
+        return response()->json([
+            'data' => \App\Models\Universidad::withCount('carreras')->orderBy('nombre')->get(),
+        ]);
+    });
+
+    Route::get('/carreras', function (\Illuminate\Http\Request $request) {
+        $query = \App\Models\Carrera::with('universidad:id,nombre')->orderBy('nombre');
+
+        if ($request->has('universidad_id')) {
+            $query->where('universidad_id', $request->universidad_id);
+        }
+
+        return response()->json([
+            'data' => $query->get(),
+        ]);
+    });
+
+    Route::get('/materias', function (\Illuminate\Http\Request $request) {
+        $query = \App\Models\Materia::orderBy('semestre')->orderBy('nombre');
+
+        if ($request->has('carrera_id')) {
+            $query->where('carrera_id', $request->carrera_id);
+        }
+
+        return response()->json([
+            'data' => $query->get(),
+        ]);
+    });
+
+    Route::get('/scholarships', function () {
+        return response()->json([
+            'data' => \App\Models\Scholarship::orderBy('name')->get(),
+        ]);
+    });
+
+    Route::get('/preguntas', function () {
+        return response()->json([
+            'data' => \App\Models\Pregunta::orderBy('orden')->get(),
+        ]);
+    });
+
+    Route::get('/logs', function () {
+        return response()->json([
+            'data' => \App\Models\AdminLog::with('user:id,name')->orderByDesc('created_at')->limit(20)->get(),
+        ]);
+    });
+});
 
 /*
 |--------------------------------------------------------------------------
 | Rutas API para Test Vocacional Wrapped
 |--------------------------------------------------------------------------
-|
-| Añade estas rutas a tu archivo routes/api.php
-|
 */
 
 Route::prefix('test')->group(function () {
@@ -273,6 +339,28 @@ Route::prefix('carreras')->group(function () {
     Route::get('/{id}', [CarreraController::class, 'show'])->where('id', '[0-9]+');
     Route::get('/universidad/{universidadId}', [CarreraController::class, 'byUniversidad'])->where('universidadId', '[0-9]+');
 
+    // Fase 4E — Materias por carrera
+    Route::get('/{id}/materias', function (int $id) {
+        $carrera = \App\Models\Carrera::findOrFail($id);
+
+        $materias = \App\Models\Materia::where('carrera_id', $id)
+            ->orderBy('semestre')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'semestre', 'tipo', 'creditos']);
+
+        $byBimester = $materias->groupBy('semestre')->map(fn($items, $sem) => [
+            'semestre' => (int) $sem,
+            'materias' => $items->values(),
+        ])->values();
+
+        return response()->json([
+            'carrera_id' => $carrera->id,
+            'carrera_nombre' => $carrera->nombre,
+            'total_materias' => $materias->count(),
+            'semestres' => $byBimester,
+        ]);
+    })->where('id', '[0-9]+');
+
 });
 
 /*
@@ -281,12 +369,15 @@ Route::prefix('carreras')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:60,1'])->group(function () {
 
     Route::get('/stats', [AdminController::class, 'stats']);
 
     Route::get('/users', [AdminController::class, 'users']);
     Route::get('/users/{id}', [AdminController::class, 'user'])->where('id', '[0-9]+');
+    Route::post('/users', [UserAdminController::class, 'store']);
+    Route::put('/users/{id}', [UserAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/users/{id}', [UserAdminController::class, 'destroy'])->where('id', '[0-9]+');
     Route::put('/users/{id}/roles', [AdminController::class, 'updateUserRoles'])->where('id', '[0-9]+');
 
     Route::get('/roles', [AdminController::class, 'roles']);
@@ -307,7 +398,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin/entities')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin/entities')->middleware(['auth', 'admin', 'throttle:60,1'])->group(function () {
 
     Route::get('/universidades', [UniversidadAdminController::class, 'index']);
     Route::post('/universidades', [UniversidadAdminController::class, 'store']);
@@ -332,6 +423,11 @@ Route::prefix('admin/entities')->middleware(['auth:sanctum', 'admin'])->group(fu
     Route::get('/preguntas/{id}', [PreguntaAdminController::class, 'show'])->where('id', '[0-9]+');
     Route::put('/preguntas/{id}', [PreguntaAdminController::class, 'update'])->where('id', '[0-9]+');
     Route::delete('/preguntas/{id}', [PreguntaAdminController::class, 'destroy'])->where('id', '[0-9]+');
+
+    Route::get('/materias', [MateriaAdminController::class, 'index']);
+    Route::post('/materias', [MateriaAdminController::class, 'store']);
+    Route::put('/materias/{id}', [MateriaAdminController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/materias/{id}', [MateriaAdminController::class, 'destroy'])->where('id', '[0-9]+');
 
 });
 

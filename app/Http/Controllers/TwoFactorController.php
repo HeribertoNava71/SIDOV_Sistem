@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\TwoFactorAuthentication;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class TwoFactorController extends Controller
 {
-    public function showSetup(): View
+    public function showSetup()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $twoFactor = $user->twoFactorAuthentication ?? new TwoFactorAuthentication(['user_id' => $user->id]);
 
         if ($twoFactor->isEnabled()) {
@@ -29,7 +31,7 @@ class TwoFactorController extends Controller
 
         $qrCodeUrl = $twoFactor->getQRCodeUrl($user->email);
 
-        return view('auth.two-factor-setup', [
+        return Inertia::render('Auth/TwoFactorSetup', [
             'qrCodeUrl' => $qrCodeUrl,
             'secret' => $twoFactor->secret,
         ]);
@@ -41,7 +43,7 @@ class TwoFactorController extends Controller
             'code' => 'required|string|size:6',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
         $twoFactor = $user->twoFactorAuthentication;
 
         if (!$twoFactor || !$twoFactor->secret) {
@@ -56,10 +58,7 @@ class TwoFactorController extends Controller
 
             $request->session()->put('2fa_recovery_codes', $recoveryCodes);
 
-            return redirect()->route('dashboard')->with([
-                'status' => 'Autenticación de dos factores habilitada.',
-                'recovery_codes' => $recoveryCodes,
-            ]);
+            return redirect()->route('two-factor.recovery-codes');
         }
 
         return back()->withErrors(['code' => 'Código inválido.']);
@@ -71,7 +70,7 @@ class TwoFactorController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!password_verify($request->password, $user->password)) {
             return response()->json(['error' => 'Contraseña incorrecta.'], 403);
@@ -90,9 +89,9 @@ class TwoFactorController extends Controller
         return redirect()->route('dashboard')->with('status', '2FA deshabilitado.');
     }
 
-    public function showChallenge(): View
+    public function showChallenge()
     {
-        return view('auth.two-factor-challenge');
+        return Inertia::render('Auth/TwoFactorChallenge');
     }
 
     public function challenge(Request $request): JsonResponse|RedirectResponse
@@ -115,10 +114,10 @@ class TwoFactorController extends Controller
         $userId = $request->session()->get('2fa_pending_user_id');
 
         if (!$userId) {
-            return response()->json(['error' => 'Sesión expirada.'], 401);
+            return response()->json(['error' => 'Sesión expirada. Por favor inicia sesión nuevamente.'], 401);
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
 
         if (!$user) {
             return response()->json(['error' => 'Usuario no encontrado.'], 404);
@@ -137,19 +136,12 @@ class TwoFactorController extends Controller
 
             $request->session()->forget('2fa_pending_user_id');
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            Auth::login($user);
+            $request->session()->regenerate();
 
             Log::info("Login 2FA exitoso para usuario {$user->id}");
 
-            return response()->json([
-                'message' => 'Verificación exitosa.',
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ],
-            ]);
+            return redirect()->intended(route('dashboard'));
         }
 
         return response()->json(['error' => 'Código inválido.'], 401);

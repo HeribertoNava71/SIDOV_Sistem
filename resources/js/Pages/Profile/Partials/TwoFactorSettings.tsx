@@ -3,28 +3,12 @@ import { usePage } from '@inertiajs/react';
 
 export default function TwoFactorSettings({ className = '' }: { className?: string }) {
     const { auth } = usePage<{ auth: { user: { has_2fa_enabled?: boolean } } }>().props;
-    const [showCodes, setShowCodes] = useState(false);
-    const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
     const [error, setError] = useState('');
 
-    const checkStatus = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/two-factor/status', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            return data.enabled;
-        } catch {
-            return false;
-        }
-    };
-
-    const handleEnable = async () => {
+    const handleEnable = () => {
         setLoading(true);
-        setError('');
         window.location.href = '/two-factor/setup';
     };
 
@@ -40,13 +24,14 @@ export default function TwoFactorSettings({ className = '' }: { className?: stri
         setError('');
 
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await fetch('/api/two-factor/disable', {
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+            const res = await fetch('/two-factor/disable', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    'X-CSRF-TOKEN': csrfToken,
                 },
+                credentials: 'include',
                 body: JSON.stringify({ password }),
             });
 

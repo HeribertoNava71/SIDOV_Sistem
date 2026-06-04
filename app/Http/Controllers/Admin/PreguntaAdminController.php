@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePreguntaRequest;
 use App\Http\Requests\Admin\UpdatePreguntaRequest;
+use App\Models\AdminLog;
 use App\Models\Pregunta;
 use Illuminate\Http\JsonResponse;
 
@@ -30,6 +31,8 @@ class PreguntaAdminController extends Controller
         }
 
         $pregunta = Pregunta::create($validated);
+
+        AdminLog::log(auth()->id(), 'create', 'pregunta', $pregunta->id, null, $pregunta->toArray());
 
         return response()->json([
             'data' => $pregunta,
@@ -68,7 +71,10 @@ class PreguntaAdminController extends Controller
             $validated['opciones'] = json_encode($validated['opciones']);
         }
 
+        $oldData = $pregunta->toArray();
         $pregunta->update($validated);
+
+        AdminLog::log(auth()->id(), 'update', 'pregunta', $pregunta->id, $oldData, $pregunta->fresh()->toArray());
 
         return response()->json([
             'data' => $pregunta->fresh(),
@@ -86,7 +92,10 @@ class PreguntaAdminController extends Controller
             ], 404);
         }
 
+        $snapshot = $pregunta->toArray();
         $pregunta->delete();
+
+        AdminLog::log(auth()->id(), 'delete', 'pregunta', $pregunta->id, $snapshot, null);
 
         return response()->json([
             'message' => 'Pregunta eliminada exitosamente',

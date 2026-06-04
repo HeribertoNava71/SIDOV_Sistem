@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
 import { User } from '@/types';
 
-interface Stats {
+interface DashboardStats {
     total_users: number;
     total_roles: number;
     total_permissions: number;
-    recent_logs: number;
+    total_universidades: number;
+    total_carreras: number;
+    total_materias: number;
 }
 
 interface Activity {
@@ -18,82 +19,21 @@ interface Activity {
     user?: { name: string };
 }
 
+interface DashboardProps {
+    auth: { user: User | null };
+    stats: DashboardStats;
+    recentLogs: Activity[];
+    [key: string]: any;
+}
+
 export default function AdminDashboard() {
-    const { auth } = usePage<{ auth: { user: User | null } }>().props;
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [recentLogs, setRecentLogs] = useState<Activity[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const token = localStorage.getItem('auth_token');
-                if (!token) {
-                    setLoading(false);
-                    return;
-                }
-
-                const [statsRes, logsRes] = await Promise.all([
-                    fetch('/api/admin/stats', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    fetch('/api/admin/logs?page=1', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                ]);
-
-                if (statsRes.ok) {
-                    const statsData = await statsRes.json();
-                    setStats(statsData);
-                }
-
-                if (logsRes.ok) {
-                    const logsData = await logsRes.json();
-                    setRecentLogs(logsData.data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching admin data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const { auth, stats, recentLogs } = usePage<DashboardProps>().props;
 
     const statCards = [
-        {
-            title: 'Total Usuarios',
-            value: stats?.total_users || 0,
-            icon: 'users',
-            color: 'from-blue-500 to-blue-600',
-            bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-500',
-        },
-        {
-            title: 'Roles',
-            value: stats?.total_roles || 0,
-            icon: 'shield',
-            color: 'from-purple-500 to-purple-600',
-            bgColor: 'bg-purple-50',
-            iconColor: 'text-purple-500',
-        },
-        {
-            title: 'Permisos',
-            value: stats?.total_permissions || 0,
-            icon: 'key',
-            color: 'from-green-500 to-green-600',
-            bgColor: 'bg-green-50',
-            iconColor: 'text-green-500',
-        },
-        {
-            title: 'Logs Recientes',
-            value: stats?.recent_logs || 0,
-            icon: 'document',
-            color: 'from-orange-500 to-orange-600',
-            bgColor: 'bg-orange-50',
-            iconColor: 'text-orange-500',
-        },
+        { title: 'Usuarios',      value: stats?.total_users         || 0, icon: 'users',    bgColor: 'bg-blue-50',    iconColor: 'text-blue-500',   href: '/admin/users' },
+        { title: 'Universidades', value: stats?.total_universidades || 0, icon: 'shield',   bgColor: 'bg-violet-50',  iconColor: 'text-violet-500', href: '/admin/universities' },
+        { title: 'Carreras',      value: stats?.total_carreras      || 0, icon: 'key',      bgColor: 'bg-emerald-50', iconColor: 'text-emerald-500',href: '/admin/carreras' },
+        { title: 'Materias',      value: stats?.total_materias      || 0, icon: 'document', bgColor: 'bg-amber-50',   iconColor: 'text-amber-500',  href: '/admin/carreras' },
     ];
 
     const iconSvgs: Record<string, JSX.Element> = {
@@ -105,7 +45,7 @@ export default function AdminDashboard() {
 
     const quickActions = [
         { title: 'Agregar Universidad', href: '/admin/universities?action=create', color: 'blue' },
-        { title: 'Agregar Carrera', href: '/admin/carrers?action=create', color: 'purple' },
+        { title: 'Agregar Carrera', href: '/admin/carreras?action=create', color: 'purple' },
         { title: 'Agregar Beca', href: '/admin/scholarships?action=create', color: 'green' },
         { title: 'Agregar Pregunta', href: '/admin/questions?action=create', color: 'orange' },
     ];
@@ -121,7 +61,6 @@ export default function AdminDashboard() {
         <AdminLayout>
             <Head title="Dashboard - Admin" />
 
-            {/* Welcome section */}
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-slate-900">
                     Bienvenido, {auth.user?.name}
@@ -131,12 +70,12 @@ export default function AdminDashboard() {
                 </p>
             </div>
 
-            {/* Stats cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statCards.map((stat, index) => (
-                    <div
+                    <a
                         key={index}
-                        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200"
+                        href={stat.href}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all block"
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div className={`w-14 h-14 rounded-xl ${stat.bgColor} flex items-center justify-center ${stat.iconColor}`}>
@@ -144,14 +83,13 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                         <p className="text-3xl font-bold text-slate-900 mb-1">
-                            {loading ? '...' : stat.value}
+                            {stat.value}
                         </p>
                         <p className="text-sm text-slate-500">{stat.title}</p>
-                    </div>
+                    </a>
                 ))}
             </div>
 
-            {/* Quick actions */}
             <div className="mb-8">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Acciones Rápidas</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -170,17 +108,12 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Recent activity */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
                 <div className="px-6 py-4 border-b border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-900">Actividad Reciente</h3>
                 </div>
                 <div className="p-6">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <div className="w-8 h-8 border-4 border-[#46178F] border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : recentLogs.length > 0 ? (
+                    {recentLogs && recentLogs.length > 0 ? (
                         <div className="space-y-4">
                             {recentLogs.slice(0, 5).map((log) => (
                                 <div key={log.id} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50">

@@ -23,6 +23,7 @@ class TwoFactorAuthentication extends Model
         'enabled_at' => 'datetime',
         'last_used_at' => 'datetime',
         'recovery_codes' => 'array',
+        'recovery_codes_hash' => 'array',
     ];
 
     public function user(): BelongsTo
