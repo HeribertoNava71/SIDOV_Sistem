@@ -721,9 +721,18 @@ function SlidePregunta({
 
 // Slide: Calculando
 function SlideCalculando({ onComplete }: { onComplete: () => void }) {
+    const mensajes = [
+        'Calculando tu perfil…',
+        'Analizando dimensiones…',
+        'Buscando carreras afines…',
+        'Preparando resultados…',
+    ];
+    const [mensajeIdx, setMensajeIdx] = useState(0);
+
     useEffect(() => {
-        const timer = setTimeout(onComplete, 3000);
-        return () => clearTimeout(timer);
+        const timer = setTimeout(onComplete, 4000);
+        const interval = setInterval(() => setMensajeIdx(i => (i + 1) % mensajes.length), 1000);
+        return () => { clearTimeout(timer); clearInterval(interval); };
     }, [onComplete]);
 
     return (
@@ -731,21 +740,31 @@ function SlideCalculando({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen flex flex-col items-center justify-center bg-slate-900"
+            className="min-h-screen flex flex-col items-center justify-center bg-slate-900 gap-10"
         >
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="w-24 h-24 border-4 border-violet-500 border-t-transparent rounded-full mb-8"
-            />
-            <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-xl text-white"
-            >
-                Analizando tus respuestas...
-            </motion.p>
+            <div className="flex gap-6 items-center">
+                {(['bg-violet-500', 'bg-fuchsia-500', 'bg-cyan-500'] as const).map((color, i) => (
+                    <motion.div
+                        key={i}
+                        className={`rounded-full ${color} ${i === 1 ? 'w-24 h-24' : 'w-20 h-20'}`}
+                        animate={{ scale: [1, 1.25, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2, ease: 'easeInOut' }}
+                    />
+                ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+                <motion.p
+                    key={mensajeIdx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-xl text-white font-medium"
+                >
+                    {mensajes[mensajeIdx]}
+                </motion.p>
+            </AnimatePresence>
         </motion.div>
     );
 }
