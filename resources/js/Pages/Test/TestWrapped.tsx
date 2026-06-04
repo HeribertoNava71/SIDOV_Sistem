@@ -6,8 +6,14 @@
  */
 
 import { Head, router } from '@inertiajs/react';
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    ChevronLeft,
+    Zap, Target, Lightbulb, Flame,
+    Monitor, Palette, BarChart2, Users, FlaskConical, ClipboardList,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { PageProps } from '@/types';
 
 // ============================================================
@@ -64,6 +70,29 @@ interface ResultadoFinal {
     perfil: PerfilProfesional;
     topCarreras: { carrera: Carrera; afinidad: number }[];
     fortalezas: string[];
+}
+
+// ============================================================
+// COMPONENTE: BOTÓN REGRESAR
+// ============================================================
+
+function BackButton({ visible }: { visible: boolean }) {
+    return (
+        <AnimatePresence>
+            {visible && (
+                <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    onClick={() => window.history.back()}
+                    className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                    <ChevronLeft size={18} />
+                    <span className="text-sm font-medium">Salir</span>
+                </motion.button>
+            )}
+        </AnimatePresence>
+    );
 }
 
 // ============================================================
@@ -1201,7 +1230,9 @@ export default function TestWrapped({ auth }: PageProps) {
 
     return (
         <>
-            <Head title="Test Vocacional Wrapped" />
+            <Head title="Test Vocacional" />
+
+            <BackButton visible={fase !== 'calculando'} />
 
             <AnimatePresence mode="wait">
                 {fase === 'intro' && (
