@@ -621,19 +621,25 @@ function SlideIntro({ onContinue }: { onContinue: () => void }) {
 }
 
 // Slide de Pregunta
-function SlidePregunta({ 
-    pregunta, 
-    numero, 
-    total, 
-    onResponder 
-}: { 
-    pregunta: Pregunta; 
-    numero: number; 
-    total: number; 
+const opcionColores = [
+    { pill: 'from-rose-500/20 to-orange-500/20', badge: 'bg-rose-500', glow: 'hover:shadow-rose-500/20' },
+    { pill: 'from-violet-500/20 to-purple-500/20', badge: 'bg-violet-500', glow: 'hover:shadow-violet-500/20' },
+    { pill: 'from-cyan-500/20 to-blue-500/20', badge: 'bg-cyan-500', glow: 'hover:shadow-cyan-500/20' },
+    { pill: 'from-emerald-500/20 to-teal-500/20', badge: 'bg-emerald-500', glow: 'hover:shadow-emerald-500/20' },
+] as const;
+
+function SlidePregunta({
+    pregunta,
+    numero,
+    total,
+    onResponder,
+}: {
+    pregunta: Pregunta;
+    numero: number;
+    total: number;
     onResponder: (index: number) => void;
 }) {
     const progreso = (numero / total) * 100;
-    const colores = ['from-rose-500 to-orange-500', 'from-violet-500 to-purple-500', 'from-cyan-500 to-blue-500', 'from-emerald-500 to-teal-500'];
 
     return (
         <motion.div
@@ -643,7 +649,7 @@ function SlidePregunta({
             className="min-h-screen flex flex-col bg-slate-900 text-white"
         >
             {/* Progress Bar */}
-            <div className="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-50">
+            <div className="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-40">
                 <motion.div
                     className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
                     initial={{ width: `${((numero - 1) / total) * 100}%` }}
@@ -657,11 +663,11 @@ function SlidePregunta({
                 <span className="text-sm text-slate-500">{numero} / {total}</span>
                 <div className="flex gap-1">
                     {[...Array(total)].map((_, i) => (
-                        <div 
-                            key={i} 
+                        <div
+                            key={i}
                             className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                 i < numero ? 'bg-violet-500' : 'bg-slate-700'
-                            }`} 
+                            }`}
                         />
                     ))}
                 </div>
@@ -694,13 +700,15 @@ function SlidePregunta({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 + index * 0.1 }}
-                            whileHover={{ scale: 1.02, x: 8 }}
+                            whileHover={{ scale: 1.02, x: 6 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => onResponder(index)}
-                            className={`relative overflow-hidden p-5 rounded-2xl text-left transition-all bg-gradient-to-r ${colores[index]} bg-opacity-10 border border-white/10 hover:border-white/30`}
+                            className={`relative overflow-hidden p-5 rounded-2xl text-left transition-all bg-gradient-to-r ${opcionColores[index].pill} border border-white/10 hover:border-white/30 hover:shadow-lg ${opcionColores[index].glow}`}
                         >
                             <div className="flex items-center gap-4">
-                                <span className="text-3xl">{opcion.icono}</span>
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${opcionColores[index].badge}`}>
+                                    {opcion.icono}
+                                </div>
                                 <span className="font-medium text-lg">{opcion.texto}</span>
                             </div>
                         </motion.button>
